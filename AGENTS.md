@@ -44,5 +44,5 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 
 - Branch per feature: `feat/<thing>`. Open PRs into `main`. Don't push broken builds to `main`.
 - Commit often, small messages. Speed over polish, but `pnpm build` must pass before merge.
-- Deploy target: Vercel. `main` = source of truth for the demo.
-- If you add an env var, tell the team — it must be set in Vercel too or the deploy breaks.
+- Deploy target: TBD. `main` = source of truth for the demo.
+- If you add an env var, tell the team — it must be set wherever we deploy too, or the deploy breaks.

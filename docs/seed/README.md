@@ -1,22 +1,18 @@
 # Seed Data
 
-The **known state** Claude (and humans) can assume when testing. Keep this in sync with the seed script.
+The **known state** Claude (and humans) can assume when testing. Keep in sync with `prisma/seed.ts`.
 
-- **Seed script:** _TBD_ (e.g. `scripts/seed.ts`) — run with `pnpm seed` once added.
-- **Reset:** how to wipe + reseed — _TBD_.
+- **Seed script:** `prisma/seed.ts` — run with `pnpm db:seed`.
+- **Reset + reseed:** `pnpm db:reset` (drops, re-migrates, reseeds — destructive).
+- Seeds are **idempotent** (upsert), so `pnpm db:seed` is safe to re-run.
 
 ## Known fixtures
 
-Document every record a test might depend on. Example shape:
+Document every record a test might depend on. Update this table whenever `prisma/seed.ts` changes.
+
+> ⚠️ Current data is a PLACEHOLDER — replace once the real models exist.
 
 ### Users
-| id | email | password | role | notes |
-|----|-------|----------|------|-------|
-| _TBD_ | `alice@test.com` | `test1234` | user | has sample data |
-
-### <other entities>
-| id | … | notes |
-|----|---|-------|
-| _TBD_ | | |
-
-> When you change the seed script, update this table in the same change — tests read it as the source of truth.
+| email | name | notes |
+|-------|------|-------|
+| `alice@test.com` | Alice | starter test user |
