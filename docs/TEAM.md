@@ -19,6 +19,17 @@ Feature verticals get real names once the problem statement is known (see bottom
 - **Each vertical owns its docs** — `docs/apis/<path>/route.md` per route (enforced by the pre-push hook).
 - **Shared UI lives in `src/components/`** (Vinayak's). Verticals import, don't rebuild.
 
+## Migrations (shared Neon DB)
+
+Everyone points at the **same Neon database**, so migrations are tightly owned.
+
+- **Only Vaibhav runs `pnpm db:migrate`** (`prisma migrate dev`) — and only when `prisma/schema.prisma` changes. It creates a migration file + applies it to Neon.
+- Vaibhav **commits the migration file** (`prisma/migrations/...`). It's the source of truth; the generated client is gitignored and rebuilt by `postinstall`.
+- **Teammates never run migrate.** After a schema change: `git pull` + `pnpm install` (auto-regenerates the client). Tables already exist in the shared DB.
+- **`pnpm db:reset` wipes shared data** — Vaibhav only, warn the team first, then `pnpm db:seed` to restore fixtures.
+- Deploy pipeline uses `prisma migrate deploy` (applies committed migrations; never creates).
+- Connections: app/runtime uses pooled `DATABASE_URL`; migrations use direct `DIRECT_URL`.
+
 ## Cross-cutting ownership
 
 - **Deploy** → Vaibhav (deploy a hello-world early; then it's just `git push`).
