@@ -26,4 +26,12 @@ if [ -n "$routes" ] && [ -z "$docs" ]; then
   exit 1
 fi
 
+# Fast type safety gate (no full build — that runs in CI).
+echo "→ typecheck (tsc --noEmit)…"
+if ! pnpm -s typecheck; then
+  echo ""
+  echo "✖ PUSH BLOCKED — TypeScript errors above. Fix them, or bypass with: git push --no-verify"
+  exit 1
+fi
+
 exit 0
