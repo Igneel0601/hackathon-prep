@@ -42,6 +42,7 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 
 ## Hackathon workflow
 
+- **Ownership:** see `docs/TEAM.md` for who owns what. Notably `prisma/schema.prisma` has a single owner (Vaibhav) — don't edit the schema on someone else's branch; request the model change instead. Shared UI lives in `src/components/`.
 - Branch per feature: `feat/<thing>`. Open PRs into `main`. Don't push broken builds to `main`.
 - Commit often, small messages. Speed over polish, but `pnpm build` must pass before merge.
 - Deploy target: TBD. `main` = source of truth for the demo.
