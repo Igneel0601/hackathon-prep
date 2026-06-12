@@ -37,7 +37,7 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 
 - **API routes** — every `src/app/api/<path>/route.ts` has a mirrored doc at `docs/apis/<path>/route.md`. Create/update it in the SAME change as the route, copy `docs/apis/_template.md`, and add a row to `docs/apis/index.md`.
 - **Architecture** — `docs/ARCHITECTURE.md` is the running system doc. Made a notable choice (library, data store, pattern)? Append it to the Decision Log (date — decision — why — alternatives rejected). Don't rewrite history.
-- **Seed data** — fixtures Claude tests against. Seed *script* lives near code (`scripts/seed.ts`); the known state (test users, IDs) is documented in `docs/seed/README.md`. Update the doc whenever the script changes.
+- **Seed data** — fixtures Claude tests against. Seed *script* is `prisma/seed.ts` (run `pnpm db:seed`); the known state (test users, IDs) is documented in `docs/seed/README.md`. Update the doc whenever the script changes.
 - These exist because Claude writes and runs tests against documented contracts — stale docs = false test failures.
 
 ## Hackathon workflow
@@ -46,3 +46,10 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 - Commit often, small messages. Speed over polish, but `pnpm build` must pass before merge.
 - Deploy target: TBD. `main` = source of truth for the demo.
 - If you add an env var, tell the team — it must be set wherever we deploy too, or the deploy breaks.
+
+## After pushing — CI
+
+The pre-push hook already runs typecheck locally, so CI is a backup. Don't poll CI on every push.
+
+- **Watch CI** (`gh run watch <id> --exit-status`) ONLY when the push touched: dependencies, `next.config.*`, `prisma/` (schema/migrations), `.github/workflows/`, or anything where `build` can fail but `typecheck` passed (RSC / server-client boundary). Fix red CI before moving on.
+- **Otherwise** (routine feature/UI commits): trust the local typecheck and move on. Check CI only if a later step fails.
