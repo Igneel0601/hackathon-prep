@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# hackathon-prep
 
-## Getting Started
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind, pnpm, Prisma 7 (Postgres/Neon), Auth.js v5.
 
-First, run the development server:
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone git@github.com:Igneel0601/hackathon-prep.git
+cd hackathon-prep
+pnpm install                 # also generates the Prisma client (postinstall)
+cp .env.example .env         # then fill in the values (see below)
+pnpm db:migrate              # apply migrations to the DB
+pnpm dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Use **pnpm**, not npm/yarn. Need Node 22+.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env` is gitignored — copy `.env.example` and fill it in. Get the real values from the team (pinned in our chat):
 
-## Learn More
+| Var | What |
+|-----|------|
+| `DATABASE_URL` | Neon **pooled** connection string (app runtime) |
+| `DIRECT_URL` | Neon **direct** connection string (migrations) |
+| `AUTH_SECRET` | Auth.js secret — generate your own with `npx auth secret` |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth creds (for login) |
 
-To learn more about Next.js, take a look at the following resources:
+> Heads up: we share **one** Neon database. Don't run `db:reset` without telling everyone (it wipes shared data).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Command | Does |
+|---------|------|
+| `pnpm dev` | dev server |
+| `pnpm build` | production build (must pass before merge) |
+| `pnpm lint` | ESLint |
+| `pnpm typecheck` | `tsc --noEmit` (also runs on pre-push) |
+| `pnpm db:migrate` | create + apply a migration (**schema owner only** — see TEAM.md) |
+| `pnpm db:seed` | seed fixtures (idempotent) |
+| `pnpm db:studio` | open Prisma Studio |
+| `pnpm db:reset` | ⚠️ drop + re-migrate + reseed (wipes shared data) |
 
-## Deploy on Vercel
+## How we work
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Branch per feature** (`feat/<thing>`) → PR into `main`. Keep PRs small, merge often.
+- `pnpm build` must pass before merge. Pre-push runs typecheck + checks API docs are updated.
+- **Don't edit `prisma/schema.prisma`** unless you own it — request the model change instead.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Docs
+
+- [`AGENTS.md`](./AGENTS.md) — conventions + rules (read this; Claude/agents follow it)
+- [`docs/TEAM.md`](./docs/TEAM.md) — who owns what
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — stack + decision log
+- [`docs/apis/`](./docs/apis/) — API route docs
+- [`docs/seed/`](./docs/seed/) — known seed data for testing
