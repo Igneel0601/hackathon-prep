@@ -4,7 +4,7 @@ Running doc. Keep the overview current; append to the Decision Log — never rew
 
 ## Overview
 
-Hackathon project on **Next.js 16 (App Router)** + **React 19** + **TypeScript** + **Tailwind CSS**, package-managed with **pnpm**. Deploy target TBD.
+Hackathon project on **Next.js 16 (App Router)** + **React 19** + **TypeScript** + **Tailwind CSS**, package-managed with **pnpm**. No deploy — the demo runs locally.
 
 ### Stack
 
@@ -14,7 +14,7 @@ Hackathon project on **Next.js 16 (App Router)** + **React 19** + **TypeScript**
 | UI | React 19 + Tailwind | client components only when needed |
 | Language | TypeScript (strict) | |
 | Package manager | pnpm | lockfile `pnpm-lock.yaml` |
-| Hosting | _TBD_ | `main` = demo source of truth |
+| Hosting | Local (no deploy) | demo runs on a laptop; `main` = source of truth |
 | Database | PostgreSQL (Neon, likely) | hosted; connection via `DATABASE_URL` |
 | ORM | Prisma 7 | engine-less, `@prisma/adapter-pg` driver adapter |
 
@@ -24,6 +24,21 @@ Hackathon project on **Next.js 16 (App Router)** + **React 19** + **TypeScript**
 - `docs/apis/` — one doc per route, mirroring the route path.
 - `docs/seed/` — seed/fixture state Claude tests against.
 - Data flows: Server Component / Server Action fetches data → renders. Client components are leaf-level and interactive-only.
+
+## Data Model
+
+> Mentors quiz the DB design in judging. Keep this current with `prisma/schema.prisma` and
+> be ready to defend *why* it's shaped this way (keys, relationships, normalization).
+
+**Entities & relationships** (fill as the schema grows):
+
+| Model | Key fields | Relationships | Why |
+|-------|-----------|---------------|-----|
+| `User` | `id`, `email` | has many `Account`, `Session` | Auth.js identity |
+| `Account` / `Session` / `VerificationToken` | — | belong to `User` | Auth.js adapter tables |
+| _(app models)_ | _TBD_ | _TBD_ | _TBD_ |
+
+_Optional: paste an ER sketch (Mermaid `erDiagram`) here once the core models exist._
 
 ## Decision Log
 

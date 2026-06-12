@@ -43,3 +43,21 @@ Fill once the problem statement lands:
 - **Vertical A (Rajat):** _TBD_
 - **Vertical B (Mukund):** _TBD_
 - Shared/cross-feature UI (Vinayak): _TBD_
+
+## Who built what
+
+In the mentoring round, **mentors ask each person what they built and quiz them on it.**
+Keep this log current as features ship — it's everyone's prep sheet.
+
+| Feature / area | Owner | Notes |
+|----------------|-------|-------|
+| Project scaffold, DB, Auth, CI | Vaibhav | platform/infra |
+| _TBD_ | _TBD_ | |
+
+## Understand your own code
+
+Heavy Claude use is fine — **but you own what you ship.**
+
+- If your name's on it, you must be able to **explain it without notes**: what it does, how, and why.
+- **Review your agent's output before committing** — don't blind-merge AI code you can't defend.
+- Know your slice's **data model + flow** — that's what mentors drill into.

@@ -39,7 +39,13 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 - **Architecture** — `docs/ARCHITECTURE.md` is the running system doc. Made a notable choice (library, data store, pattern)? Append it to the Decision Log (date — decision — why — alternatives rejected). Don't rewrite history.
 - **Seed data** — fixtures Claude tests against. Seed *script* is `prisma/seed.ts` (run `pnpm db:seed`); the known state (test users, IDs) is documented in `docs/seed/README.md`. Update the doc whenever the script changes.
 - **Demo / jury notes** — when you ship a notable user-facing feature, add to `docs/DEMO.md`: what it does in plain English, where it sits in the demo click-path, and any "wow" moment. This is how we'll brief the jury — keep it current as you build, don't leave it to the last hour.
+- **Data model** — when models change, update the Data Model section in `docs/ARCHITECTURE.md` (entities, relationships, why). Mentors quiz the DB design in judging.
 - These exist because Claude writes and runs tests against documented contracts — stale docs = false test failures.
+
+## MVP-first (judging discipline)
+
+- **Build the MVP before any add-on.** `docs/SCOPE.md` defines the core flow vs add-ons. Do NOT build anything from "Add-ons" while the MVP checkboxes are unticked — if asked to, push back and point at SCOPE.md. Judges reward a working core, not half-built features.
+- **You own what you ship.** Whoever's name is on a feature must be able to explain it cold — what/how/why — to a mentor. Review agent output before committing; don't merge code you can't defend. Log who built what in `docs/TEAM.md`.
 
 ## Hackathon workflow
 
