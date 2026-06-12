@@ -38,6 +38,7 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 - **API routes** — every `src/app/api/<path>/route.ts` has a mirrored doc at `docs/apis/<path>/route.md`. Create/update it in the SAME change as the route, copy `docs/apis/_template.md`, and add a row to `docs/apis/index.md`.
 - **Architecture** — `docs/ARCHITECTURE.md` is the running system doc. Made a notable choice (library, data store, pattern)? Append it to the Decision Log (date — decision — why — alternatives rejected). Don't rewrite history.
 - **Seed data** — fixtures Claude tests against. Seed *script* is `prisma/seed.ts` (run `pnpm db:seed`); the known state (test users, IDs) is documented in `docs/seed/README.md`. Update the doc whenever the script changes.
+- **Demo / jury notes** — when you ship a notable user-facing feature, add to `docs/DEMO.md`: what it does in plain English, where it sits in the demo click-path, and any "wow" moment. This is how we'll brief the jury — keep it current as you build, don't leave it to the last hour.
 - These exist because Claude writes and runs tests against documented contracts — stale docs = false test failures.
 
 ## Hackathon workflow
