@@ -11,7 +11,7 @@
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/api/auth/signin` | Sign-in page / provider list |
-| GET | `/api/auth/callback/:provider` | OAuth callback |
+| GET | `/api/auth/callback/google` | OAuth callback |
 | POST | `/api/auth/signout` | Sign out |
 | GET | `/api/auth/session` | Current session JSON (`{}` if signed out) |
 | GET | `/api/auth/providers` | Configured providers |
@@ -20,7 +20,7 @@
 ## Config
 
 - Defined in `src/auth.ts`. Adapter: Prisma (`@auth/prisma-adapter`) → **database sessions**.
-- Provider: **GitHub** (placeholder). Reads `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`.
+- Provider: **Google**. Reads `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`.
 - Requires `AUTH_SECRET` (see `.env.example`).
 
 ## Usage in code
