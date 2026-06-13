@@ -6,7 +6,7 @@ import { TableCard } from "./TableCard";
 
 describe("TableCard", () => {
   it("renders number, seats, and 'Free' for an available table", () => {
-    render(<TableCard number={3} seats={4} status="available" onClick={() => {}} />);
+    render(<TableCard number={3} seats={4} status="free" onClick={() => {}} />);
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("4 seats")).toBeInTheDocument();
     expect(screen.getByText("Free")).toBeInTheDocument();
@@ -14,7 +14,7 @@ describe("TableCard", () => {
 
   it("shows 'Occupied' for an active table and is still clickable (resume order)", async () => {
     const onClick = vi.fn();
-    render(<TableCard number={1} seats={2} status="active" onClick={onClick} />);
+    render(<TableCard number={1} seats={2} status="occupied" onClick={onClick} />);
 
     expect(screen.getByText("Occupied")).toBeInTheDocument();
     const btn = screen.getByRole("button");

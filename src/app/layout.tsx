@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cafe POS",
+  title: "Odoo Cafe",
   description: "Restaurant point-of-sale — orders, kitchen display, payments",
 };
 

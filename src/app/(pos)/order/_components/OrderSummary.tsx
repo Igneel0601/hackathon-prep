@@ -9,24 +9,29 @@ interface OrderSummaryProps {
 
 export function OrderSummary({ subtotal, tax, discount, total }: OrderSummaryProps) {
   return (
-    <div className="space-y-1 border-t border-gray-200 pt-3 text-sm">
-      <div className="flex justify-between text-gray-600">
+    <div className="flex flex-col gap-1.5">
+      <div className="flex justify-between text-sm" style={{ color: "#9B6B55" }}>
         <span>Subtotal</span>
         <span>₹{parseFloat(subtotal).toFixed(2)}</span>
       </div>
-      <div className="flex justify-between text-gray-600">
+      <div className="flex justify-between text-sm" style={{ color: "#9B6B55" }}>
         <span>Tax</span>
         <span>₹{parseFloat(tax).toFixed(2)}</span>
       </div>
       {parseFloat(discount) > 0 && (
-        <div className="flex justify-between text-green-600">
+        <div className="flex justify-between text-sm font-medium" style={{ color: "#16803C" }}>
           <span>Discount</span>
           <span>−₹{parseFloat(discount).toFixed(2)}</span>
         </div>
       )}
-      <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900">
-        <span>Total</span>
-        <span>₹{parseFloat(total).toFixed(2)}</span>
+      <div
+        className="flex justify-between pt-2 mt-1"
+        style={{ borderTop: "1.5px solid rgba(92,48,32,0.14)" }}
+      >
+        <span className="text-base font-bold" style={{ color: "#1A0A04" }}>Total</span>
+        <span className="text-lg font-extrabold" style={{ fontFamily: "var(--cafe-font-display)", color: "#1A0A04", letterSpacing: "-0.01em" }}>
+          ₹{parseFloat(total).toFixed(2)}
+        </span>
       </div>
     </div>
   );

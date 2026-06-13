@@ -67,7 +67,7 @@ export function LoginForm() {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>{mode === "login" ? "Sign in" : "Create account"}</CardTitle>
-        <CardDescription>Cafe POS — staff access</CardDescription>
+        <CardDescription>Odoo Cafe — staff access</CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
         <CardContent className="flex flex-col gap-4">

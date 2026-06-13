@@ -26,12 +26,16 @@ describe("FloorPickerModal", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
-  it("selecting a free table calls onSelectTable with that table", async () => {
+  it("selecting a free table then confirming calls onSelectTable with that table", async () => {
     const onSelectTable = vi.fn();
     render(
       <FloorPickerModal floors={floors} onSelectTable={onSelectTable} onClose={() => {}} />,
     );
+    // Free tables are a two-step select→confirm: clicking the table highlights
+    // it and reveals the "Open Table" CTA, which fires onSelectTable.
     await userEvent.click(screen.getByText("1"));
+    expect(onSelectTable).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: /Open Table/i }));
     expect(onSelectTable).toHaveBeenCalledWith(expect.objectContaining({ id: "t1" }));
   });
 
