@@ -1,10 +1,11 @@
-// UX gate: bounce signed-out users to /login. This is a lightweight cookie
-// presence check (not cryptographic) — the REAL enforcement is server-side in
-// every API route via requireUser() in src/lib/api.ts. Keeping the heavy auth
-// config (Prisma adapter, bcrypt) out of middleware avoids edge-bundling issues.
+// Next.js 16 Proxy (formerly Middleware — renamed in v16, same behavior).
+// UX gate: bounce signed-out users to /login. Lightweight cookie presence check
+// (not cryptographic) — the REAL enforcement is server-side in every API route
+// via requireUser() in src/lib/api.ts. Keeping the heavy auth config (Prisma
+// adapter, bcrypt) out of the proxy avoids edge-bundling issues.
 import { NextResponse, type NextRequest } from "next/server";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const hasSession =
     req.cookies.has("authjs.session-token") ||
     req.cookies.has("__Secure-authjs.session-token");
