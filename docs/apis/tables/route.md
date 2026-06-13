@@ -43,7 +43,7 @@
 
 ```bash
 curl http://localhost:3000/api/tables \
-  -H 'Cookie: next-auth.session-token=<your-session>'
+  -H 'Cookie: authjs.session-token=<your-session>'
 ```
 
 ## Notes / errors
