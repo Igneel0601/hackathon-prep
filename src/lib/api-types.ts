@@ -157,3 +157,58 @@ export interface SignupBody {
   email: string;
   password: string;
 }
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+export interface Paginated<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface AdminCategory {
+  id: string;
+  name: string;
+  color: string;
+  productCount: number;
+}
+
+export interface AdminProduct {
+  id: string;
+  name: string;
+  price: Money;
+  unit: string;
+  tax: Money;
+  description: string | null;
+  sendToKitchen: boolean;
+  active: boolean;
+  categoryId: string;
+  category: { id: string; name: string; color: string } | null;
+}
+
+export interface CategoryBody {
+  name?: string;
+  color?: string;
+}
+
+export interface CreateProductBody {
+  name: string;
+  price: number;
+  unit?: string;
+  tax?: number;
+  description?: string | null;
+  sendToKitchen?: boolean;
+  categoryId?: string;
+  newCategory?: { name: string; color?: string };
+}
+
+export type UpdateProductBody = Partial<{
+  name: string;
+  price: number;
+  unit: string;
+  tax: number;
+  description: string | null;
+  sendToKitchen: boolean;
+  active: boolean;
+  categoryId: string;
+}>;

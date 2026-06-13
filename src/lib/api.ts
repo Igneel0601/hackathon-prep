@@ -17,18 +17,12 @@
 // them with Number()/parseFloat. Don't do money math in floats on the server.
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { ApiError } from "@/lib/api-error";
 
 export type Role = "ADMIN" | "EMPLOYEE";
 
-/** Throw inside a handler; `errorResponse` turns it into the right HTTP status. */
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+// Re-export so existing `import { ApiError } from "@/lib/api"` keeps working.
+export { ApiError };
 
 /** Success JSON response. */
 export function json(data: unknown, status = 200): Response {
@@ -39,6 +33,21 @@ export function json(data: unknown, status = 200): Response {
 export function errorResponse(e: unknown): Response {
   if (e instanceof ApiError) {
     return Response.json({ error: e.message }, { status: e.status });
+  }
+  // Map common Prisma error codes to HTTP statuses.
+  if (e && typeof e === "object" && "code" in e) {
+    const code = (e as { code: unknown }).code;
+    if (code === "P2002") {
+      const target = (e as { meta?: { target?: unknown } }).meta?.target;
+      const field = Array.isArray(target) ? target.join(", ") : "value";
+      return Response.json(
+        { error: `A record with that ${field} already exists` },
+        { status: 409 },
+      );
+    }
+    if (code === "P2025") {
+      return Response.json({ error: "Not found" }, { status: 404 });
+    }
   }
   console.error("[api] unhandled error:", e);
   return Response.json({ error: "Internal server error" }, { status: 500 });

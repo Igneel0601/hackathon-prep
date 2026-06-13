@@ -151,6 +151,7 @@ Keep this log current as features ship — it's everyone's prep sheet.
 | Auth — email/password + Google, JWT + auth shell | Vaibhav | Credentials + signup + middleware/login |
 | API client + types, integration, PR review | Vaibhav | `src/lib/api-*`; merges + conflict resolution |
 | Per-table order persistence (resume/ensureOrder) | Vaibhav | one draft per table; idempotency fix |
+| Admin backend — Products & Categories CRUD + authz | Vaibhav | role-gated `/admin`, validate.ts, archive policy |
 | Order View — floor picker, cart, checkout, receipt | Rajat | products grid, qty, discount, cash/card/upi, print |
 | Kitchen Display (KDS) | Rajat | live polling, stage advance |
 | Session orders list + home nav | Rajat | `/orders`, `/kds` buttons |

@@ -16,5 +16,9 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 | POST | `/api/orders/[id]/payment` | [orders/[id]/payment/route.md](./orders/[id]/payment/route.md) | Take payment (Cash) → mark Paid |
 | POST | `/api/orders/[id]/kitchen` | [orders/[id]/kitchen/route.md](./orders/[id]/kitchen/route.md) | Send to kitchen / advance kitchenStatus |
 | GET | `/api/kitchen` | [kitchen/route.md](./kitchen/route.md) | KDS tickets (orders in the kitchen queue) |
+| GET/POST | `/api/admin/categories` | [admin/categories/route.md](./admin/categories/route.md) | Admin: list / create categories |
+| PATCH/DELETE | `/api/admin/categories/[id]` | [admin/categories/[id]/route.md](./admin/categories/[id]/route.md) | Admin: update / delete a category |
+| GET/POST | `/api/admin/products` | [admin/products/route.md](./admin/products/route.md) | Admin: list / create products (on-the-fly category) |
+| PATCH/DELETE | `/api/admin/products/[id]` | [admin/products/[id]/route.md](./admin/products/[id]/route.md) | Admin: update / archive-or-delete a product |
 
 > Rows above are pre-registered for the parallel API build. Each route's `route.md` is authored on its own branch alongside the handler.
