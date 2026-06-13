@@ -19,8 +19,8 @@ export function TableCard({ number, seats, status, selected = false, occupiedSin
   let boxShadow = "none";
   let transform = "none";
   let numColor = "#2A1008";
-  let statusBg = "rgba(74,222,128,0.15)";
-  let statusColor = "#16803C";
+  let statusBg = "rgba(92,48,32,0.10)";
+  let statusColor = "#5C3020";
   let statusLabel = "Free";
   const cursor = "pointer";
 
@@ -36,7 +36,7 @@ export function TableCard({ number, seats, status, selected = false, occupiedSin
   } else if (isOccupied) {
     bg = "rgba(255,188,13,0.05)";
     border = "2px solid #FFBC0D";
-    numColor = "#8B0000";
+    numColor = "#5C3020";
     statusBg = "rgba(255,188,13,0.18)";
     statusColor = "#8B5E00";
     statusLabel = "Occupied";
@@ -78,9 +78,9 @@ export function TableCard({ number, seats, status, selected = false, occupiedSin
             fontFamily: "var(--font-body)",
             fontSize: "0.5625rem",
             fontWeight: 700,
-            color: "rgba(139,0,0,0.55)",
+            color: "rgba(92,48,32,0.62)",
             letterSpacing: "0.04em",
-            background: "rgba(139,0,0,0.07)",
+            background: "rgba(92,48,32,0.08)",
             borderRadius: 4,
             padding: "1px 4px",
           }}

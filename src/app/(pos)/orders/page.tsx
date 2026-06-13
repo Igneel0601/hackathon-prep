@@ -3,18 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOrders } from "./_hooks/useOrders";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 const PAYMENT_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   DRAFT:     { bg: "rgba(255,188,13,0.10)", color: "#8B5E00",  border: "rgba(255,188,13,0.30)" },
-  PAID:      { bg: "rgba(22,128,60,0.10)",  color: "#16803C",  border: "rgba(22,128,60,0.28)" },
-  CANCELLED: { bg: "rgba(196,26,26,0.08)",  color: "#C41A1A",  border: "rgba(196,26,26,0.22)" },
+  PAID:      { bg: "rgba(92,48,32,0.08)",  color: "#5C3020",  border: "rgba(92,48,32,0.22)" },
+  CANCELLED: { bg: "rgba(122,46,18,0.08)",  color: "#7A2E12",  border: "rgba(122,46,18,0.22)" },
 };
 
 const KITCHEN_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   NONE:      { bg: "rgba(155,107,85,0.08)", color: "#9B6B55",  border: "rgba(155,107,85,0.20)" },
   TO_COOK:   { bg: "rgba(255,188,13,0.10)", color: "#8B5E00",  border: "rgba(255,188,13,0.28)" },
-  PREPARING: { bg: "rgba(249,115,22,0.10)", color: "#C2570A",  border: "rgba(249,115,22,0.25)" },
-  COMPLETED: { bg: "rgba(22,128,60,0.10)",  color: "#16803C",  border: "rgba(22,128,60,0.28)" },
+  PREPARING: { bg: "rgba(92,48,32,0.10)", color: "#5C3020",  border: "rgba(92,48,32,0.22)" },
+  COMPLETED: { bg: "rgba(92,48,32,0.08)",  color: "#5C3020",  border: "rgba(92,48,32,0.22)" },
 };
 
 const fallbackStyle = { bg: "rgba(155,107,85,0.08)", color: "#9B6B55", border: "rgba(155,107,85,0.20)" };
@@ -75,15 +76,25 @@ export default function OrdersPage() {
             Session Orders
           </h1>
         </div>
-        <button
-          onClick={refetch}
-          style={{ display: "flex", alignItems: "center", gap: 6, height: 32, padding: "0 14px", background: "#fff", border: "1.5px solid rgba(92,48,32,0.16)", borderRadius: 8, fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 600, color: "#5C3020", cursor: "pointer" }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-          </svg>
-          Refresh
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => router.push("/kds")}
+            className="hidden sm:block"
+            style={{ height: 32, padding: "0 14px", background: "#fff", border: "1.5px solid rgba(92,48,32,0.16)", borderRadius: 8, fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 600, color: "#5C3020", cursor: "pointer" }}
+          >
+            Kitchen
+          </button>
+          <button
+            onClick={refetch}
+            style={{ display: "flex", alignItems: "center", gap: 6, height: 32, padding: "0 14px", background: "#fff", border: "1.5px solid rgba(92,48,32,0.16)", borderRadius: 8, fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 600, color: "#5C3020", cursor: "pointer" }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+            </svg>
+            Refresh
+          </button>
+          <PosUserMenu />
+        </div>
       </header>
 
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "20px 20px 40px" }}>
@@ -103,12 +114,12 @@ export default function OrdersPage() {
             {/* Paid */}
             <div style={{ background: "#FDFAF5", borderRadius: 14, padding: "14px 16px", border: "1px solid rgba(92,48,32,0.10)", boxShadow: "0 1px 8px rgba(13,5,2,0.04)" }}>
               <p style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 600, color: "#9B6B55", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Paid</p>
-              <p style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", fontWeight: 800, color: "#16803C", letterSpacing: "-0.02em", lineHeight: 1 }}>{paidCount}</p>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", fontWeight: 800, color: "#5C3020", letterSpacing: "-0.02em", lineHeight: 1 }}>{paidCount}</p>
             </div>
             {/* Kitchen Active */}
             <div style={{ background: "#FDFAF5", borderRadius: 14, padding: "14px 16px", border: "1px solid rgba(92,48,32,0.10)", boxShadow: "0 1px 8px rgba(13,5,2,0.04)" }}>
               <p style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 600, color: "#9B6B55", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Kitchen Active</p>
-              <p style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", fontWeight: 800, color: "#C41A1A", letterSpacing: "-0.02em", lineHeight: 1 }}>{kitchenActive}</p>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", fontWeight: 800, color: "#7A2E12", letterSpacing: "-0.02em", lineHeight: 1 }}>{kitchenActive}</p>
             </div>
           </div>
         )}
@@ -161,7 +172,7 @@ export default function OrdersPage() {
         )}
 
         {state.phase === "error" && (
-          <div style={{ borderRadius: 12, padding: "12px 16px", fontSize: "0.875rem", background: "rgba(196,26,26,0.08)", border: "1px solid rgba(196,26,26,0.18)", color: "#C41A1A" }}>
+          <div style={{ borderRadius: 12, padding: "12px 16px", fontSize: "0.875rem", background: "rgba(122,46,18,0.08)", border: "1px solid rgba(122,46,18,0.18)", color: "#7A2E12" }}>
             {state.message} —{" "}
             <button onClick={refetch} style={{ textDecoration: "underline", background: "none", border: "none", cursor: "pointer", color: "inherit" }}>retry</button>
           </div>

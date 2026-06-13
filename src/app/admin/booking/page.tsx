@@ -122,8 +122,8 @@ function FloorBlock({
             <p className="text-lg font-bold text-gray-900">#{t.number}</p>
             <p className="text-xs text-gray-500">{t.seats} seats{t.active ? "" : " · inactive"}</p>
             <div className="mt-2 flex justify-center gap-1">
-              <button className="text-xs text-blue-600 hover:underline" onClick={() => onEditTable(t)}>edit</button>
-              <button className="text-xs text-red-500 hover:underline" onClick={() => onDeleteTable(t)}>del</button>
+              <button className="text-xs hover:underline" style={{ color: "#5C3020" }} onClick={() => onEditTable(t)}>edit</button>
+              <button className="text-xs hover:underline" style={{ color: "#7A2E12" }} onClick={() => onDeleteTable(t)}>del</button>
             </div>
           </div>
         ))}

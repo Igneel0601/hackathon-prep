@@ -20,27 +20,27 @@ export default async function AdminDashboard() {
       value: String(stats.products.total),
       sub: `${stats.categories.total} categories`,
       note: stats.products.inactive > 0 ? `${stats.products.inactive} inactive` : undefined,
-      noteColor: "#C41A1A",
+      noteColor: "#7A2E12",
       accent: "#1A0A04",
-      bar: "#8B0000",
+      bar: "#5C3020",
     },
     {
       label: "Tables Occupied",
       value: `${stats.tables.occupied} / ${stats.tables.total}`,
       sub: "Floor + Terrace",
       note: stats.tables.total > 0 ? `${Math.round((stats.tables.occupied / stats.tables.total) * 100)}% full` : undefined,
-      noteColor: "#C41A1A",
+      noteColor: "#7A2E12",
       accent: "#1A0A04",
-      bar: "#C41A1A",
+      bar: "#7A2E12",
     },
     {
       label: "Active Staff",
       value: String(stats.users.activeStaff),
       sub: `${stats.users.total} total staff`,
       note: stats.users.activeStaff > 0 ? "On shift" : undefined,
-      noteColor: "#16803C",
+      noteColor: "#5C3020",
       accent: "#1A0A04",
-      bar: "#16803C",
+      bar: "#5C3020",
     },
   ];
 
@@ -139,7 +139,7 @@ export default async function AdminDashboard() {
           >
             <span
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: "rgba(92,48,32,0.06)", color: "#8B0000" }}
+              style={{ background: "rgba(92,48,32,0.06)", color: "#5C3020" }}
             >
               {c.icon}
             </span>
@@ -167,8 +167,8 @@ export default async function AdminDashboard() {
 function Badge({ children, tone }: { children: React.ReactNode; tone: "gold" | "red" | "green" | "neutral" }) {
   const tones = {
     gold: { bg: "rgba(255,188,13,0.14)", color: "#8B5E00" },
-    red: { bg: "rgba(196,26,26,0.10)", color: "#C41A1A" },
-    green: { bg: "rgba(22,128,60,0.10)", color: "#16803C" },
+    red: { bg: "rgba(122,46,18,0.10)", color: "#7A2E12" },
+    green: { bg: "rgba(92,48,32,0.10)", color: "#5C3020" },
     neutral: { bg: "rgba(92,48,32,0.08)", color: "#5C3020" },
   }[tone];
   return (

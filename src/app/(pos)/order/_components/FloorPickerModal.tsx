@@ -84,7 +84,7 @@ export function FloorPickerModal({ floors, onSelectTable, onClose }: FloorPicker
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             {/* Legend */}
             <div style={{ display: "flex", gap: 12 }} className="hidden sm:flex">
-              <Legend color="#16803C" label="Free" />
+              <Legend color="#9B6B55" label="Free" />
               <Legend color="#FFBC0D" label="Occupied" />
             </div>
             <button

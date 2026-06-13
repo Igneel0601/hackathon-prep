@@ -72,7 +72,12 @@ export default function UsersPage() {
                   <TableCell className="font-medium">{user.name ?? "—"}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${user.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-600"}`}>
+                    <span
+                      className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                      style={user.role === "ADMIN"
+                        ? { background: "rgba(255,188,13,0.16)", color: "#8B5E00" }
+                        : { background: "rgba(92,48,32,0.10)", color: "#5C3020" }}
+                    >
                       {user.role}
                     </span>
                   </TableCell>

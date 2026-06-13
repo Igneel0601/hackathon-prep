@@ -19,7 +19,7 @@ export function OrderSummary({ subtotal, tax, discount, total }: OrderSummaryPro
         <span>₹{parseFloat(tax).toFixed(2)}</span>
       </div>
       {parseFloat(discount) > 0 && (
-        <div className="flex justify-between text-sm font-medium" style={{ color: "#16803C" }}>
+        <div className="flex justify-between text-sm font-medium" style={{ color: "#5C3020" }}>
           <span>Discount</span>
           <span>−₹{parseFloat(discount).toFixed(2)}</span>
         </div>
