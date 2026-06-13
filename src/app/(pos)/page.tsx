@@ -142,9 +142,8 @@ export default function PosHomePage() {
             <Image src="/logo-badge.png" alt="Odoo Cafe" width={64} height={64} className="relative z-10 object-contain" style={{ filter: "drop-shadow(0 4px 12px rgba(255,188,13,0.30))" }} />
           </div>
 
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: "#FFBC0D" }}>Point of Sale</p>
           <h1 className="mb-3 text-5xl font-extrabold uppercase leading-none tracking-tight text-[#FAF3E8] md:text-6xl" style={{ fontFamily: "var(--cafe-font-display)" }}>
-            Cafe POS
+            Odoo Cafe
           </h1>
           <div className="mx-auto mb-4 h-0.5 w-10 rounded-full" style={{ background: "linear-gradient(to right, transparent, #FFBC0D, transparent)" }} />
           <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(212,169,122,0.80)" }}>
