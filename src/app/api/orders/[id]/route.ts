@@ -1,13 +1,7 @@
 import { type NextRequest } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import {
-  ApiError,
-  errorResponse,
-  getOpenPosSession,
-  json,
-  requireEmployee,
-} from "@/lib/api";
+import { ApiError, errorResponse, json, requireEmployee } from "@/lib/api";
 
 // ─── Shape helper (shared contract) ──────────────────────────────────────────
 
@@ -82,14 +76,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requireEmployee();
-    const session = await getOpenPosSession(user.id);
+    await requireEmployee();
 
     const { id } = await params;
 
-    // Scope to the current session so a cashier can't edit another session's order.
-    const order = await db.order.findFirst({
-      where: { id, sessionId: session.id },
+    // Floor-shared: any employee can edit any table's open order (orders belong
+    // to the table, not the session). DRAFT/kitchen/CAS guards below still apply.
+    const order = await db.order.findUnique({
+      where: { id },
       include: ORDER_INCLUDE,
     });
 

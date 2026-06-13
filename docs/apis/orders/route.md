@@ -2,7 +2,7 @@
 
 > Mirrors `src/app/api/orders/route.ts`. Update this file in the same change as the route.
 
-**Purpose:** List all orders for the current open POS session (GET) or create a new DRAFT order (POST).
+**Purpose:** List orders across the floor (GET) or create a new DRAFT order (POST). **Floor-shared:** orders belong to the table, not the cashier's session — any employee lists/serves any table's order; `sessionId` is recorded as provenance (which till opened it) for reporting.
 
 **Auth:** Requires a valid session (any authenticated employee/admin). Returns `401` if signed out. Opens a POS session implicitly on first call.
 
@@ -75,7 +75,7 @@ curl -X POST http://localhost:3000/api/orders \
 
 ---
 
-## GET — List Session Orders
+## GET — List Orders (floor-wide)
 
 ### Request
 
