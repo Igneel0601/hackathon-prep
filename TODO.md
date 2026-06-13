@@ -2,7 +2,7 @@
 
 ## Tonight (optional)
 - [ ] Google OAuth creds → `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` in `.env` (only blocker for working login; skip if idea may not need login)
-- [ ] Copilot ruleset — currently **disabled** (no review running). Decide: re-enable **Active** with Copilot-only rule (no PR requirement), or leave off until PRs start
+- [x] Rulesets active: `dev` (PR + Copilot review) and `main` (PR, no review). Flow: `feat/* → dev → main`, both PR-gated.
 - [ ] `DIRECT_URL` lock (optional) — to truly enforce only-Vaibhav-migrates, share only `DATABASE_URL` in chat and pull `DIRECT_URL`
 
 ## Tomorrow (once problem statement drops)
@@ -20,7 +20,7 @@
 - Prisma 7 + Neon — migrated + seeded, connection verified
 - Pooled/direct URL split (`DATABASE_URL` / `DIRECT_URL`)
 - Auth.js v5 wired (Google provider, DB sessions); `AUTH_SECRET` set
-- Pre-push hook (typecheck + API-doc-sync); CI (lint/typecheck/build) green
+- CI gates all PRs: lint/typecheck/build + API-doc-sync (no local pre-push hook)
 - Docs: AGENTS.md, ARCHITECTURE, TEAM.md, API template+index, seed, Copilot instructions
 - Onboarding README; DB-safety guard in AGENTS.md
 - Secrets shared with team

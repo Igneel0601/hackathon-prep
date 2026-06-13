@@ -33,7 +33,7 @@ Use pnpm, not npm/yarn. Lockfile is `pnpm-lock.yaml`.
 
 ## Documentation rules (enforced)
 
-Docs live with code. A blocking `pre-push` hook rejects pushes that change an API route without updating its doc.
+Docs live with code. A blocking CI check (the `doc-sync` job, on every PR) fails when a PR changes an API route without updating its doc.
 
 - **API routes** — every `src/app/api/<path>/route.ts` has a mirrored doc at `docs/apis/<path>/route.md`. Create/update it in the SAME change as the route, copy `docs/apis/_template.md`, and add a row to `docs/apis/index.md`.
 - **Architecture** — `docs/ARCHITECTURE.md` is the running system doc. Made a notable choice (library, data store, pattern)? Append it to the Decision Log (date — decision — why — alternatives rejected). Don't rewrite history.
@@ -51,14 +51,14 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 
 - **Ownership:** see `docs/TEAM.md` for who owns what. Notably `prisma/schema.prisma` has a single owner (Vaibhav) — don't edit the schema on someone else's branch; request the model change instead. Shared UI lives in `src/components/`.
 - **DB safety — do NOT run `pnpm db:migrate`, `prisma migrate`, or `pnpm db:reset`** unless you are the schema owner (Vaibhav). These hit the **shared Neon DB** and can wipe everyone's data. Need a schema change? Ask the owner. `pnpm db:seed` (idempotent) is fine.
-- Branch per feature: `feat/<thing>`. Open PRs into `main`. Don't push broken builds to `main`.
+- Branch per change: `feat/<thing>` (also `fix/`, `chore/`, `docs/`, `refactor/`) → PR into `dev`; Copilot auto-reviews on push. Promote `dev → main` via PR at integration/demo checkpoints (merge commit, not squash). Direct push to `dev` and `main` is blocked by rulesets. Don't push broken builds.
 - Commit often, small messages. Speed over polish, but `pnpm build` must pass before merge.
 - Deploy target: TBD. `main` = source of truth for the demo.
 - If you add an env var, tell the team — it must be set wherever we deploy too, or the deploy breaks.
 
 ## After pushing — CI
 
-The pre-push hook already runs typecheck locally, so CI is a backup. Don't poll CI on every push.
+No local pre-push gate — CI is the gate. It runs on every PR into `dev`/`main` (lint, typecheck, build, `doc-sync`). Don't merge a PR with red CI.
 
-- **Watch CI** (`gh run watch <id> --exit-status`) ONLY when the push touched: dependencies, `next.config.*`, `prisma/` (schema/migrations), `.github/workflows/`, or anything where `build` can fail but `typecheck` passed (RSC / server-client boundary). Fix red CI before moving on.
-- **Otherwise** (routine feature/UI commits): trust the local typecheck and move on. Check CI only if a later step fails.
+- **Watch CI on your PR** (`gh pr checks <num> --watch` or `gh run watch <id> --exit-status`), especially when the change touched: dependencies, `next.config.*`, `prisma/` (schema/migrations), `.github/workflows/`, or an RSC / server-client boundary (`build` can fail where a quick typecheck passes). Fix red before merging.
+- Run `pnpm typecheck` / `pnpm build` locally before opening the PR to avoid round-trips.

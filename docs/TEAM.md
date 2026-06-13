@@ -7,7 +7,7 @@ Feature verticals get real names once the problem statement is known (see bottom
 
 | Person | Role | Owns |
 |--------|------|------|
-| **Vaibhav** | Platform / Integrator | `prisma/schema.prisma`, Auth (`src/auth.ts`), CI, deploy, env/secrets, merging branches into `main`. Tiebreaker on structure. |
+| **Vaibhav** | Platform / Integrator | `prisma/schema.prisma`, Auth (`src/auth.ts`), CI, deploy, env/secrets, promoting `dev → main`. Tiebreaker on structure. |
 | **Rajat** | Feature Vertical A (full slice) | One core feature end-to-end: its API routes (`src/app/api/...`) + its UI. |
 | **Mukund** | Feature Vertical B (full slice) | A second core feature end-to-end. |
 | **Vinayak** | Frontend / UI system | shadcn setup, layout/nav shell, design tokens, reusable components in `src/components/`, demo polish. Pairs with Rajat/Mukund to skin their features. |
@@ -15,8 +15,8 @@ Feature verticals get real names once the problem statement is known (see bottom
 ## Rules that prevent collisions
 
 - **`prisma/schema.prisma` is Vaibhav-only.** Need a model/field? Ask Vaibhav — he adds it and runs the migration. Multiple editors on the schema = merge conflicts + broken migrations.
-- **Branch per feature** (`feat/<thing>`), PR into `main`. Small PRs, merge often. Don't push broken builds to `main`.
-- **Each vertical owns its docs** — `docs/apis/<path>/route.md` per route (enforced by the pre-push hook).
+- **Branch per change** (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/<thing>`) → PR into `dev`. Small PRs, merge often. `dev → main` is a promotion PR at checkpoints (use a merge commit, not squash). Direct push to `dev`/`main` blocked. Don't push broken builds.
+- **Each vertical owns its docs** — `docs/apis/<path>/route.md` per route (enforced by the `doc-sync` CI check on every PR).
 - **Shared UI lives in `src/components/`** (Vinayak's). Verticals import, don't rebuild.
 
 ## Migrations (shared Neon DB)
