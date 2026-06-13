@@ -157,6 +157,18 @@ export interface PaymentBody {
 
 export type KitchenAction = "send" | "advance";
 
+// ─── Self-checkout (kiosk) ───────────────────────────────────────────────────
+export interface SelfOrderBody {
+  tableId: string;
+  items: { productId: string; qty: number }[];
+  customer: { email: string; name?: string };
+}
+
+export interface SelfOrderResult {
+  id: string;
+  number: number;
+}
+
 export interface SignupBody {
   name: string;
   email: string;

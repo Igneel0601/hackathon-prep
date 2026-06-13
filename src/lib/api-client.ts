@@ -37,6 +37,8 @@ import type {
   Role,
   SelfCheckoutOrderBody,
   SelfCheckoutOrderResponse,
+  SelfOrderBody,
+  SelfOrderResult,
 } from "@/lib/api-types";
 
 export class ApiClientError extends Error {
@@ -84,6 +86,19 @@ export function getProducts(categoryId?: string): Promise<ProductsResponse> {
 
 export function getTables(): Promise<TablesResponse> {
   return request<TablesResponse>("/api/tables");
+}
+
+// ─── Self-checkout (kiosk, public) ────────────────────────────────────────────
+export function getSelfMenu(): Promise<ProductsResponse> {
+  return request<ProductsResponse>("/api/self/menu");
+}
+
+export function getSelfTables(): Promise<TablesResponse> {
+  return request<TablesResponse>("/api/self/tables");
+}
+
+export function placeSelfOrder(body: SelfOrderBody): Promise<SelfOrderResult> {
+  return request<SelfOrderResult>("/api/self/orders", json(body));
 }
 
 export function getOrders(opts?: {
