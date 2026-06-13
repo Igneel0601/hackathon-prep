@@ -12,32 +12,41 @@ interface FloorPickerModalProps {
 export function FloorPickerModal({ floors, onSelectTable, onClose }: FloorPickerModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-espresso/55 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Select a Table"
+        className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-border/60 bg-card p-7 shadow-2xl shadow-espresso/30 animate-rise"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 cursor-pointer rounded-full px-2 text-xl text-gray-400 hover:text-gray-700"
+          className="absolute right-5 top-5 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         >
           ×
         </button>
-        <h2 className="mb-6 text-xl font-bold text-gray-900">Select a Table</h2>
+
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-caramel">
+          Floor plan
+        </p>
+        <h2 className="font-heading mt-1 mb-6 text-2xl font-bold text-espresso">
+          Select a Table
+        </h2>
 
         {floors.length === 0 && (
-          <p className="text-center text-gray-500">No floors found.</p>
+          <p className="text-center text-muted-foreground">No floors found.</p>
         )}
 
         {floors.map((floor) => (
-          <div key={floor.id} className="mb-6">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <div key={floor.id} className="mb-7 last:mb-0">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               {floor.name}
             </h3>
-            <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
               {floor.tables.map((table) => (
                 <TableCard
                   key={table.id}

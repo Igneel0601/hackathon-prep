@@ -85,6 +85,7 @@ function OrderView() {
   const isEmpty = items.length === 0;
   const isSubmitting = orderState.phase === "submitting";
   const isPaid = orderState.phase === "paid";
+  const itemCount = items.reduce((n, it) => n + it.qty, 0);
 
   async function handleSendToKitchen() {
     if (!tableId) return;
@@ -120,40 +121,33 @@ function OrderView() {
   if (isPaid && orderState.phase === "paid") {
     const { payment, order } = orderState.result;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-green-50 p-8 print:bg-white print:block print:p-0">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg text-center print:shadow-none print:rounded-none print:max-w-full">
-          <div className="mb-4 text-5xl print:hidden">✅</div>
-          <h2 className="text-2xl font-bold text-gray-900">Payment Received</h2>
-          <p className="mt-1 text-gray-500 print:text-gray-700 font-medium">Odoo Cafe</p>
-          <p className="text-sm text-gray-400 print:text-gray-600">Order #{order.number}</p>
-          <div className="my-4 border-t border-dashed border-gray-300" />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-cream p-8 print:bg-white print:block print:p-0">
+        <div className="w-full max-w-sm rounded-3xl border border-border/60 bg-card p-8 text-center shadow-xl shadow-espresso/10 animate-rise print:shadow-none print:rounded-none print:max-w-full">
+          <div className="mb-3 text-5xl print:hidden">✅</div>
+          <h2 className="font-heading text-2xl font-bold text-espresso">Payment Received</h2>
+          <p className="mt-1 font-medium text-muted-foreground print:text-gray-700">Odoo Cafe</p>
+          <p className="text-sm text-muted-foreground/70 print:text-gray-600">Order #{order.number}</p>
+          <div className="my-4 border-t border-dashed border-border" />
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>₹{parseFloat(order.subtotal).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-600">Tax</span><span>₹{parseFloat(order.tax).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="tabular-nums">₹{parseFloat(order.subtotal).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span className="tabular-nums">₹{parseFloat(order.tax).toFixed(2)}</span></div>
             {parseFloat(order.discount) > 0 && (
-              <div className="flex justify-between text-green-700"><span>Discount</span><span>−₹{parseFloat(order.discount).toFixed(2)}</span></div>
+              <div className="flex justify-between text-emerald-700"><span>Discount</span><span className="tabular-nums">−₹{parseFloat(order.discount).toFixed(2)}</span></div>
             )}
-            <div className="flex justify-between font-semibold text-base"><span>Total</span><span>₹{parseFloat(order.total).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-600">Method</span><span>{payment.method}</span></div>
-            <div className="flex justify-between"><span className="text-gray-600">Paid</span><span className="font-semibold">₹{parseFloat(payment.amount).toFixed(2)}</span></div>
+            <div className="flex justify-between text-base font-semibold"><span>Total</span><span className="tabular-nums">₹{parseFloat(order.total).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span>{payment.method}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Paid</span><span className="font-semibold tabular-nums">₹{parseFloat(payment.amount).toFixed(2)}</span></div>
             {payment.changeDue && (
-              <div className="flex justify-between text-green-600 font-semibold"><span>Change Due</span><span>₹{parseFloat(payment.changeDue).toFixed(2)}</span></div>
+              <div className="flex justify-between font-semibold text-emerald-600"><span>Change Due</span><span className="tabular-nums">₹{parseFloat(payment.changeDue).toFixed(2)}</span></div>
             )}
           </div>
-          <div className="my-4 border-t border-dashed border-gray-300" />
-          <p className="text-xs text-gray-400 print:text-gray-500">Thank you for visiting!</p>
+          <div className="my-4 border-t border-dashed border-border" />
+          <p className="text-xs text-muted-foreground/70 print:text-gray-500">Thank you for visiting! ☕</p>
           <div className="mt-6 flex gap-2 print:hidden">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => window.print()}
-            >
+            <Button variant="outline" className="flex-1" onClick={() => window.print()}>
               🖨️ Print
             </Button>
-            <Button
-              className="flex-1"
-              onClick={() => { clear(); router.push("/"); }}
-            >
+            <Button className="flex-1" onClick={() => { clear(); router.push("/"); }}>
               New Order
             </Button>
           </div>
@@ -163,27 +157,35 @@ function OrderView() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50 lg:flex-row">
+    <div className="flex h-screen flex-col bg-background lg:flex-row">
       {/* Left — product browser */}
-      <div className="flex flex-1 flex-col overflow-hidden p-4">
+      <div className="flex flex-1 flex-col overflow-hidden p-5">
         {/* Header */}
         <div className="mb-4 flex items-center gap-3">
-          <button onClick={() => router.push("/")} className="text-sm text-gray-500 hover:text-gray-800">
+          <button
+            onClick={() => router.push("/")}
+            className="flex h-9 items-center gap-1 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
             ← Tables
           </button>
-          <h1 className="text-lg font-bold text-gray-900">
-            Order — Table {tableId ? `(${tableId.slice(-4)})` : ""}
-          </h1>
+          <div>
+            <h1 className="font-heading text-lg font-bold text-espresso">
+              Order {tableId ? `· Table ${tableId.slice(-4)}` : ""}
+            </h1>
+          </div>
         </div>
 
         {/* Search */}
-        <input
-          type="text"
-          placeholder="Search products…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-3 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400"
-        />
+        <div className="relative mb-3">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+          <input
+            type="text"
+            placeholder="Search products…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-ring/30"
+          />
+        </div>
 
         {/* Category tabs */}
         <div className="mb-4">
@@ -192,40 +194,50 @@ function OrderView() {
 
         {/* Product grid */}
         {productsLoading ? (
-          <p className="text-center text-sm text-gray-400">Loading products…</p>
+          <p className="mt-10 text-center text-sm text-muted-foreground">Loading products…</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 overflow-y-auto pb-2 sm:grid-cols-3 md:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 name={product.name}
                 price={product.price}
-                categoryColor={categoryMap[product.categoryId] ?? "#6b7280"}
+                categoryColor={categoryMap[product.categoryId] ?? "#a16207"}
                 onClick={() => addProduct(product)}
               />
             ))}
             {filteredProducts.length === 0 && (
-              <p className="col-span-full text-center text-sm text-gray-400">No products found.</p>
+              <p className="col-span-full mt-10 text-center text-sm text-muted-foreground">No products found.</p>
             )}
           </div>
         )}
       </div>
 
       {/* Right — cart */}
-      <div className="flex w-full flex-col border-t border-gray-200 bg-white lg:w-80 lg:border-l lg:border-t-0">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h2 className="font-semibold text-gray-900">Cart</h2>
+      <div className="flex w-full flex-col border-t border-border bg-card lg:w-96 lg:border-l lg:border-t-0">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="flex items-center gap-2">
+            <h2 className="font-heading text-lg font-bold text-espresso">Cart</h2>
+            {itemCount > 0 && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                {itemCount}
+              </span>
+            )}
+          </div>
           {!isEmpty && (
-            <button onClick={clear} className="text-xs text-red-500 hover:underline">Clear</button>
+            <button onClick={clear} className="text-xs font-medium text-destructive hover:underline">Clear</button>
           )}
         </div>
 
         {/* Cart lines */}
-        <div className="flex-1 overflow-y-auto px-4">
+        <div className="flex-1 overflow-y-auto px-5">
           {isEmpty ? (
-            <p className="py-8 text-center text-sm text-gray-400">Add items to start an order</p>
+            <div className="flex h-full flex-col items-center justify-center gap-2 py-12 text-center">
+              <span className="text-4xl opacity-40">🧾</span>
+              <p className="text-sm text-muted-foreground">Add items to start an order</p>
+            </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border">
               {items.map((item) => (
                 <CartLine
                   key={item.productId}
@@ -243,11 +255,13 @@ function OrderView() {
 
         {/* Order summary + actions */}
         {!isEmpty && (
-          <div className="border-t border-gray-200 p-4 space-y-3">
+          <div className="space-y-3 border-t border-border p-5">
             {/* Discount */}
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500 shrink-0">Discount %</label>
+              <label htmlFor="discount" className="shrink-0 text-xs font-medium text-muted-foreground">Discount %</label>
               <input
+                id="discount"
+                aria-label="Discount %"
                 type="number"
                 min="0"
                 max="100"
@@ -257,7 +271,7 @@ function OrderView() {
                   const v = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
                   setDiscountPct(v);
                 }}
-                className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-blue-400"
+                className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none transition-colors focus:border-primary/50"
               />
             </div>
 
@@ -269,7 +283,7 @@ function OrderView() {
             />
 
             {orderState.phase === "error" && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{orderState.message}</p>
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{orderState.message}</p>
             )}
 
             <Button
@@ -282,25 +296,24 @@ function OrderView() {
             </Button>
 
             {!showPayment ? (
-              <Button
-                className="w-full"
-                disabled={isSubmitting}
-                onClick={openPayment}
-              >
+              <Button className="w-full" disabled={isSubmitting} onClick={openPayment}>
                 💳 Checkout
               </Button>
             ) : (
               <div className="space-y-3">
                 {/* Method tabs */}
-                <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
+                <div role="tablist" className="flex overflow-hidden rounded-xl border border-border text-sm font-medium">
                   {enabledMethods.map(({ method: m }) => (
                     <button
                       key={m}
+                      role="tab"
+                      aria-selected={payMethod === m}
+                      aria-label={m === "CASH" ? "Cash" : m === "CARD" ? "Card" : "UPI"}
                       onClick={() => { setPayMethod(m); setAmountReceived(""); setPayReference(""); }}
                       className={`flex-1 py-2 transition-colors ${
                         payMethod === m
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-600 hover:bg-gray-50"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-muted-foreground hover:bg-secondary"
                       }`}
                     >
                       {m === "CASH" ? "💵 Cash" : m === "CARD" ? "💳 Card" : "📱 UPI"}
@@ -313,13 +326,14 @@ function OrderView() {
                   <>
                     <input
                       type="number"
+                      aria-label="Amount received"
                       placeholder="Amount received (₹)"
                       value={amountReceived}
                       onChange={(e) => setAmountReceived(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                     />
                     {cashReady && (
-                      <p className="text-xs text-green-600">
+                      <p className="text-xs font-medium text-emerald-600">
                         Change: ₹{(parseFloat(amountReceived) - parseFloat(totals.total)).toFixed(2)}
                       </p>
                     )}
@@ -330,42 +344,42 @@ function OrderView() {
                 {payMethod === "CARD" && (
                   <input
                     type="text"
+                    aria-label="Transaction reference"
                     placeholder="Transaction reference (optional)"
                     value={payReference}
                     onChange={(e) => setPayReference(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                   />
                 )}
 
                 {/* UPI fields — QR generated from the admin-saved UPI ID */}
                 {payMethod === "UPI" && (
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2 rounded-xl bg-secondary/50 p-3">
                     {upiId ? (
                       <>
-                        <QRCodeSVG value={`upi://pay?pa=${upiId}&am=${totals.total}&cu=INR`} size={140} />
-                        <p className="text-xs text-gray-500">
+                        <div className="rounded-lg bg-white p-2">
+                          <QRCodeSVG value={`upi://pay?pa=${upiId}&am=${totals.total}&cu=INR`} size={140} />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
                           Scan to pay ₹{parseFloat(totals.total).toFixed(2)} · {upiId}
                         </p>
                       </>
                     ) : (
-                      <p className="text-xs text-gray-400">No UPI ID configured in admin</p>
+                      <p className="text-xs text-muted-foreground">No UPI ID configured in admin</p>
                     )}
                     <input
                       type="text"
+                      aria-label="UPI reference"
                       placeholder="UPI reference / note (optional)"
                       value={payReference}
                       onChange={(e) => setPayReference(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                     />
                   </div>
                 )}
 
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setShowPayment(false)}
-                  >
+                  <Button variant="outline" className="flex-1" onClick={() => setShowPayment(false)}>
                     Cancel
                   </Button>
                   <Button

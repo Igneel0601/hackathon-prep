@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import { getProductImage } from "@/lib/product-image";
+
 interface ProductCardProps {
   name: string;
   price: string;
@@ -8,17 +11,35 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ name, price, categoryColor, onClick }: ProductCardProps) {
+  const img = getProductImage(name, null, 400);
+
   return (
     <button
+      data-testid="product-card"
       onClick={onClick}
-      className="flex flex-col items-start rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition-all hover:border-blue-300 hover:shadow-md active:scale-95"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg active:translate-y-0"
     >
-      <div
-        className="mb-2 h-1.5 w-8 rounded-full"
-        style={{ backgroundColor: categoryColor }}
-      />
-      <span className="text-sm font-semibold text-gray-900 leading-tight">{name}</span>
-      <span className="mt-1 text-sm font-bold text-blue-600">₹{parseFloat(price).toFixed(0)}</span>
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
+        <Image
+          src={img}
+          alt={name}
+          fill
+          sizes="(max-width: 768px) 50vw, 200px"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <span
+          className="absolute left-2 top-2 h-2.5 w-2.5 rounded-full ring-2 ring-white/80"
+          style={{ backgroundColor: categoryColor }}
+        />
+      </div>
+      <div className="flex items-center justify-between gap-2 p-3">
+        <span className="text-sm font-semibold leading-tight text-foreground line-clamp-2">
+          {name}
+        </span>
+        <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-1 text-sm font-bold text-primary">
+          ₹{parseFloat(price).toFixed(0)}
+        </span>
+      </div>
     </button>
   );
 }

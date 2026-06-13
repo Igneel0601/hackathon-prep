@@ -64,10 +64,16 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm border-border/70 shadow-xl shadow-espresso/5 animate-rise">
       <CardHeader>
-        <CardTitle>{mode === "login" ? "Sign in" : "Create account"}</CardTitle>
-        <CardDescription>Cafe POS — staff access</CardDescription>
+        <CardTitle className="font-heading text-2xl text-espresso">
+          {mode === "login" ? "Welcome back" : "Create account"}
+        </CardTitle>
+        <CardDescription>
+          {mode === "login"
+            ? "Sign in to open the terminal."
+            : "Set up your staff access."}
+        </CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
         <CardContent className="flex flex-col gap-4">

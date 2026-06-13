@@ -17,8 +17,8 @@ export function CategoryTabs({ categories, active, onChange }: CategoryTabsProps
         className={cn(
           "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
           active === null
-            ? "bg-gray-900 text-white"
-            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "bg-secondary text-secondary-foreground hover:bg-accent/30",
         )}
       >
         All
@@ -29,7 +29,9 @@ export function CategoryTabs({ categories, active, onChange }: CategoryTabsProps
           onClick={() => onChange(cat.id)}
           className={cn(
             "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-            active === cat.id ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            active === cat.id
+              ? "text-white shadow-sm"
+              : "bg-secondary text-secondary-foreground hover:bg-accent/30",
           )}
           style={active === cat.id ? { backgroundColor: cat.color } : undefined}
         >
