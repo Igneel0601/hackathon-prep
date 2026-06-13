@@ -7,7 +7,8 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 
 | Method | Path | Doc | Purpose |
 |--------|------|-----|---------|
-| GET/POST | `/api/auth/*` | [auth/route.md](./auth/route.md) | Auth.js — OAuth flow + session endpoints |
+| GET/POST | `/api/auth/*` | [auth/route.md](./auth/route.md) | Auth.js — email/password + Google login, session endpoints |
+| POST | `/api/signup` | [signup/route.md](./signup/route.md) | Create an email/password account |
 | GET | `/api/products` | [products/route.md](./products/route.md) | List active products (optional `?categoryId=`); categories |
 | GET | `/api/tables` | [tables/route.md](./tables/route.md) | Floors + their tables (with active-order flag) |
 | GET/POST | `/api/orders` | [orders/route.md](./orders/route.md) | List session orders / create a Draft order |

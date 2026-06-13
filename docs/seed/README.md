@@ -11,10 +11,12 @@ The **known state** Claude (and humans) can assume when testing. Keep in sync wi
 Document every record a test might depend on. Update this table whenever `prisma/seed.ts` changes.
 
 ### Users
-| email | name | role | notes |
-|-------|------|------|-------|
-| `admin@test.com` | Admin | ADMIN | backend/admin login |
-| `cashier@test.com` | Cashier | EMPLOYEE | POS terminal login |
+| email | name | role | password (dev) | notes |
+|-------|------|------|----------------|-------|
+| `admin@test.com` | Admin | ADMIN | `admin123` | backend/admin login |
+| `cashier@test.com` | Cashier | EMPLOYEE | `cashier123` | POS terminal login |
+
+> Passwords are bcrypt-hashed by the seed. Dev-only — fine to log in with these locally.
 
 ### Categories
 | name | color |

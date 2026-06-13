@@ -3,21 +3,24 @@
 // Idempotent: safe to re-run (upserts on stable keys).
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // ─── Accounts: one admin, one cashier ──────────────────────────────────────
+  // ─── Accounts: one admin, one cashier (dev passwords below) ─────────────────
+  const adminHash = await bcrypt.hash("admin123", 10);
+  const cashierHash = await bcrypt.hash("cashier123", 10);
   await prisma.user.upsert({
     where: { email: "admin@test.com" },
-    update: { role: "ADMIN" },
-    create: { email: "admin@test.com", name: "Admin", role: "ADMIN" },
+    update: { role: "ADMIN", passwordHash: adminHash },
+    create: { email: "admin@test.com", name: "Admin", role: "ADMIN", passwordHash: adminHash },
   });
   await prisma.user.upsert({
     where: { email: "cashier@test.com" },
-    update: { role: "EMPLOYEE" },
-    create: { email: "cashier@test.com", name: "Cashier", role: "EMPLOYEE" },
+    update: { role: "EMPLOYEE", passwordHash: cashierHash },
+    create: { email: "cashier@test.com", name: "Cashier", role: "EMPLOYEE", passwordHash: cashierHash },
   });
 
   // ─── Categories (name is unique → idempotent) ───────────────────────────────

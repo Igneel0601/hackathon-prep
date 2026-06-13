@@ -2,9 +2,11 @@
 
 > Mirrors `src/app/api/auth/[...nextauth]/route.ts`. Managed by Auth.js (NextAuth v5) — do not hand-roll these.
 
-**Purpose:** Auth.js catch-all. Handles the full OAuth flow and session endpoints.
+**Purpose:** Auth.js catch-all. Handles login (email/password + Google) and session endpoints.
 
-**Auth:** public (these endpoints *establish* auth).
+**Auth:** public (these endpoints *establish* auth). New accounts are created via `POST /api/signup`.
+
+**Providers:** Credentials (email/password, primary) + Google (secondary, optional). **Sessions are JWT** (Credentials can't use database sessions). Sign in to the Credentials provider by POSTing `email` + `password` to the Auth.js callback (`/api/auth/callback/credentials`) with the CSRF token, or via the `signIn("credentials", …)` helper from a client/server action.
 
 ## Endpoints (provided by Auth.js)
 
@@ -19,9 +21,9 @@
 
 ## Config
 
-- Defined in `src/auth.ts`. Adapter: Prisma (`@auth/prisma-adapter`) → **database sessions**.
-- Provider: **Google**. Reads `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`.
-- Requires `AUTH_SECRET` (see `.env.example`).
+- Defined in `src/auth.ts`. Adapter: Prisma (`@auth/prisma-adapter`); session strategy: **JWT**.
+- Providers: **Credentials** (email/password, checks bcrypt against `User.passwordHash`) + **Google** (optional, reads `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`).
+- Requires `AUTH_SECRET` (see `.env.example`). Google creds are optional — email/password works without them.
 
 ## Usage in code
 
