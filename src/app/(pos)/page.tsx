@@ -37,6 +37,21 @@ export default function PosHomePage() {
         >
           {loading ? "Loading tables…" : "Open Table"}
         </button>
+
+        <div className="mt-6 flex justify-center gap-3">
+          <button
+            onClick={() => router.push("/orders")}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            📋 Orders
+          </button>
+          <button
+            onClick={() => router.push("/kds")}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            🍳 Kitchen Display
+          </button>
+        </div>
       </div>
 
       {showPicker && !loading && (
