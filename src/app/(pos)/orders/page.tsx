@@ -53,7 +53,7 @@ export default function OrdersPage() {
   const totalOrders = orders.length;
   const revenue = orders.filter((o) => o.status === "PAID").reduce((sum, o) => sum + parseFloat(o.total), 0);
   const paidCount = orders.filter((o) => o.status === "PAID").length;
-  const kitchenActive = orders.filter((o) => o.kitchenStatus === "TO_COOK" || o.kitchenStatus === "PREPARING").length;
+  const kitchenActive = orders.filter((o) => o.status !== "CANCELLED" && (o.kitchenStatus === "TO_COOK" || o.kitchenStatus === "PREPARING")).length;
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0EB" }}>
@@ -235,6 +235,11 @@ export default function OrdersPage() {
                     </td>
                     <td style={{ padding: "11px 14px", textAlign: "center" }}>
                       {(() => {
+                        // A cancelled order isn't in the kitchen (even if its
+                        // status field is stale from a void before this fix).
+                        if (order.status === "CANCELLED") {
+                          return <span style={{ color: "rgba(92,48,32,0.35)" }}>—</span>;
+                        }
                         const s = KITCHEN_STYLE[order.kitchenStatus] ?? fallbackStyle;
                         return (
                           <span style={{ display: "inline-block", borderRadius: 9999, padding: "2px 10px", fontSize: "0.6875rem", fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>

@@ -281,9 +281,12 @@ export async function DELETE(
     await requireEmployee();
     const { id } = await params;
 
+    // Void also clears the kitchen state: a cancelled order must not linger in
+    // any "active in kitchen" reckoning (counters, the orders list). The KDS
+    // already excludes CANCELLED, this keeps the order's own field consistent.
     const cancelled = await db.order.updateMany({
       where: { id, status: "DRAFT" },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELLED", kitchenStatus: "NONE" },
     });
 
     if (cancelled.count === 0) {

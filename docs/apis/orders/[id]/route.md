@@ -97,3 +97,4 @@ curl -X PATCH http://localhost:3000/api/orders/ord_abc123 \
 - Supplying `items: []` returns `400` — an order must always have at least one line.
 - If a product referenced in `items` is inactive, returns `400`.
 - Paid/cancelled orders are immutable via this endpoint; use the payment/kitchen routes for state transitions.
+- **DELETE** (void / "Free Table") cancels a DRAFT order: sets `status: CANCELLED` **and** `kitchenStatus: NONE` (so a voided order never lingers in any "active in kitchen" count). Only DRAFT orders can be voided — a PAID/CANCELLED order returns **409**, a missing one **404**.

@@ -16,7 +16,6 @@ import {
   getOrders,
   createOrder,
   updateOrder,
-  voidOrder,
   getProducts,
   getTables,
   payOrder,
@@ -29,8 +28,8 @@ const isBrowser = typeof window !== "undefined";
 const idb = isBrowser
   ? new ObservablePersistIndexedDB({
       databaseName: "cafe-pos-offline",
-      version: 2,
-      tableNames: ["orders", "products", "tables", "payment-outbox"],
+      version: 3,
+      tableNames: ["orders", "products", "tables", "payment-outbox", "order-outbox"],
     })
   : undefined;
 
@@ -58,7 +57,14 @@ export const orders$ = observable(
           : {}),
         ...(input.discount !== undefined ? { discount: Number(input.discount) } : {}),
       }),
-    delete: (input) => voidOrder(input.id as string),
+    // NEVER auto-cancel a server order from sync reconciliation. `list()` only
+    // returns DRAFT orders, so an order leaving DRAFT (i.e. it got PAID — the
+    // NORMAL lifecycle) is pruned from this cache; if that prune called the
+    // server it would CANCEL a paid order (and the queued payment would then 409
+    // and be dropped). Voiding is an explicit user action ("Free Table") that
+    // calls voidOrder() directly — it does not route through this store. So the
+    // sync delete is a local-only no-op: drop it from the cache, touch nothing.
+    delete: async () => {},
     fieldId: "id",
     fieldUpdatedAt: "updatedAt",
     as: "object",
@@ -106,6 +112,60 @@ export const tables$ = observable(
     persist: persist("tables"),
   }),
 );
+
+// ── Order create outbox ─────────────────────────────────────────────────────
+// orders$ (syncedCrud) only retries a pending create while the observable is
+// actively OBSERVED. After an offline checkout the order screen unmounts, so the
+// create never flushes on reconnect — and the queued payment then 404s forever
+// ("paid offline but never in /orders"). So, exactly like payments, offline order
+// creates live in an explicit persisted outbox that the global OfflineSync drains
+// on reconnect — BEFORE payments (the pay endpoint needs the order to exist).
+// createOrder is idempotent on the client id, so a retried flush is safe.
+export interface QueuedOrder {
+  id: string;
+  tableId: string;
+  items: { productId: string; qty: number }[];
+  discount?: number;
+  queuedAt: number;
+}
+export const orderOutbox$ = observable<Record<string, QueuedOrder>>({});
+if (idb) {
+  syncObservable(orderOutbox$, { persist: { name: "order-outbox", plugin: idb } });
+}
+export function queueOrderCreate(o: QueuedOrder) {
+  orderOutbox$[o.id].set(o);
+}
+
+let flushingOrders = false;
+export async function flushOrders(): Promise<void> {
+  if (flushingOrders || typeof navigator === "undefined" || !navigator.onLine) return;
+  flushingOrders = true;
+  try {
+    const queued = orderOutbox$.get() ?? {};
+    for (const [key, o] of Object.entries(queued)) {
+      try {
+        await createOrder({
+          id: o.id,
+          tableId: o.tableId,
+          items: o.items,
+          ...(o.discount && o.discount > 0 ? { discount: o.discount } : {}),
+        });
+        orderOutbox$[key].delete(); // 201 created, or 200 idempotent-existing → done
+      } catch (e) {
+        const status = (e as { status?: number }).status;
+        // A genuine 409 = a DIFFERENT order already holds this table (our own id
+        // returns 200, not 409). Can't auto-reconcile → drop so we don't spin.
+        if (status === 409) {
+          orderOutbox$[key].delete();
+          console.warn("[offline] order create rejected (table busy):", o.id);
+        }
+        // network / 5xx → leave queued, retry next tick
+      }
+    }
+  } finally {
+    flushingOrders = false;
+  }
+}
 
 // ── Cash payment outbox ─────────────────────────────────────────────────────
 // Payment is a separate endpoint (not part of the order CRUD), and it must run

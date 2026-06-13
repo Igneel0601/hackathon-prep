@@ -5,7 +5,7 @@ import { createOrder, updateOrder, sendToKitchen, payOrder } from "@/lib/api-cli
 import type { Order, OrderItem, PaymentResponse } from "@/lib/api-types";
 import type { CartItem } from "./useCart";
 import { OFFLINE_ENABLED } from "@/lib/offline/flag";
-import { orders$, queuePayment } from "@/lib/offline/store";
+import { orders$, queuePayment, queueOrderCreate } from "@/lib/offline/store";
 
 type State =
   | { phase: "idle" }
@@ -99,6 +99,13 @@ export function useOrder() {
     // exists server-side (otherwise Send-to-Kitchen hits a 404 on an unsynced id).
     if (OFFLINE_ENABLED && typeof navigator !== "undefined" && !navigator.onLine) {
       try {
+        // Pay-time calls ensureOrder with [] (all lines already fired). There's
+        // nothing new to persist, and re-setting the order here would trigger a
+        // spurious PATCH that 409s once it's PAID — so just return what we have.
+        if (existing && items.length === 0) {
+          dispatch({ type: "ordered", order: existing });
+          return existing;
+        }
         const id = existing?.id ?? crypto.randomUUID();
         const local = buildLocalOrder(
           id,
@@ -109,6 +116,19 @@ export function useOrder() {
         );
         // set() on a new id → store's create(); assign on an existing id → update().
         orders$[id].set(local);
+        // Queue the create in the explicit outbox (the reliable sync path on
+        // reconnect — see store.ts). Only when there are items: the pay-time
+        // ensureOrder call passes [] (all lines already fired), and we must NOT
+        // overwrite the real queued order with an empty one.
+        if (items.length > 0) {
+          queueOrderCreate({
+            id,
+            tableId,
+            items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
+            discount: discount && discount > 0 ? discount : undefined,
+            queuedAt: Date.now(),
+          });
+        }
         dispatch({ type: "ordered", order: local });
         return local;
       } catch (e: unknown) {
