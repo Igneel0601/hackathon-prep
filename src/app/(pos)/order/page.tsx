@@ -28,7 +28,7 @@ function OrderView() {
   const [search, setSearch] = useState("");
 
   const { categories, products, loading: productsLoading } = useProducts(activeCategoryId ?? undefined);
-  const { items, totals, addProduct, increment, decrement, clear } = useCart();
+  const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, clear } = useCart();
   const { state: orderState, placeOrder, sendKitchen, pay } = useOrder();
 
   const [showPayment, setShowPayment] = useState(false);
@@ -51,7 +51,7 @@ function OrderView() {
     if (!tableId) return;
     let id = orderId;
     if (!id) {
-      const order = await placeOrder(tableId, items);
+      const order = await placeOrder(tableId, items, totals.discountAmt || undefined);
       if (!order) return;
       id = order.id;
     }
@@ -68,7 +68,7 @@ function OrderView() {
     if (payMethod === "CASH" && !cashReady) return;
     let id = orderId;
     if (!id) {
-      const order = await placeOrder(tableId, items);
+      const order = await placeOrder(tableId, items, totals.discountAmt || undefined);
       if (!order) return;
       id = order.id;
     }
@@ -194,6 +194,23 @@ function OrderView() {
         {/* Order summary + actions */}
         {!isEmpty && (
           <div className="border-t border-gray-200 p-4 space-y-3">
+            {/* Discount */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500 shrink-0">Discount %</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="0"
+                value={discountPct === 0 ? "" : discountPct}
+                onChange={(e) => {
+                  const v = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                  setDiscountPct(v);
+                }}
+                className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-blue-400"
+              />
+            </div>
+
             <OrderSummary
               subtotal={totals.subtotal}
               tax={totals.tax}
