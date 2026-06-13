@@ -7,7 +7,7 @@ import { TicketCard } from "./_components/TicketCard";
 export default function KdsPage() {
   const router = useRouter();
   const state = useKitchenTickets();
-  const { phase, tickets, advance } = state;
+  const { phase, tickets, completed, advance } = state;
   const errorMessage = state.phase === "error" ? state.message : null;
 
   const toCook = tickets.filter((t) => t.kitchenStatus === "TO_COOK");
@@ -145,7 +145,7 @@ export default function KdsPage() {
           </p>
         )}
 
-        {phase !== "loading" && tickets.length === 0 && (
+        {phase !== "loading" && tickets.length === 0 && completed.length === 0 && (
           <div style={{ marginTop: 96, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, opacity: 0.4 }}>
             <span style={{ fontSize: "2.5rem" }}>🍽️</span>
             <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9375rem", color: "#F0EDE8" }}>
@@ -155,7 +155,7 @@ export default function KdsPage() {
           </div>
         )}
 
-        {tickets.length > 0 && (
+        {(tickets.length > 0 || completed.length > 0) && (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {toCook.length > 0 && (
               <section>
@@ -183,6 +183,22 @@ export default function KdsPage() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, alignItems: "start" }} className="sm:grid-cols-3 lg:grid-cols-4">
                   {preparing.map((ticket) => (
+                    <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {completed.length > 0 && (
+              <section>
+                <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#16803C", boxShadow: "0 0 6px #16803C", display: "inline-block" }} />
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#16803C" }}>
+                    Completed — {completed.length}
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, alignItems: "start" }} className="sm:grid-cols-3 lg:grid-cols-4">
+                  {completed.map((ticket) => (
                     <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
                   ))}
                 </div>

@@ -28,9 +28,20 @@ const CONFIG = {
     btnColor: "#16803C",
     btnBorderColor: "rgba(22,128,60,0.28)",
   },
+  COMPLETED: {
+    bg: "#F1FBF4",
+    border: "#16803C",
+    badgeBg: "rgba(22,128,60,0.12)",
+    badgeColor: "#16803C",
+    timerColor: "#16803C",
+    tearBg: "#F1FBF4",
+    btnLabel: "",
+    btnColor: "#16803C",
+    btnBorderColor: "rgba(22,128,60,0.28)",
+  },
 } as const;
 
-function ElapsedTimer({ createdAt, status }: { createdAt: string; status: "TO_COOK" | "PREPARING" }) {
+function ElapsedTimer({ createdAt, status }: { createdAt: string; status: "TO_COOK" | "PREPARING" | "COMPLETED" }) {
   const [nowMs, dispatchNow] = useReducer((_: number, n: number) => n, 0);
 
   useEffect(() => {
@@ -84,9 +95,10 @@ interface Props {
 
 export function TicketCard({ ticket, onAdvance }: Props) {
   const status = ticket.kitchenStatus;
-  if (status !== "TO_COOK" && status !== "PREPARING") return null;
+  if (status !== "TO_COOK" && status !== "PREPARING" && status !== "COMPLETED") return null;
 
   const cfg = CONFIG[status];
+  const label = status === "TO_COOK" ? "To Cook" : status === "PREPARING" ? "Preparing" : "Completed";
   const timeStr = new Date(ticket.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
@@ -132,7 +144,7 @@ export function TicketCard({ ticket, onAdvance }: Props) {
                   whiteSpace: "nowrap",
                 }}
               >
-                {status === "TO_COOK" ? "To Cook" : "Preparing"}
+                {label}
               </span>
             </div>
           </div>
@@ -207,10 +219,23 @@ export function TicketCard({ ticket, onAdvance }: Props) {
               ))}
             </div>
 
-            <ElapsedTimer createdAt={ticket.createdAt} status={status} />
+            {status === "COMPLETED" ? (
+              <div
+                style={{
+                  display: "flex", alignItems: "center", gap: 5, fontFamily: MONO,
+                  fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.04em", color: "#16803C",
+                }}
+              >
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16803C", display: "inline-block" }} />
+                Done ✓
+              </div>
+            ) : (
+              <ElapsedTimer createdAt={ticket.createdAt} status={status} />
+            )}
           </div>
 
           {/* Action button */}
+          {cfg.btnLabel && (
           <button
             onClick={() => onAdvance(ticket.orderId, status)}
             style={{
@@ -234,6 +259,7 @@ export function TicketCard({ ticket, onAdvance }: Props) {
           >
             {cfg.btnLabel}
           </button>
+          )}
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { getOrders } from "@/lib/api-client";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
 import type { CartItem } from "./_hooks/useCart";
+import { Receipt } from "./_components/Receipt";
 import { useOrder } from "./_hooks/useOrder";
 import { CategoryTabs } from "./_components/CategoryTabs";
 import { ProductCard } from "./_components/ProductCard";
@@ -332,76 +333,58 @@ function OrderView() {
     const { payment, order } = orderState.result;
     return (
       <div
-        className="flex min-h-screen flex-col items-center justify-center p-8 print:block print:p-0"
+        className="flex min-h-screen flex-col items-center justify-center gap-5 p-8 print:block print:p-0"
         style={{ background: "#F5F0EB" }}
       >
-        <div
-          className="w-full max-w-sm rounded-2xl p-8 text-center print:max-w-full print:rounded-none print:shadow-none"
-          style={{ background: "#FDFAF5", boxShadow: "0 8px 40px rgba(13,5,2,0.12)" }}
-        >
-          <div className="mb-4 text-5xl print:hidden">✅</div>
-          <h2 className="text-2xl font-bold" style={{ fontFamily: "var(--cafe-font-display)", color: "#1A0A04" }}>
+        {/* Success badge */}
+        <div className="flex items-center gap-2 print:hidden">
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-full"
+            style={{ background: "rgba(22,128,60,0.14)", color: "#16803C" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </span>
+          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#16803C" }}>
             Payment Received
-          </h2>
-          <p className="mt-1 font-semibold" style={{ color: "#5C3020" }}>Odoo Cafe</p>
-          <p className="text-sm" style={{ color: "#9B6B55" }}>Order #{order.number}</p>
+          </span>
+        </div>
 
-          <div className="my-4 border-t border-dashed" style={{ borderColor: "rgba(92,48,32,0.20)" }} />
+        {/* Thermal receipt */}
+        <div className="print:mx-auto">
+          <Receipt
+            orderNumber={order.number}
+            createdAt={new Date().toISOString()}
+            items={items}
+            subtotal={order.subtotal}
+            tax={order.tax}
+            discount={order.discount}
+            total={order.total}
+            method={payment.method}
+            amountPaid={payment.amount}
+            changeDue={payment.changeDue}
+          />
+        </div>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between" style={{ color: "#9B6B55" }}>
-              <span>Subtotal</span>
-              <span className="font-semibold" style={{ color: "#1A0A04" }}>₹{parseFloat(order.subtotal).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between" style={{ color: "#9B6B55" }}>
-              <span>Tax</span>
-              <span className="font-semibold" style={{ color: "#1A0A04" }}>₹{parseFloat(order.tax).toFixed(2)}</span>
-            </div>
-            {parseFloat(order.discount) > 0 && (
-              <div className="flex justify-between font-medium" style={{ color: "#16803C" }}>
-                <span>Discount</span>
-                <span>−₹{parseFloat(order.discount).toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between font-semibold" style={{ color: "#1A0A04" }}>
-              <span>Total</span>
-              <span>₹{parseFloat(order.total).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between" style={{ color: "#9B6B55" }}>
-              <span>Method</span>
-              <span className="font-semibold" style={{ color: "#1A0A04" }}>{payment.method}</span>
-            </div>
-            <div className="flex justify-between" style={{ color: "#9B6B55" }}>
-              <span>Paid</span>
-              <span className="font-semibold" style={{ color: "#1A0A04" }}>₹{parseFloat(payment.amount).toFixed(2)}</span>
-            </div>
-            {payment.changeDue && (
-              <div className="flex justify-between font-semibold" style={{ color: "#16803C" }}>
-                <span>Change Due</span>
-                <span>₹{parseFloat(payment.changeDue).toFixed(2)}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="my-4 border-t border-dashed" style={{ borderColor: "rgba(92,48,32,0.20)" }} />
-          <p className="text-xs" style={{ color: "#9B6B55" }}>Thank you for visiting!</p>
-
-          <div className="mt-6 flex gap-2 print:hidden">
-            <button
-              onClick={() => window.print()}
-              className="flex-1 rounded-xl py-2.5 text-sm font-semibold"
-              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.22)", color: "#2A1008" }}
-            >
-              🖨️ Print
-            </button>
-            <button
-              onClick={() => { clear(); router.push("/"); }}
-              className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-              style={{ background: "#1A0A04", color: "#FAF3E8" }}
-            >
-              New Order
-            </button>
-          </div>
+        <div className="flex w-full max-w-xs gap-2 print:hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold"
+            style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.22)", color: "#2A1008" }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Print
+          </button>
+          <button
+            onClick={() => { clear(); router.push("/"); }}
+            className="flex-1 rounded-xl py-2.5 text-sm font-bold"
+            style={{ background: "#1A0A04", color: "#FAF3E8" }}
+          >
+            New Order
+          </button>
         </div>
       </div>
     );
