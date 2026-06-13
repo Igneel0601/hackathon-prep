@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const role = oneOf(body.role, "role", ["ADMIN", "EMPLOYEE"] as const);
     const password = str(body.password, "password", { min: 8, max: 200 });
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const user = await db.user.create({
       data: { name, email, role, passwordHash },
       select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },

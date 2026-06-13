@@ -4,7 +4,7 @@ import { type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ApiError, errorResponse, json, requireRole } from "@/lib/api";
 import { bool } from "@/lib/validate";
-import { assertNotSelf, assertNotLastAdmin } from "@/lib/admin-guards";
+import { assertNotSelf } from "@/lib/admin-guards";
 
 export async function PATCH(
   request: NextRequest,
@@ -21,17 +21,25 @@ export async function PATCH(
     }
     const active = bool(body.active, "active");
 
-    if (!active) {
-      // Deactivating: protect self + last admin.
-      assertNotSelf(id, me.id);
-      const target = await db.user.findUnique({ where: { id }, select: { role: true } });
-      if (target?.role === "ADMIN") await assertNotLastAdmin(id);
-    }
-
-    const user = await db.user.update({
-      where: { id },
-      data: { active },
-      select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+    const user = await db.$transaction(async (tx) => {
+      if (!active) {
+        // Deactivating: protect self + last admin. Lock the active-admin rows so
+        // concurrent deactivations can't both strand the cafe with zero admins.
+        assertNotSelf(id, me.id);
+        const target = await tx.user.findUnique({ where: { id }, select: { role: true } });
+        if (target?.role === "ADMIN") {
+          await tx.$queryRaw`SELECT id FROM "User" WHERE "role" = 'ADMIN' AND "active" = true FOR UPDATE`;
+          const others = await tx.user.count({
+            where: { role: "ADMIN", active: true, NOT: { id } },
+          });
+          if (others === 0) throw new ApiError(409, "Can't remove the last active admin");
+        }
+      }
+      return tx.user.update({
+        where: { id },
+        data: { active },
+        select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+      });
     });
     return json({ ...user, createdAt: user.createdAt.toISOString() });
   } catch (e) {

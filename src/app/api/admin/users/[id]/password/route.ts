@@ -19,7 +19,7 @@ export async function POST(
       throw new ApiError(400, "Invalid JSON body");
     }
     const password = str(body.password, "password", { min: 8, max: 200 });
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     await db.user.update({ where: { id }, data: { passwordHash } });
     return json({ ok: true });
   } catch (e) {

@@ -86,5 +86,18 @@ export async function getOpenPosSession(userId: string) {
     orderBy: { openedAt: "desc" },
   });
   if (existing) return existing;
-  return db.posSession.create({ data: { userId } });
+  try {
+    return await db.posSession.create({ data: { userId } });
+  } catch (e) {
+    // Lost the open-session race (partial-unique on one open session per user) —
+    // another concurrent request just opened it; read that one instead.
+    if (e && typeof e === "object" && "code" in e && (e as { code: unknown }).code === "P2002") {
+      const open = await db.posSession.findFirst({
+        where: { userId, closedAt: null },
+        orderBy: { openedAt: "desc" },
+      });
+      if (open) return open;
+    }
+    throw e;
+  }
 }

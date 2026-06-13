@@ -4,7 +4,7 @@
 
 **Purpose:** Take payment for a Draft order. Creates a Payment record and marks the order as PAID in a single transaction.
 
-**Auth:** Requires a valid session (any authenticated employee). Returns 401 if signed out.
+**Auth:** Requires a valid session (any authenticated employee). Returns 401 if signed out. The order is looked up **scoped to the cashier's open POS session** — an order belonging to a different session is treated as not found (`404`), so one shift can't pay another shift's order.
 
 > **Enabled-method guard:** the chosen `method` must be enabled in the admin Payment-Method settings; a disabled method returns **409** (`<METHOD> payments are currently disabled`), even if a stale client offered it.
 
@@ -45,7 +45,7 @@
   - `"amountReceived is required for CASH payments"`
   - `"amountReceived is less than order total"`
 - **401** — `{ "error": "Not authenticated" }`
-- **404** — `{ "error": "Order not found" }`
+- **404** — `{ "error": "Order not found" }` — unknown order, or it belongs to a different POS session.
 - **409** — `{ "error": "Order is not payable" }` — order is not in DRAFT status (already PAID or CANCELLED).
 - **500** — `{ "error": "Internal server error" }`
 
