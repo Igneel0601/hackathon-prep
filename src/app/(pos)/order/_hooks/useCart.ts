@@ -15,10 +15,13 @@ type Action =
   | { type: "add"; product: Product }
   | { type: "inc"; productId: string }
   | { type: "dec"; productId: string }
+  | { type: "load"; items: CartItem[] }
   | { type: "clear" };
 
 function reducer(items: CartItem[], action: Action): CartItem[] {
   switch (action.type) {
+    case "load":
+      return action.items;
     case "add": {
       const existing = items.find((i) => i.productId === action.product.id);
       if (existing) {
@@ -74,6 +77,7 @@ export function useCart() {
     addProduct: (product: Product) => dispatch({ type: "add", product }),
     increment: (productId: string) => dispatch({ type: "inc", productId }),
     decrement: (productId: string) => dispatch({ type: "dec", productId }),
+    loadItems: (cartItems: CartItem[]) => dispatch({ type: "load", items: cartItems }),
     clear: () => dispatch({ type: "clear" }),
   };
 }

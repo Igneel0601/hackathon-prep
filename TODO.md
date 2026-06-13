@@ -1,26 +1,36 @@
 # TODO
 
-## Now — team building the MVP (Cafe POS)
-Branch off `dev`, PR back into `dev`. Spine in `docs/SCOPE.md`; endpoints in `docs/apis/`.
-- [ ] **Vinayak** — `feat/ui-shell`: shadcn init, app shell + top nav, components from the mockup
-- [ ] **Rajat** — `feat/order-view`: floor → Order View → cart → cash pay (`/api/tables`, `/api/products`, `/api/orders`, `…/payment`)
-- [ ] **Mukund** — `feat/kitchen-display`: Send-to-Kitchen → KDS (poll 2-3s) → Orders list (`…/kitchen`, `/api/kitchen`, `/api/orders`)
-- [ ] **Vaibhav** — integration, PR review, wire login UI to `signIn()`; add-on APIs when spine is green
+## MVP — DONE ✅ (demoable end-to-end)
+Login → pick table → build order → Send to Kitchen → **KDS** → pay → receipt.
+- [x] Auth (email/password + Google), login screen, route guard
+- [x] Order View — products, cart, qty, discount, totals
+- [x] Send to Kitchen + Kitchen Display (`/kds`, live polling, stage advance)
+- [x] Payment — Cash (change) + Card/UPI (simulated) → receipt (print)
+- [x] Session orders list (`/orders`) + home nav
+- [x] Per-table order persistence — resume draft, no duplicates, tables free on pay
 
-## Optional / later
-- [ ] Real Google OAuth creds (secondary login) — email/password already works without them
-- [ ] `DIRECT_URL` lock — share only `DATABASE_URL` in chat to enforce only-Vaibhav-migrates
-- [ ] Bump CI actions off Node 20 (cosmetic deprecation warning)
-- [ ] Add-ons (only after MVP demos clean) — see `docs/SCOPE.md`: coupons, UPI/Card, dashboard, customer mgmt
+## Now — make it demo-grade
+- [ ] **Vinayak** — visual reskin to the mockup (current UI is functional, not designed)
+- [ ] **Mukund** — QA pass per `docs/mukund.md`; file + verify bugs
+- [ ] Fill `docs/DEMO.md` talking points + rehearse the click-path
+- [ ] Promote `dev → main` at the demo checkpoint
+
+## Add-ons (only if MVP polish is solid) — see `docs/SCOPE.md`
+- [ ] Cancel order (→ CANCELLED) to vacate an abandoned table without paying
+- [ ] Admin CRUD (products / categories / tables / payment methods) — currently seeded
+- [ ] Coupons & automated promotions
+- [ ] Reporting dashboard
+- [ ] UPI QR (real QR from saved UPI ID), order detail view, customer management
+
+## Optional / housekeeping
+- [ ] Real Google OAuth creds (secondary login; email/password works without)
+- [ ] `DIRECT_URL` lock to enforce only-Vaibhav-migrates
+- [ ] Bump CI actions off Node 20 (cosmetic warning)
 
 ---
 
-## Done ✅
-- Next.js 16 + React 19 + TS + Tailwind, pnpm; `feat → dev → main` flow, rulesets + CI (lint/typecheck/build + doc-sync)
-- Prisma 7 + Neon — schema, migrations, seed live (6 products / 3 categories / 1 floor + 4 tables)
-- **Problem locked: Odoo Cafe POS** — brief + mockup in `docs/{brief,design}`; MVP cut + plan-aware split in `docs/{SCOPE,TEAM}`
-- **POS API layer** — 7 routes (products, tables, orders CRUD, payment, kitchen, KDS) + docs, Copilot-reviewed
-- **Auth** — email/password (primary) + Google (secondary), JWT sessions; `POST /api/signup`
-  - Seed logins: `cashier@test.com` / `cashier123` · `admin@test.com` / `admin123`
-- Docs: AGENTS, ARCHITECTURE (decision log + data model), TEAM, SCOPE, DEMO, seed, API index
-- Secrets (`DATABASE_URL` / `AUTH_SECRET`) shared with team
+## Foundation (done earlier)
+- Next.js 16 + React 19 + TS + Tailwind + shadcn; pnpm
+- Prisma 7 + Neon — schema, migrations, seed; `feat → dev → main` flow, rulesets + CI
+- Full POS API layer + typed client (`src/lib/api-*`); docs per route (doc-sync CI)
+- Vitest + Testing Library (`pnpm test`) — hook/component tests
