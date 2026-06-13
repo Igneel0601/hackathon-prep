@@ -16,6 +16,8 @@ import { CartLine } from "./_components/CartLine";
 import { OrderSummary } from "./_components/OrderSummary";
 import { productImage } from "@/lib/product-image";
 import { PosUserMenu } from "@/components/PosUserMenu";
+import { OfflineBadge } from "@/components/OfflineBadge";
+import { printKitchenChit } from "./_components/KitchenChit";
 
 export default function OrderPage() {
   return (
@@ -364,6 +366,19 @@ function OrderView() {
     if (!tableId) return;
     const unfired = items.filter((i) => i.round === 0);
     if (unfired.length === 0) return;
+    // Offline: the KDS can't be reached, so print a kitchen chit at the pass; the
+    // order syncs to the board on reconnect. (Full offline send/queue lands with
+    // the Legend-State order-screen rewire.)
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      const nextRound = items.reduce((m, i) => Math.max(m, i.round), 0) + 1;
+      printKitchenChit({
+        tableNumber,
+        orderNumber: orderState.phase === "ordered" ? orderState.order.number : null,
+        round: nextRound,
+        items: unfired.map((i) => ({ name: i.name, qty: i.qty })),
+      });
+      return;
+    }
     const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
     if (!order) return;
     await sendKitchen(order);
@@ -513,6 +528,7 @@ function OrderView() {
             )}
           </span>
           <div className="ml-auto flex shrink-0 items-center gap-2">
+            <OfflineBadge />
             <button
               onClick={() => router.push("/orders")}
               className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:block"
