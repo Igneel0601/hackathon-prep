@@ -115,6 +115,12 @@ export async function PATCH(
     const discountRaw = body.discount;
     const customerIdInput = body.customerId;
 
+    // Items already sent to the kitchen are being cooked — block changes to them
+    // (discount/customer may still be edited). kitchenStatus is the cooking state.
+    if (rawItems !== undefined && order.kitchenStatus !== "NONE") {
+      throw new ApiError(409, "Items already sent to kitchen and can't be changed");
+    }
+
     // Validate customer update if provided
     let resolvedCustomerId = order.customerId;
     if (customerIdInput !== undefined) {
@@ -217,27 +223,31 @@ export async function PATCH(
     }
 
     const total = subtotal.plus(taxTotal).minus(discount);
+    if (total.lessThan(0)) {
+      throw new ApiError(400, "discount cannot exceed the order subtotal + tax");
+    }
 
-    // Transactional update: delete old items + create new ones if items supplied
+    // Transactional update with a compare-and-swap guard: updateMany can put
+    // `status` in the WHERE (order.update can't), so a payment landing between
+    // the read above and this write makes the guard match 0 rows → 409, instead
+    // of silently editing a now-PAID order or losing a concurrent edit.
     const updatedOrder = await db.$transaction(async (tx) => {
-      if (itemsCreateData !== null) {
-        await tx.orderItem.deleteMany({ where: { orderId: id } });
+      const guard = await tx.order.updateMany({
+        where: { id, status: "DRAFT" },
+        data: { customerId: resolvedCustomerId, discount, subtotal, tax: taxTotal, total },
+      });
+      if (guard.count === 0) {
+        throw new ApiError(409, "Order is no longer editable");
       }
 
-      return tx.order.update({
-        where: { id },
-        data: {
-          customerId: resolvedCustomerId,
-          discount,
-          subtotal,
-          tax: taxTotal,
-          total,
-          ...(itemsCreateData !== null
-            ? { items: { create: itemsCreateData } }
-            : {}),
-        },
-        include: ORDER_INCLUDE,
-      });
+      if (itemsCreateData !== null) {
+        await tx.orderItem.deleteMany({ where: { orderId: id } });
+        await tx.orderItem.createMany({
+          data: itemsCreateData.map((item) => ({ ...item, orderId: id })),
+        });
+      }
+
+      return tx.order.findUniqueOrThrow({ where: { id }, include: ORDER_INCLUDE });
     });
 
     return json(serializeOrder(updatedOrder));

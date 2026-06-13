@@ -56,8 +56,9 @@ All arithmetic uses `Prisma.Decimal` (backed by `decimal.js`). Float math is nev
   }
   ```
   Money fields (`subtotal`, `tax`, `discount`, `total`, `unitPrice`, `lineTotal`) are **strings**.
-- **400** — Validation error (missing/invalid fields, unknown table/product, inactive product).
+- **400** — Validation error (missing/invalid fields, unknown table/product, inactive product, or `discount` greater than `subtotal + tax`).
 - **401** — Not authenticated.
+- **409** — `"This table already has an open order"` — one DRAFT order per table is enforced by a partial-unique DB index, so a concurrent/duplicate open (or a retried request) is rejected instead of creating a second draft. This makes order creation **idempotent per table**: the safe client flow is to resume the existing draft (`GET /api/orders?tableId=…&status=DRAFT`) on a 409.
 - **500** — Unexpected server error.
 
 ### Example
@@ -102,6 +103,6 @@ curl 'http://localhost:3000/api/orders?status=DRAFT'
 
 ## Notes / errors
 
-- A POS session is opened implicitly if none is open — cashiers don't need a separate "open session" step.
+- A POS session is opened implicitly if none is open — cashiers don't need a separate "open session" step. One open session per user is enforced by a partial-unique DB index; a concurrent first action just attaches to the session the other request opened.
 - Products must be `active: true` — attempting to order a deactivated product returns `400`.
 - Seed data: see `docs/seed/README.md` for known table/product IDs usable in tests.

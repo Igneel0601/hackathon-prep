@@ -188,20 +188,33 @@ export async function POST(request: Request) {
     });
 
     const total = subtotal.plus(taxTotal).minus(discount);
+    if (total.lessThan(0)) {
+      throw new ApiError(400, "discount cannot exceed the order subtotal + tax");
+    }
 
-    const order = await db.order.create({
-      data: {
-        tableId,
-        sessionId: session.id,
-        customerId: customerId as string | null,
-        discount,
-        subtotal,
-        tax: taxTotal,
-        total,
-        items: { create: itemsData },
-      },
-      include: ORDER_INCLUDE,
-    });
+    let order;
+    try {
+      order = await db.order.create({
+        data: {
+          tableId,
+          sessionId: session.id,
+          customerId: customerId as string | null,
+          discount,
+          subtotal,
+          tax: taxTotal,
+          total,
+          items: { create: itemsData },
+        },
+        include: ORDER_INCLUDE,
+      });
+    } catch (e) {
+      // Partial-unique index (one DRAFT order per table) → a concurrent/duplicate
+      // open lost the race. Surface the existing draft instead of a generic 409.
+      if (e && typeof e === "object" && "code" in e && (e as { code: unknown }).code === "P2002") {
+        throw new ApiError(409, "This table already has an open order");
+      }
+      throw e;
+    }
 
     return json(serializeOrder(order), 201);
   } catch (e) {

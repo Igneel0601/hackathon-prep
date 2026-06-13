@@ -1,5 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
-import { ApiError, errorResponse, json, requireEmployee } from "@/lib/api";
+import { ApiError, errorResponse, getOpenPosSession, json, requireEmployee } from "@/lib/api";
 import { db } from "@/lib/db";
 
 type PaymentMethod = "CASH" | "CARD" | "UPI";
@@ -15,11 +15,13 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireEmployee();
+    const user = await requireEmployee();
+    const session = await getOpenPosSession(user.id);
     const { id } = await params;
 
-    const order = await db.order.findUnique({
-      where: { id },
+    // Scope to the cashier's open session so one shift can't pay another's order.
+    const order = await db.order.findFirst({
+      where: { id, sessionId: session.id },
       select: {
         id: true,
         number: true,
