@@ -53,7 +53,7 @@ export default function WelcomePage() {
 
           {/* Service */}
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/login?callbackUrl=/tables")}
             className="group flex flex-1 flex-col items-center gap-3 rounded-3xl px-8 py-10 transition-all active:scale-[0.98]"
             style={{ background: "rgba(255,255,255,0.06)", color: "#FAF3E8", border: "1.5px solid rgba(255,188,13,0.45)", backdropFilter: "blur(8px)" }}
           >

@@ -6,16 +6,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export function proxy(req: NextRequest) {
+  // The root is always the kiosk entry (Self Checkout vs Service) for everyone.
+  if (req.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/welcome", req.url));
+  }
+
   const hasSession =
     req.cookies.has("authjs.session-token") ||
     req.cookies.has("__Secure-authjs.session-token");
 
   if (!hasSession) {
-    // Guests landing on the root see the kiosk entry (Self Checkout vs Service);
-    // any other gated page bounces to login.
-    if (req.nextUrl.pathname === "/") {
-      return NextResponse.redirect(new URL("/welcome", req.url));
-    }
     const url = new URL("/login", req.url);
     url.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(url);
