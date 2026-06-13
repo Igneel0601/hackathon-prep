@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useKitchenTickets } from "./_hooks/useKitchenTickets";
 import { TicketCard } from "./_components/TicketCard";
+import { UserMenu } from "@/components/UserMenu";
 
 export default function KdsPage() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function KdsPage() {
   const preparing = tickets.filter((t) => t.kitchenStatus === "PREPARING");
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#191C27" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#1A0A04" }}>
       {/* Header */}
       <header
         style={{
@@ -84,8 +85,8 @@ export default function KdsPage() {
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                background: phase === "error" ? "#EF4444" : "#4ade80",
-                boxShadow: phase === "error" ? "0 0 6px #EF4444" : "0 0 6px #4ade80",
+                background: phase === "error" ? "#C99A86" : "#FFBC0D",
+                boxShadow: phase === "error" ? "0 0 6px #C99A86" : "0 0 6px #FFBC0D",
                 flexShrink: 0,
                 display: "inline-block",
               }}
@@ -114,26 +115,8 @@ export default function KdsPage() {
             + New Order
           </button>
 
-          {/* Avatar */}
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              background: "#2A1008",
-              border: "1.5px solid rgba(255,255,255,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: "#FAF3E8",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            N
-          </div>
+          {/* Account menu */}
+          <UserMenu tone="dark" />
         </div>
       </header>
 
@@ -176,8 +159,8 @@ export default function KdsPage() {
             {preparing.length > 0 && (
               <section>
                 <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#C41A1A", boxShadow: "0 0 6px #C41A1A", display: "inline-block" }} />
-                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#C41A1A" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#D4A97A", boxShadow: "0 0 6px #D4A97A", display: "inline-block" }} />
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#D4A97A" }}>
                     Preparing — {preparing.length}
                   </span>
                 </div>
@@ -192,8 +175,8 @@ export default function KdsPage() {
             {completed.length > 0 && (
               <section>
                 <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#16803C", boxShadow: "0 0 6px #16803C", display: "inline-block" }} />
-                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#16803C" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#9B6B55", boxShadow: "0 0 6px #9B6B55", display: "inline-block" }} />
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9B6B55" }}>
                     Completed — {completed.length}
                   </span>
                 </div>

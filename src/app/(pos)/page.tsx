@@ -7,6 +7,7 @@ import { FloorPickerModal } from "./order/_components/FloorPickerModal";
 import { useTables } from "./order/_hooks/useTables";
 import { useProducts } from "./order/_hooks/useProducts";
 import { productImage } from "@/lib/product-image";
+import { UserMenu } from "@/components/UserMenu";
 import type { TableInfo } from "@/lib/api-types";
 
 const DISPLAY = "var(--cafe-font-display)";
@@ -54,13 +55,7 @@ export default function PosHomePage() {
             </svg>
             <span className="text-sm" style={{ color: "#9B6B55" }}>Coffee</span>
           </div>
-          <button
-            onClick={() => router.push("/admin")}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold"
-            style={{ background: "#2A1008", color: "#FAF3E8" }}
-          >
-            N
-          </button>
+          <UserMenu />
         </div>
       </header>
 
@@ -91,7 +86,7 @@ export default function PosHomePage() {
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
                 </span>
               </button>
-              <button onClick={() => router.push("/orders")} className="text-sm font-semibold" style={{ color: "#C2570A" }}>
+              <button onClick={() => router.push("/orders")} className="text-sm font-semibold" style={{ color: "#5C3020" }}>
                 More menu
               </button>
             </div>
@@ -127,7 +122,7 @@ export default function PosHomePage() {
         {featured.length > 0 && (
           <div
             className="relative z-10 mb-10 rounded-[28px] px-5 py-7 md:px-10 md:py-8"
-            style={{ background: "#F0820E", boxShadow: "0 24px 60px rgba(240,130,14,0.28)" }}
+            style={{ background: "#2A1008", boxShadow: "0 24px 60px rgba(13,5,2,0.34)" }}
           >
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {featured.map((p) => (

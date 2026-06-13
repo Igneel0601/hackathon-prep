@@ -15,6 +15,7 @@ import { ProductCard } from "./_components/ProductCard";
 import { CartLine } from "./_components/CartLine";
 import { OrderSummary } from "./_components/OrderSummary";
 import { productImage } from "@/lib/product-image";
+import { UserMenu } from "@/components/UserMenu";
 
 export default function OrderPage() {
   return (
@@ -114,7 +115,7 @@ function CartContent({
         />
 
         {orderPhase === "error" && (
-          <p className="rounded-lg px-3 py-2 text-xs" style={{ background: "rgba(139,0,0,0.10)", color: "#C41A1A" }}>
+          <p className="rounded-lg px-3 py-2 text-xs" style={{ background: "rgba(122,46,18,0.10)", color: "#7A2E12" }}>
             {orderErrorMsg}
           </p>
         )}
@@ -145,7 +146,7 @@ function CartContent({
               {enabledMethods.map(({ method: m }) => {
                 const active = payMethod === m;
                 const activeStyles: Record<string, React.CSSProperties> = {
-                  CASH: { background: "rgba(22,128,60,0.10)", color: "#16803C" },
+                  CASH: { background: "rgba(92,48,32,0.10)", color: "#5C3020" },
                   CARD: { background: "#1A0A04", color: "#FAF3E8" },
                   UPI:  { background: "#FFBC0D", color: "#1A0A04" },
                 };
@@ -175,10 +176,10 @@ function CartContent({
                 {cashReady && (
                   <div
                     className="flex justify-between rounded-lg px-3 py-1.5 text-sm"
-                    style={{ background: "rgba(22,128,60,0.08)", border: "1px solid rgba(22,128,60,0.18)" }}
+                    style={{ background: "rgba(92,48,32,0.08)", border: "1px solid rgba(92,48,32,0.18)" }}
                   >
-                    <span style={{ color: "#16803C" }}>Change</span>
-                    <span className="font-bold" style={{ color: "#16803C", fontFamily: "var(--cafe-font-display)" }}>
+                    <span style={{ color: "#5C3020" }}>Change</span>
+                    <span className="font-bold" style={{ color: "#5C3020", fontFamily: "var(--cafe-font-display)" }}>
                       ₹{(parseFloat(amountReceived) - parseFloat(totals.total)).toFixed(2)}
                     </span>
                   </div>
@@ -361,13 +362,13 @@ function OrderView() {
         <div className="flex items-center gap-2 print:hidden">
           <span
             className="flex h-7 w-7 items-center justify-center rounded-full"
-            style={{ background: "rgba(22,128,60,0.14)", color: "#16803C" }}
+            style={{ background: "rgba(92,48,32,0.10)", color: "#5C3020" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5"/>
             </svg>
           </span>
-          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#16803C" }}>
+          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#5C3020" }}>
             Payment Received
           </span>
         </div>
@@ -435,6 +436,23 @@ function OrderView() {
           <span className="truncate font-bold" style={{ color: "#1A0A04" }}>
             Order — Table {tableId ? `(${tableId.slice(-4)})` : ""}
           </span>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => router.push("/orders")}
+              className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:block"
+              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.16)", color: "#5C3020" }}
+            >
+              Orders
+            </button>
+            <button
+              onClick={() => router.push("/kds")}
+              className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:block"
+              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.16)", color: "#5C3020" }}
+            >
+              Kitchen
+            </button>
+            <UserMenu />
+          </div>
         </header>
 
         {/* Product browser */}
@@ -499,7 +517,7 @@ function OrderView() {
             <button
               onClick={() => { clear(); setShowPayment(false); }}
               className="text-xs font-semibold"
-              style={{ color: "#C41A1A" }}
+              style={{ color: "#7A2E12" }}
             >
               Clear
             </button>
@@ -565,7 +583,7 @@ function OrderView() {
               <button
                 onClick={() => { clear(); setShowPayment(false); }}
                 className="text-xs font-semibold"
-                style={{ color: "#C41A1A" }}
+                style={{ color: "#7A2E12" }}
               >
                 Clear
               </button>

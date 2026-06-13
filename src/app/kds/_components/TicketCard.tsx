@@ -7,37 +7,37 @@ const MONO = "'Courier Prime', 'Courier New', Courier, monospace";
 
 const CONFIG = {
   TO_COOK: {
-    bg: "#FFFCE8",
-    border: "#E8A800",
-    badgeBg: "rgba(232,168,0,0.18)",
+    bg: "#FAF3E8",
+    border: "#FFBC0D",
+    badgeBg: "rgba(255,188,13,0.20)",
     badgeColor: "#8B5E00",
     timerColor: "#8B5E00",
-    tearBg: "#FFFCE8",
+    tearBg: "#FAF3E8",
     btnLabel: "Start Preparing",
     btnColor: "#1A0A04",
     btnBorderColor: "rgba(92,48,32,0.22)",
   },
   PREPARING: {
-    bg: "#FFF4F0",
-    border: "#C41A1A",
-    badgeBg: "rgba(196,26,26,0.10)",
-    badgeColor: "#C41A1A",
-    timerColor: "#C41A1A",
-    tearBg: "#FFF4F0",
+    bg: "#F2E4CC",
+    border: "#5C3020",
+    badgeBg: "rgba(92,48,32,0.14)",
+    badgeColor: "#5C3020",
+    timerColor: "#5C3020",
+    tearBg: "#F2E4CC",
     btnLabel: "Mark Complete",
-    btnColor: "#16803C",
-    btnBorderColor: "rgba(22,128,60,0.28)",
+    btnColor: "#1A0A04",
+    btnBorderColor: "rgba(92,48,32,0.28)",
   },
   COMPLETED: {
-    bg: "#F1FBF4",
-    border: "#16803C",
-    badgeBg: "rgba(22,128,60,0.12)",
-    badgeColor: "#16803C",
-    timerColor: "#16803C",
-    tearBg: "#F1FBF4",
+    bg: "#FDFAF5",
+    border: "#9B6B55",
+    badgeBg: "rgba(92,48,32,0.10)",
+    badgeColor: "#9B6B55",
+    timerColor: "#9B6B55",
+    tearBg: "#FDFAF5",
     btnLabel: "",
-    btnColor: "#16803C",
-    btnBorderColor: "rgba(22,128,60,0.28)",
+    btnColor: "#5C3020",
+    btnBorderColor: "rgba(92,48,32,0.22)",
   },
 } as const;
 
@@ -58,7 +58,7 @@ function ElapsedTimer({ createdAt, status }: { createdAt: string; status: "TO_CO
   const label = mins > 0 ? `${mins}m ${secs % 60}s` : `${secs}s`;
   const cfg = CONFIG[status];
   const isWarn = mins >= 8;
-  const color = isWarn ? "#C41A1A" : cfg.timerColor;
+  const color = isWarn ? "#7A2E12" : cfg.timerColor;
 
   return (
     <div
@@ -223,10 +223,10 @@ export function TicketCard({ ticket, onAdvance }: Props) {
               <div
                 style={{
                   display: "flex", alignItems: "center", gap: 5, fontFamily: MONO,
-                  fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.04em", color: "#16803C",
+                  fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.04em", color: "#9B6B55",
                 }}
               >
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16803C", display: "inline-block" }} />
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#9B6B55", display: "inline-block" }} />
                 Done ✓
               </div>
             ) : (
@@ -270,7 +270,7 @@ export function TicketCard({ ticket, onAdvance }: Props) {
           backgroundRepeat: "repeat-x",
           backgroundPosition: "3px 0",
           backgroundSize: "14px 14px",
-          backgroundImage: `radial-gradient(circle at 7px 14px, #191C27 7px, ${cfg.tearBg} 7px)`,
+          backgroundImage: `radial-gradient(circle at 7px 14px, #1A0A04 7px, ${cfg.tearBg} 7px)`,
         }}
       />
     </div>
