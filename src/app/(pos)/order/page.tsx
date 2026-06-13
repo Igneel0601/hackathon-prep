@@ -18,6 +18,8 @@ import { productImage } from "@/lib/product-image";
 import { PosUserMenu } from "@/components/PosUserMenu";
 import { OfflineBadge } from "@/components/OfflineBadge";
 import { printKitchenChit } from "./_components/KitchenChit";
+import { OFFLINE_ENABLED } from "@/lib/offline/flag";
+import { orders$ } from "@/lib/offline/store";
 
 export default function OrderPage() {
   return (
@@ -303,8 +305,18 @@ function OrderView() {
   // Load the table's open DRAFT order into the cart (resume). Reused after a
   // Send-to-Kitchen so the freshly-fired lines pick up their new round and lock.
   const loadDraft = useCallback(async () => {
-    const orders = await getOrders({ tableId, status: "DRAFT" });
-    const draft = orders[0];
+    let draft;
+    try {
+      draft = (await getOrders({ tableId, status: "DRAFT" }))[0];
+    } catch (e) {
+      // Offline: fall back to the Legend-State cache (IndexedDB) so a reload
+      // while disconnected rehydrates the table's draft from local storage.
+      if (!OFFLINE_ENABLED) throw e;
+      const cached = orders$.get() ?? {};
+      draft = Object.values(cached).find(
+        (o) => o.tableId === tableId && o.status === "DRAFT",
+      );
+    }
     if (!draft) return;
     const taxByProduct = new Map(products.map((p) => [p.id, p.tax]));
     loadItems(
@@ -379,7 +391,7 @@ function OrderView() {
       });
       return;
     }
-    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
+    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined, totals);
     if (!order) return;
     await sendKitchen(order);
     await loadDraft(); // refresh rounds so the just-fired lines lock
@@ -390,7 +402,7 @@ function OrderView() {
     if (payMethod === "CASH" && !cashReady) return;
     // Persist any un-fired lines onto the bill first, then take payment.
     const unfired = items.filter((i) => i.round === 0);
-    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
+    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined, totals);
     if (!order) return;
     await pay(order.id, {
       method: payMethod,
