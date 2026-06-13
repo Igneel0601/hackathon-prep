@@ -20,7 +20,7 @@
 - Prisma 7 + Neon — migrated + seeded, connection verified
 - Pooled/direct URL split (`DATABASE_URL` / `DIRECT_URL`)
 - Auth.js v5 wired (Google provider, DB sessions); `AUTH_SECRET` set
-- Pre-push hook (typecheck + API-doc-sync); CI (lint/typecheck/build) green
+- CI gates all PRs: lint/typecheck/build + API-doc-sync (no local pre-push hook)
 - Docs: AGENTS.md, ARCHITECTURE, TEAM.md, API template+index, seed, Copilot instructions
 - Onboarding README; DB-safety guard in AGENTS.md
 - Secrets shared with team

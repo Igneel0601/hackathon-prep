@@ -16,7 +16,7 @@ Feature verticals get real names once the problem statement is known (see bottom
 
 - **`prisma/schema.prisma` is Vaibhav-only.** Need a model/field? Ask Vaibhav — he adds it and runs the migration. Multiple editors on the schema = merge conflicts + broken migrations.
 - **Branch per change** (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/<thing>`) → PR into `dev`. Small PRs, merge often. `dev → main` is a promotion PR at checkpoints (use a merge commit, not squash). Direct push to `dev`/`main` blocked. Don't push broken builds.
-- **Each vertical owns its docs** — `docs/apis/<path>/route.md` per route (enforced by the pre-push hook).
+- **Each vertical owns its docs** — `docs/apis/<path>/route.md` per route (enforced by the `doc-sync` CI check on every PR).
 - **Shared UI lives in `src/components/`** (Vinayak's). Verticals import, don't rebuild.
 
 ## Migrations (shared Neon DB)

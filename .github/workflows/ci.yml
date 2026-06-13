@@ -7,6 +7,28 @@ on:
     branches: [main, dev]
 
 jobs:
+  doc-sync:
+    # API route changed without its mirrored doc -> fail. PR-only (needs a base to diff).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check API-doc sync
+        run: |
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          routes=$(echo "$changed" | grep -E '^src/app/api/.*/route\.(ts|tsx|js)$' || true)
+          docs=$(echo "$changed"   | grep -E '^docs/apis/' || true)
+          if [ -n "$routes" ] && [ -z "$docs" ]; then
+            echo "::error::API route(s) changed but no doc under docs/apis/ updated:"
+            echo "$routes" | sed 's/^/    /'
+            exit 1
+          fi
+          echo "doc-sync OK"
+
   build:
     runs-on: ubuntu-latest
     steps:
