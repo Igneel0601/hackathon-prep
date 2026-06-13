@@ -2,34 +2,37 @@
 // See docs/apis/tables/route.md.
 import { db } from "@/lib/db";
 import { json, errorResponse, requireUser } from "@/lib/api";
+import { withDbRetry } from "@/lib/db-retry";
 
 export async function GET() {
   try {
     await requireUser();
 
-    const floors = await db.floor.findMany({
-      select: {
-        id: true,
-        name: true,
-        tables: {
-          select: {
-            id: true,
-            number: true,
-            seats: true,
-            active: true,
-            _count: {
-              select: {
-                orders: {
-                  where: { status: "DRAFT" },
+    const floors = await withDbRetry(() =>
+      db.floor.findMany({
+        select: {
+          id: true,
+          name: true,
+          tables: {
+            select: {
+              id: true,
+              number: true,
+              seats: true,
+              active: true,
+              _count: {
+                select: {
+                  orders: {
+                    where: { status: "DRAFT" },
+                  },
                 },
               },
             },
+            orderBy: { number: "asc" },
           },
-          orderBy: { number: "asc" },
         },
-      },
-      orderBy: { name: "asc" },
-    });
+        orderBy: { name: "asc" },
+      }),
+    );
 
     const result = floors.map((floor) => ({
       id: floor.id,

@@ -8,6 +8,7 @@ import {
   json,
   requireEmployee,
 } from "@/lib/api";
+import { withDbRetry } from "@/lib/db-retry";
 
 // ─── Shape helpers ────────────────────────────────────────────────────────────
 
@@ -261,16 +262,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const orders = await db.order.findMany({
-      where: {
-        // Floor-shared: orders belong to the table, not the cashier's session —
-        // any employee sees/serves any table's order. sessionId is provenance only.
-        ...(status ? { status: status as "DRAFT" | "PAID" | "CANCELLED" } : {}),
-        ...(tableId ? { tableId } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      include: ORDER_INCLUDE,
-    });
+    const orders = await withDbRetry(() =>
+      db.order.findMany({
+        where: {
+          // Floor-shared: orders belong to the table, not the cashier's session —
+          // any employee sees/serves any table's order. sessionId is provenance only.
+          ...(status ? { status: status as "DRAFT" | "PAID" | "CANCELLED" } : {}),
+          ...(tableId ? { tableId } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        include: ORDER_INCLUDE,
+      }),
+    );
 
     return json(orders.map(serializeOrder));
   } catch (e) {
