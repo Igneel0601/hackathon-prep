@@ -4,7 +4,9 @@ import { useKitchenTickets } from "./_hooks/useKitchenTickets";
 import { TicketCard } from "./_components/TicketCard";
 
 export default function KdsPage() {
-  const { phase, tickets, advance } = useKitchenTickets();
+  const state = useKitchenTickets();
+  const { phase, tickets, advance } = state;
+  const errorMessage = state.phase === "error" ? state.message : null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -13,7 +15,7 @@ export default function KdsPage() {
         <h1 className="text-xl font-bold tracking-wide">Kitchen Display</h1>
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <span className={`inline-block h-2 w-2 rounded-full ${phase === "error" ? "bg-red-500" : "bg-green-400"}`} />
-          {phase === "error" ? "Connection error" : "Live • refreshing every 3s"}
+          {errorMessage ?? "Live • refreshing every 3s"}
         </div>
       </div>
 

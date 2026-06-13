@@ -68,8 +68,10 @@ export function useKitchenTickets() {
     dispatch({ type: "optimistic", orderId, nextStatus });
     try {
       await sendToKitchen(orderId, "advance");
-    } catch {
-      // next poll will correct state
+    } catch (e: unknown) {
+      // Surface the failure; the next poll (≤3s) reconciles the real state.
+      const message = e instanceof Error ? e.message : "Couldn't update ticket";
+      dispatch({ type: "error", message });
     }
   }
 
