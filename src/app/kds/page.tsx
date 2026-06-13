@@ -96,7 +96,7 @@ export default function KdsPage() {
 
           {/* + New Order */}
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/tables")}
             style={{
               height: 32,
               padding: "0 14px",

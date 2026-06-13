@@ -140,7 +140,7 @@ export function AdminNav({ user, badges }: AdminNavProps) {
           <p className="truncate text-[0.625rem]" style={{ color: "rgba(212,169,122,0.60)" }}>{user.role}</p>
         </div>
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ callbackUrl: "/" })}
           aria-label="Log out"
           className="flex h-7 w-7 items-center justify-center rounded-md transition-colors"
           style={{ color: "rgba(250,243,232,0.55)" }}
