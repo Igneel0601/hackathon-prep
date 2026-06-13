@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Boldonse&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -117,12 +118,38 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ── Cafe DS tokens ── */
+:root {
+  --cafe-gold:        #FFBC0D;
+  --cafe-gold-hover:  #FFD04A;
+  --cafe-cherry:      #8B0000;
+  --cafe-espresso-50: #F5EDE8;
+  --cafe-espresso-600:#3D1C0E;
+  --cafe-espresso-700:#2A1008;
+  --cafe-espresso-800:#1A0A04;
+  --cafe-espresso-900:#0D0502;
+  --cafe-cream-50:    #FDFAF5;
+  --cafe-cream-100:   #FAF3E8;
+  --cafe-cream-200:   #F2E4CC;
+  --cafe-cream-400:   #D4A97A;
+  --cafe-brown-300:   #9B6B55;
+  --cafe-brown-500:   #5C3020;
+  --cafe-font-display:'Boldonse', 'Barlow Condensed', system-ui, sans-serif;
+  --cafe-font-body:   'Poppins', 'Barlow', system-ui, sans-serif;
+  --cafe-font-mono:   'Courier Prime', 'Courier New', Courier, monospace;
+  --font-display:     'Boldonse', 'Barlow Condensed', system-ui, sans-serif;
+  --font-body:        'Poppins', 'Barlow', system-ui, sans-serif;
+  --font-mono:        'Courier Prime', 'Courier New', Courier, monospace;
+  --color-gold:       #FFBC0D;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--cafe-font-body);
   }
   html {
     @apply font-sans;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAdminProducts } from "./_hooks/useAdminProducts";
 import { useAdminCategories } from "../categories/_hooks/useAdminCategories";
 import { ProductDialog } from "./_components/ProductDialog";
+import { AdminPageHeader } from "../_components/AdminPageHeader";
 import type { AdminProduct } from "@/lib/api-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,14 +23,13 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<AdminProduct | "new" | null>(null);
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-500">The menu. Inactive products are hidden from the POS.</p>
-        </div>
-        <Button onClick={() => setEditing("new")}>+ New Product</Button>
-      </div>
+    <div className="p-6 lg:p-8">
+      <AdminPageHeader
+        title="Products"
+        subtitle="Manage menu, prices & tax"
+        actionLabel="Add Product"
+        onAction={() => setEditing("new")}
+      />
 
       <div className="mb-4 flex gap-3">
         <Input

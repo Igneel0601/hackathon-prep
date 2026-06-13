@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAdminCategories } from "./_hooks/useAdminCategories";
+import { AdminPageHeader } from "../_components/AdminPageHeader";
 import type { AdminCategory } from "@/lib/api-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,14 +28,13 @@ export default function CategoriesPage() {
   const [editing, setEditing] = useState<AdminCategory | "new" | null>(null);
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-sm text-gray-500">Color shows on POS tabs & product cards.</p>
-        </div>
-        <Button onClick={() => setEditing("new")}>+ New Category</Button>
-      </div>
+    <div className="p-6 lg:p-8">
+      <AdminPageHeader
+        title="Categories"
+        subtitle="Group products, set colours"
+        actionLabel="Add New"
+        onAction={() => setEditing("new")}
+      />
 
       {loading && <p className="text-sm text-gray-400">Loading…</p>}
       {error && (
