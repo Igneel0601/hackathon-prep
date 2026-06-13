@@ -6,11 +6,23 @@ import { db } from "@/lib/db";
 import { ApiError, errorResponse, json } from "@/lib/api";
 import { getKioskSession } from "@/lib/kiosk";
 import { sendReceiptEmail } from "@/lib/mailer";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// This endpoint is PUBLIC and unauthenticated, fires straight to the kitchen,
+// and sends email — so it carries the same bounds as POST /api/self/orders.
+const MAX_ITEMS = 50;
+const MAX_QTY = 99;
+const MAX_ORDERS_PER_MIN = 10; // per device/IP
+const MAX_EMAILS_PER_HOUR = 5; // per email address — blunt using our SMTP to bomb a victim
 
 export async function POST(request: Request) {
   try {
+    // Per-device throttle: stops scripted kitchen/email flooding.
+    if (!rateLimit(`self-checkout:${clientIp(request)}`, MAX_ORDERS_PER_MIN, 60_000)) {
+      throw new ApiError(429, "Too many orders from this device — please wait a moment.");
+    }
+
     let body: { email?: unknown; tableId?: unknown; items?: unknown };
     try {
       body = (await request.json()) as typeof body;
@@ -22,6 +34,11 @@ export async function POST(request: Request) {
     if (!email || !EMAIL_RE.test(email)) {
       throw new ApiError(400, "a valid email is required");
     }
+    // Per-recipient throttle: the `to` address is attacker-controlled, so cap how
+    // often we'll email any one address through our SMTP (anti-bombing / reputation).
+    if (!rateLimit(`self-checkout-email:${email}`, MAX_EMAILS_PER_HOUR, 3_600_000)) {
+      throw new ApiError(429, "Too many receipts requested for this email — please wait.");
+    }
 
     const tableId = body.tableId;
     if (!tableId || typeof tableId !== "string") {
@@ -32,6 +49,9 @@ export async function POST(request: Request) {
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
       throw new ApiError(400, "items must be a non-empty array");
     }
+    if (rawItems.length > MAX_ITEMS) {
+      throw new ApiError(400, `too many items (max ${MAX_ITEMS} per order)`);
+    }
     const itemInputs = rawItems.map((item, i) => {
       if (
         !item ||
@@ -39,11 +59,12 @@ export async function POST(request: Request) {
         typeof item.productId !== "string" ||
         typeof item.qty !== "number" ||
         !Number.isInteger(item.qty) ||
-        item.qty < 1
+        item.qty < 1 ||
+        item.qty > MAX_QTY
       ) {
         throw new ApiError(
           400,
-          `items[${i}]: productId (string) and qty (positive integer) are required`,
+          `items[${i}]: productId (string) and qty (integer 1–${MAX_QTY}) are required`,
         );
       }
       return { productId: item.productId as string, qty: item.qty as number };

@@ -2,10 +2,14 @@
 // the public self-checkout kiosk's table picker. No auth.
 // See docs/apis/self-checkout/tables/route.md.
 import { db } from "@/lib/db";
-import { json, errorResponse } from "@/lib/api";
+import { json, errorResponse, ApiError } from "@/lib/api";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    if (!rateLimit(`self-checkout-tables:${clientIp(request)}`, 60, 60_000)) {
+      throw new ApiError(429, "Too many requests — please slow down.");
+    }
     const floors = await db.floor.findMany({
       select: {
         id: true,

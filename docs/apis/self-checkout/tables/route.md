@@ -40,3 +40,4 @@ curl http://localhost:3000/api/self-checkout/tables
 
 - The kiosk UI filters to `hasActiveOrder === false` and lets the guest pick from those.
 - `POST /api/self-checkout` re-checks occupancy server-side (race-safe) before creating the order.
+- Public + unauthenticated → rate-limited to **60 requests / minute per IP** (`src/lib/rate-limit.ts`); over that returns **429**.

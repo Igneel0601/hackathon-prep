@@ -33,3 +33,4 @@ curl http://localhost:3000/api/self-checkout/menu
 ## Notes / errors
 
 - Only `active: true` products are returned.
+- Public + unauthenticated → rate-limited to **60 requests / minute per IP** (`src/lib/rate-limit.ts`); over that returns **429**.

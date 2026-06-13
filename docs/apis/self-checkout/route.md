@@ -25,8 +25,18 @@ and `docs/seed/README.md`).
   - `email` — required; must look like a valid email address.
   - `tableId` — required; must reference an existing, **active**, currently **free** Table
     (no open DRAFT order). Occupied tables are rejected.
-  - `items` — required non-empty array; each item needs `productId` (string) and `qty`
-    (positive integer). Products must exist and be active.
+  - `items` — required array, **1–50 entries**; each item needs `productId` (string) and `qty`
+    (integer **1–99**). Products must exist and be active.
+
+## Abuse protection (public endpoint)
+
+Unauthenticated, fires to the kitchen, and sends email — so it is rate-limited (per-process,
+in-memory; see `src/lib/rate-limit.ts`):
+
+- **≤ 10 orders / minute per device** (client IP) → else **429**.
+- **≤ 5 receipts / hour per email address** (the `to` is caller-supplied) → else **429**. Caps
+  abuse of our SMTP to bomb a victim.
+- Item-count (≤ 50) and per-item `qty` (≤ 99) bounds prevent overflow / oversized orders.
 
 ## Response
 
@@ -34,9 +44,10 @@ and `docs/seed/README.md`).
   ```json
   { "orderNumber": 12, "tableNumber": 3, "subtotal": "440", "tax": "22", "total": "462" }
   ```
-- **400** — Validation error (bad email, missing/invalid fields, unknown table/product, inactive
-  table/product).
+- **400** — Validation error (bad email, missing/invalid fields, too many items, `qty` out of
+  range, unknown table/product, inactive table/product).
 - **409** — Table is occupied (already has a DRAFT order) — race lost or stale table list.
+- **429** — Rate limit exceeded (per-device order rate, or per-email receipt rate).
 
 ## Example
 
