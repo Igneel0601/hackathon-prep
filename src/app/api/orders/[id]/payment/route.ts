@@ -18,6 +18,7 @@ export async function POST(
     await requireEmployee();
     const { id } = await params;
 
+    // Floor-shared: any employee can take payment for any table's order.
     const order = await db.order.findUnique({
       where: { id },
       select: {

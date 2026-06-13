@@ -49,16 +49,20 @@ export async function PATCH(
     if (method === "UPI" && resultingEnabled && !resultingUpiId) {
       throw new ApiError(400, "UPI requires a UPI ID before it can be enabled");
     }
-    if (!resultingEnabled) {
-      const othersEnabled = await db.paymentMethodSetting.count({
-        where: { enabled: true, NOT: { method } },
-      });
-      if (othersEnabled === 0) {
-        throw new ApiError(409, "At least one payment method must stay enabled");
+    // Lock the enabled rows so two concurrent disables can't both pass the
+    // "another method still enabled" check and leave the till with no method.
+    const updated = await db.$transaction(async (tx) => {
+      if (!resultingEnabled) {
+        await tx.$queryRaw`SELECT method FROM "PaymentMethodSetting" WHERE "enabled" = true FOR UPDATE`;
+        const othersEnabled = await tx.paymentMethodSetting.count({
+          where: { enabled: true, NOT: { method } },
+        });
+        if (othersEnabled === 0) {
+          throw new ApiError(409, "At least one payment method must stay enabled");
+        }
       }
-    }
-
-    const updated = await db.paymentMethodSetting.update({ where: { method }, data });
+      return tx.paymentMethodSetting.update({ where: { method }, data });
+    });
     return json({
       method: updated.method,
       enabled: updated.enabled,

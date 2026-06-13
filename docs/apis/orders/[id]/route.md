@@ -4,7 +4,7 @@
 
 **Purpose:** Update a DRAFT order — replace its line items, change the discount, or assign/remove a customer. Totals are always recomputed server-side.
 
-**Auth:** Requires a valid session (any authenticated employee/admin). Returns `401` if signed out.
+**Auth:** Requires a valid session (any authenticated employee/admin). Returns `401` if signed out. **Floor-shared:** any employee can edit any table's order — edits are not scoped to the cashier's session.
 
 ---
 
@@ -27,9 +27,13 @@
   - `discount` — if provided, replaces the current discount amount (non-negative number, absolute value not percent).
   - `customerId` — if provided, sets the customer (`null` to clear). Must reference an existing Customer when a string.
 
-### DRAFT-only rule
+### DRAFT-only rule + concurrency guards
 
 Only orders with `status === "DRAFT"` can be edited. Attempting to PATCH a `PAID` or `CANCELLED` order returns **409**.
+
+Two further guards close edit races:
+- **Items already sent to the kitchen can't be changed.** If `kitchenStatus !== "NONE"` (the order is cooking) and the body includes `items`, returns **409** (`"Items already sent to kitchen and can't be changed"`). `discount`/`customerId` may still be edited.
+- **Compare-and-swap on write.** The DRAFT check is re-asserted *inside* the transaction via `updateMany({ where: { id, status: "DRAFT" } })`. If a payment lands between the read and the write, the guard matches 0 rows and returns **409** (`"Order is no longer editable"`) instead of silently editing a now-PAID order or losing a concurrent edit.
 
 ### Money recomputation
 
@@ -63,10 +67,10 @@ The item replacement and order update run inside a single DB transaction to avoi
   }
   ```
   Money fields are **strings**.
-- **400** — Validation error (invalid fields, unknown product/customer, inactive product).
+- **400** — Validation error (invalid fields, unknown product/customer, inactive product, or `discount` greater than `subtotal + tax`).
 - **401** — Not authenticated.
 - **404** — Order not found.
-- **409** — Order is not in DRAFT status.
+- **409** — Order is not in DRAFT status, items already sent to kitchen, or it became un-editable concurrently.
 - **500** — Unexpected server error.
 
 ### Example
