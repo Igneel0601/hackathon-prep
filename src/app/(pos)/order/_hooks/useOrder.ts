@@ -32,12 +32,13 @@ function reducer(_: State, action: Action): State {
 export function useOrder() {
   const [state, dispatch] = useReducer(reducer, { phase: "idle" });
 
-  async function placeOrder(tableId: string, items: CartItem[]) {
+  async function placeOrder(tableId: string, items: CartItem[], discount?: number) {
     dispatch({ type: "submitting" });
     try {
       const order = await createOrder({
         tableId,
         items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
+        ...(discount ? { discount } : {}),
       });
       dispatch({ type: "ordered", order });
       return order;
