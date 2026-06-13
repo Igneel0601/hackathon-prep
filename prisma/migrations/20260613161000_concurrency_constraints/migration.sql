@@ -1,26 +1,43 @@
 -- Robustness hardening: DB-level invariants the app computes but never enforced.
--- Authored for review; apply with `pnpm db:migrate` (schema owner only — shared Neon).
+-- Apply with `prisma migrate deploy` (schema owner only — shared Neon). Prisma wraps
+-- this whole file in ONE transaction, so the LOCK + de-dupe + index build are atomic.
 --
--- PRE-FLIGHT: CHECK constraints fail to apply if existing rows violate them.
--- Before running, confirm these all return 0 rows:
---   SELECT 1 FROM "Order"   WHERE "discount" < 0 OR "discount" > "subtotal" + "tax";
---   SELECT 1 FROM "Product" WHERE "tax" < 0;
---   SELECT 1 FROM "Payment" WHERE "amount" <= 0;
--- And no duplicate open drafts/sessions exist:
---   SELECT "tableId" FROM "Order" WHERE "status" = 'DRAFT' GROUP BY "tableId" HAVING count(*) > 1;
---   SELECT "userId"  FROM "PosSession" WHERE "closedAt" IS NULL GROUP BY "userId" HAVING count(*) > 1;
--- Seed data is already compliant; if a dirty dev DB trips these, `pnpm db:seed` after a reset.
+-- Why the LOCK: the shared DB has concurrent writers (teammates' POS instances). A
+-- plain "clean the dupes, then CREATE UNIQUE INDEX" loses the race — a new DRAFT can
+-- be inserted in the gap and the index build fails (23505). Taking SHARE locks blocks
+-- writes (reads still fine) for the ~1s this runs, so no row sneaks in between the
+-- de-dupe and the index. Writers resume the instant we commit — now bounded by the
+-- index (a 2nd open draft → P2002 → the app's friendly 409).
+--
+-- The de-dupe keeps the NEWEST open row per group and cancels/closes the rest — the
+-- exact state the app's "one draft per table / one open till" rule intends. This is a
+-- one-time data repair co-located with the constraint that prevents the mess recurring.
 
--- One open order per table: the partial-unique index is the real "one draft per
--- table" guarantee + makes POST /api/orders idempotent (retry → P2002 → 409).
+-- ── One open order per table ────────────────────────────────────────────────
+LOCK TABLE "Order" IN SHARE MODE;
+
+UPDATE "Order" SET status = 'CANCELLED'
+WHERE status = 'DRAFT' AND id NOT IN (
+  SELECT DISTINCT ON ("tableId") id FROM "Order"
+  WHERE status = 'DRAFT' ORDER BY "tableId", "createdAt" DESC
+);
+
 CREATE UNIQUE INDEX "Order_one_draft_per_table"
   ON "Order"("tableId") WHERE "status" = 'DRAFT';
 
--- One open till per cashier (getOpenPosSession is find-or-create with no guard).
+-- ── One open till per cashier ───────────────────────────────────────────────
+LOCK TABLE "PosSession" IN SHARE MODE;
+
+UPDATE "PosSession" SET "closedAt" = now()
+WHERE "closedAt" IS NULL AND id NOT IN (
+  SELECT DISTINCT ON ("userId") id FROM "PosSession"
+  WHERE "closedAt" IS NULL ORDER BY "userId", "openedAt" DESC
+);
+
 CREATE UNIQUE INDEX "PosSession_one_open_per_user"
   ON "PosSession"("userId") WHERE "closedAt" IS NULL;
 
--- Domain invariants — hold even against a direct SQL write, not just the app.
+-- ── Domain invariants — hold even against a direct SQL write ─────────────────
 ALTER TABLE "Order"
   ADD CONSTRAINT "Order_discount_bounds" CHECK ("discount" >= 0 AND "discount" <= "subtotal" + "tax");
 ALTER TABLE "Product"
