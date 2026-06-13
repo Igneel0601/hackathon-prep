@@ -72,6 +72,7 @@ export interface Order {
   items: OrderItem[];
   customer: { id: string; name: string } | null;
   createdAt: string; // ISO
+  updatedAt?: string; // ISO — drives Legend-State offline change detection (fieldUpdatedAt)
 }
 
 /** Trimmed order returned by the payment + kitchen endpoints (no items/customer). */
@@ -137,6 +138,7 @@ export interface PaymentResponse {
 
 // ─── Request bodies ──────────────────────────────────────────────────────────
 export interface CreateOrderBody {
+  id?: string; // optional client-supplied cuid (offline) — makes create idempotent
   tableId: string;
   items: { productId: string; qty: number }[];
   customerId?: string | null;

@@ -18,6 +18,7 @@ function serializeOrder(order: {
   customerId: string | null;
   sessionId: string;
   createdAt: Date;
+  updatedAt: Date;
   items: {
     id: string;
     productId: string;
@@ -56,6 +57,7 @@ function serializeOrder(order: {
       ? { id: order.customer.id, name: order.customer.name }
       : null,
     createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
   };
 }
 

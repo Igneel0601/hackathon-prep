@@ -24,6 +24,7 @@ function serializeOrder(order: {
   customerId: string | null;
   sessionId: string;
   createdAt: Date;
+  updatedAt: Date;
   items: {
     id: string;
     productId: string;
@@ -62,6 +63,7 @@ function serializeOrder(order: {
       ? { id: order.customer.id, name: order.customer.name }
       : null,
     createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
   };
 }
 
@@ -89,6 +91,7 @@ export async function POST(request: Request) {
     const session = await getOpenPosSession(user.id);
 
     let body: {
+      id?: unknown;
       tableId?: unknown;
       items?: unknown;
       customerId?: unknown;
@@ -98,6 +101,14 @@ export async function POST(request: Request) {
       body = (await request.json()) as typeof body;
     } catch {
       throw new ApiError(400, "Invalid JSON body");
+    }
+
+    // Offline: the client supplies its own id (cuid) so local ↔ server records
+    // match and a queued-then-retried create is idempotent (return the existing row).
+    const clientId = typeof body.id === "string" && body.id ? body.id : undefined;
+    if (clientId) {
+      const existing = await db.order.findUnique({ where: { id: clientId }, include: ORDER_INCLUDE });
+      if (existing) return json(serializeOrder(existing), 200);
     }
 
     const tableId = body.tableId;
@@ -202,6 +213,7 @@ export async function POST(request: Request) {
     try {
       order = await db.order.create({
         data: {
+          ...(clientId ? { id: clientId } : {}),
           tableId,
           sessionId: session.id,
           customerId: customerId as string | null,
@@ -214,9 +226,14 @@ export async function POST(request: Request) {
         include: ORDER_INCLUDE,
       });
     } catch (e) {
-      // Partial-unique index (one DRAFT order per table) → a concurrent/duplicate
-      // open lost the race. Surface the existing draft instead of a generic 409.
       if (e && typeof e === "object" && "code" in e && (e as { code: unknown }).code === "P2002") {
+        // Lost a create race. If it's our own client id that already landed, that's
+        // an idempotent replay → return the existing order. Otherwise it's the
+        // one-draft-per-table index → another open order exists for this table.
+        if (clientId) {
+          const existing = await db.order.findUnique({ where: { id: clientId }, include: ORDER_INCLUDE });
+          if (existing) return json(serializeOrder(existing), 200);
+        }
         throw new ApiError(409, "This table already has an open order");
       }
       throw e;
