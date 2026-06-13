@@ -18,7 +18,7 @@ const KITCHEN_BADGE: Record<string, string> = {
 
 export default function OrdersPage() {
   const router = useRouter();
-  const state = useOrders();
+  const { refetch, ...state } = useOrders();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -31,6 +31,12 @@ export default function OrdersPage() {
             ← Tables
           </button>
           <h1 className="text-xl font-bold text-gray-900">Session Orders</h1>
+          <button
+            onClick={refetch}
+            className="ml-auto rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            ↻ Refresh
+          </button>
         </div>
 
         {state.phase === "loading" && (
@@ -38,7 +44,10 @@ export default function OrdersPage() {
         )}
 
         {state.phase === "error" && (
-          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{state.message}</p>
+          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            {state.message} —{" "}
+            <button onClick={refetch} className="underline">retry</button>
+          </p>
         )}
 
         {state.phase === "ready" && state.orders.length === 0 && (
