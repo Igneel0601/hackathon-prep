@@ -10,4 +10,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "database" },
   // Reads AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET from env.
   providers: [Google],
+  callbacks: {
+    // Expose the DB user's id + role on the session (db-session strategy passes `user`).
+    // Typed in src/types/next-auth.d.ts.
+    session({ session, user }) {
+      session.user.id = user.id;
+      session.user.role = (user as { role?: "ADMIN" | "EMPLOYEE" }).role ?? "EMPLOYEE";
+      return session;
+    },
+  },
 });
