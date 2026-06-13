@@ -262,3 +262,37 @@ export async function PATCH(
     return errorResponse(e);
   }
 }
+
+// ─── DELETE /api/orders/[id] — void an unpaid order, freeing its table ─────────
+//
+// "Customer came and went": cancel a DRAFT order so the table reads free again
+// (a table is occupied iff it has a DRAFT order). Floor-shared, so any employee
+// can void any table's open order. PAID orders can't be voided — they already
+// freed the table by leaving DRAFT. CAS-guarded so a payment can't slip in
+// between read and write; cancelling also drops the order's KDS tickets (the
+// kitchen query excludes CANCELLED).
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await requireEmployee();
+    const { id } = await params;
+
+    const cancelled = await db.order.updateMany({
+      where: { id, status: "DRAFT" },
+      data: { status: "CANCELLED" },
+    });
+
+    if (cancelled.count === 0) {
+      // Either it doesn't exist or it's already PAID/CANCELLED.
+      const exists = await db.order.findUnique({ where: { id }, select: { status: true } });
+      if (!exists) throw new ApiError(404, `Order "${id}" not found`);
+      throw new ApiError(409, `Only draft orders can be voided (order is ${exists.status})`);
+    }
+
+    return json({ id, status: "CANCELLED" });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}

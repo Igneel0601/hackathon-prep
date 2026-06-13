@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useKitchenTickets } from "./_hooks/useKitchenTickets";
 import { TicketCard } from "./_components/TicketCard";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 export default function KdsPage() {
   const router = useRouter();
@@ -114,26 +115,8 @@ export default function KdsPage() {
             + New Order
           </button>
 
-          {/* Avatar */}
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              background: "#2A1008",
-              border: "1.5px solid rgba(255,255,255,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: "#FAF3E8",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            N
-          </div>
+          {/* Account menu */}
+          <PosUserMenu />
         </div>
       </header>
 

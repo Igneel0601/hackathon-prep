@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getOrders } from "@/lib/api-client";
+import { getOrders, voidOrder } from "@/lib/api-client";
 import { QRCodeSVG } from "qrcode.react";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
@@ -15,6 +15,7 @@ import { ProductCard } from "./_components/ProductCard";
 import { CartLine } from "./_components/CartLine";
 import { OrderSummary } from "./_components/OrderSummary";
 import { productImage } from "@/lib/product-image";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 export default function OrderPage() {
   return (
@@ -383,6 +384,22 @@ function OrderView() {
     });
   }
 
+  // Customer left without paying: void the draft (if one was persisted) and
+  // free the table. No persisted order yet → nothing to cancel, just leave.
+  async function handleVoid() {
+    const existingId = orderState.phase === "ordered" ? orderState.order.id : null;
+    if (!window.confirm("Void this order and free the table? This can't be undone.")) return;
+    if (existingId) {
+      try {
+        await voidOrder(existingId);
+      } catch {
+        // best-effort: still clear locally and return to the floor
+      }
+    }
+    clear();
+    router.push("/tables");
+  }
+
   function openPayment() {
     setPayMethod(enabledMethods[0]?.method ?? "CASH");
     setAmountReceived("");
@@ -457,7 +474,7 @@ function OrderView() {
             Print
           </button>
           <button
-            onClick={() => { clear(); router.push("/"); }}
+            onClick={() => { clear(); router.push("/tables"); }}
             className="flex-1 rounded-xl py-2.5 text-sm font-bold"
             style={{ background: "#1A0A04", color: "#FAF3E8" }}
           >
@@ -479,7 +496,7 @@ function OrderView() {
           style={{ height: "56px", background: "#FDFAF5", borderBottom: "1px solid rgba(92,48,32,0.10)" }}
         >
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/tables")}
             className="flex shrink-0 items-center gap-1 text-sm"
             style={{ color: "#9B6B55" }}
           >
@@ -495,6 +512,21 @@ function OrderView() {
               <span className="font-normal" style={{ color: "#9B6B55" }}> · Order #{orderState.order.number}</span>
             )}
           </span>
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            {orderState.phase === "ordered" && (
+              <button
+                onClick={handleVoid}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                style={{ border: "1.5px solid rgba(196,26,26,0.30)", color: "#C41A1A", background: "#fff" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Free Table
+              </button>
+            )}
+            <PosUserMenu />
+          </div>
         </header>
 
         {/* Product browser */}
