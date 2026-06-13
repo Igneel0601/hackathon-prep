@@ -20,5 +20,16 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 | PATCH/DELETE | `/api/admin/categories/[id]` | [admin/categories/[id]/route.md](./admin/categories/[id]/route.md) | Admin: update / delete a category |
 | GET/POST | `/api/admin/products` | [admin/products/route.md](./admin/products/route.md) | Admin: list / create products (on-the-fly category) |
 | PATCH/DELETE | `/api/admin/products/[id]` | [admin/products/[id]/route.md](./admin/products/[id]/route.md) | Admin: update / archive-or-delete a product |
+| GET | `/api/admin/payment-methods` | [admin/payment-methods/route.md](./admin/payment-methods/route.md) | Admin: list payment-method settings |
+| PATCH | `/api/admin/payment-methods/[method]` | [admin/payment-methods/[method]/route.md](./admin/payment-methods/[method]/route.md) | Admin: toggle/configure a payment method |
+| GET | `/api/payment-methods` | [payment-methods/route.md](./payment-methods/route.md) | POS: enabled methods for checkout |
+| GET/POST | `/api/admin/floors` | [admin/floors/route.md](./admin/floors/route.md) | Admin: list / create floors |
+| PATCH/DELETE | `/api/admin/floors/[id]` | [admin/floors/[id]/route.md](./admin/floors/[id]/route.md) | Admin: rename / delete a floor |
+| POST | `/api/admin/tables` | [admin/tables/route.md](./admin/tables/route.md) | Admin: create a table |
+| PATCH/DELETE | `/api/admin/tables/[id]` | [admin/tables/[id]/route.md](./admin/tables/[id]/route.md) | Admin: update / archive-or-delete a table |
+| GET/POST | `/api/admin/users` | [admin/users/route.md](./admin/users/route.md) | Admin: list / create users |
+| PATCH/DELETE | `/api/admin/users/[id]` | [admin/users/[id]/route.md](./admin/users/[id]/route.md) | Admin: update / archive-or-delete a user |
+| POST | `/api/admin/users/[id]/password` | [admin/users/[id]/password/route.md](./admin/users/[id]/password/route.md) | Admin: set a user's password |
+| PATCH | `/api/admin/users/[id]/archive` | [admin/users/[id]/archive/route.md](./admin/users/[id]/archive/route.md) | Admin: archive/restore a user |
 
 > Rows above are pre-registered for the parallel API build. Each route's `route.md` is authored on its own branch alongside the handler.

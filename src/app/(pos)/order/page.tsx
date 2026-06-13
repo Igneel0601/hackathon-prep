@@ -3,9 +3,11 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getOrders } from "@/lib/api-client";
+import { QRCodeSVG } from "qrcode.react";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
 import { useOrder } from "./_hooks/useOrder";
+import { useEnabledPaymentMethods } from "./_hooks/useEnabledPaymentMethods";
 import { CategoryTabs } from "./_components/CategoryTabs";
 import { ProductCard } from "./_components/ProductCard";
 import { CartLine } from "./_components/CartLine";
@@ -31,6 +33,8 @@ function OrderView() {
   const { categories, products, loading: productsLoading } = useProducts(activeCategoryId ?? undefined);
   const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, loadItems, clear } = useCart();
   const { state: orderState, ensureOrder, resumeExisting, sendKitchen, pay } = useOrder();
+  const { methods: enabledMethods } = useEnabledPaymentMethods();
+  const upiId = enabledMethods.find((m) => m.method === "UPI")?.upiId ?? null;
 
   // Resume the table's open DRAFT order (if any) once, after products load
   // (products give us each line's tax rate). One draft per table.
@@ -107,7 +111,7 @@ function OrderView() {
   }
 
   function openPayment() {
-    setPayMethod("CASH");
+    setPayMethod(enabledMethods[0]?.method ?? "CASH");
     setAmountReceived("");
     setPayReference("");
     setShowPayment(true);
@@ -289,7 +293,7 @@ function OrderView() {
               <div className="space-y-3">
                 {/* Method tabs */}
                 <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
-                  {(["CASH", "CARD", "UPI"] as const).map((m) => (
+                  {enabledMethods.map(({ method: m }) => (
                     <button
                       key={m}
                       onClick={() => { setPayMethod(m); setAmountReceived(""); setPayReference(""); }}
@@ -333,15 +337,27 @@ function OrderView() {
                   />
                 )}
 
-                {/* UPI fields */}
+                {/* UPI fields — QR generated from the admin-saved UPI ID */}
                 {payMethod === "UPI" && (
-                  <input
-                    type="text"
-                    placeholder="UPI reference / note (optional)"
-                    value={payReference}
-                    onChange={(e) => setPayReference(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                  />
+                  <div className="flex flex-col items-center gap-2">
+                    {upiId ? (
+                      <>
+                        <QRCodeSVG value={`upi://pay?pa=${upiId}&am=${totals.total}&cu=INR`} size={140} />
+                        <p className="text-xs text-gray-500">
+                          Scan to pay ₹{parseFloat(totals.total).toFixed(2)} · {upiId}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-gray-400">No UPI ID configured in admin</p>
+                    )}
+                    <input
+                      type="text"
+                      placeholder="UPI reference / note (optional)"
+                      value={payReference}
+                      onChange={(e) => setPayReference(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                    />
+                  </div>
                 )}
 
                 <div className="flex gap-2">

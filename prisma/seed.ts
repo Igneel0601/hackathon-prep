@@ -79,6 +79,23 @@ async function main() {
       create: { floorId: ground.id, number, seats: 4, active: true },
     });
   }
+
+  // ─── Payment method settings (one row per method) ───────────────────────────
+  await prisma.paymentMethodSetting.upsert({
+    where: { method: "CASH" },
+    update: {},
+    create: { method: "CASH", enabled: true },
+  });
+  await prisma.paymentMethodSetting.upsert({
+    where: { method: "CARD" },
+    update: {},
+    create: { method: "CARD", enabled: true },
+  });
+  await prisma.paymentMethodSetting.upsert({
+    where: { method: "UPI" },
+    update: {},
+    create: { method: "UPI", enabled: true, upiId: "cafe@okhdfc" },
+  });
 }
 
 main()
