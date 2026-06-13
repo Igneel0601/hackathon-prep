@@ -10,9 +10,32 @@ The **known state** Claude (and humans) can assume when testing. Keep in sync wi
 
 Document every record a test might depend on. Update this table whenever `prisma/seed.ts` changes.
 
-> ⚠️ Current data is a PLACEHOLDER — replace once the real models exist.
-
 ### Users
-| email | name | notes |
-|-------|------|-------|
-| `alice@test.com` | Alice | starter test user |
+| email | name | role | notes |
+|-------|------|------|-------|
+| `admin@test.com` | Admin | ADMIN | backend/admin login |
+| `cashier@test.com` | Cashier | EMPLOYEE | POS terminal login |
+
+### Categories
+| name | color |
+|------|-------|
+| Coffee | `#6f4e37` |
+| Food | `#e07a3f` |
+| Desserts | `#c84b6e` |
+
+### Products
+| name | category | price | tax % | sendToKitchen |
+|------|----------|------:|------:|:-------------:|
+| Espresso | Coffee | 120 | 5 | no |
+| Cappuccino | Coffee | 160 | 5 | no |
+| Cold Brew | Coffee | 180 | 5 | no |
+| Veg Sandwich | Food | 150 | 5 | yes |
+| Margherita Pizza | Food | 280 | 5 | yes |
+| Chocolate Brownie | Desserts | 110 | 5 | yes |
+
+### Floor & tables
+| floor | tables | seats each |
+|-------|--------|-----------|
+| Ground Floor (`id: seed-floor-ground`) | 1, 2, 3, 4 | 4 |
+
+> No orders/sessions seeded — those are created live during the demo.
