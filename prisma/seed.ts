@@ -23,6 +23,20 @@ async function main() {
     create: { email: "cashier@test.com", name: "Cashier", role: "EMPLOYEE", passwordHash: cashierHash },
   });
 
+  // ─── Kiosk system user: owns the PosSession that self-checkout orders attach
+  // to (no employee login for that flow). No password — never logs in. See src/lib/kiosk.ts.
+  const kiosk = await prisma.user.upsert({
+    where: { email: "kiosk@cafe.internal" },
+    update: { role: "EMPLOYEE", name: "Self-Checkout Kiosk" },
+    create: { email: "kiosk@cafe.internal", name: "Self-Checkout Kiosk", role: "EMPLOYEE" },
+  });
+  const kioskSession = await prisma.posSession.findFirst({
+    where: { userId: kiosk.id, closedAt: null },
+  });
+  if (!kioskSession) {
+    await prisma.posSession.create({ data: { userId: kiosk.id } });
+  }
+
   // ─── Categories (name is unique → idempotent) ───────────────────────────────
   const coffee = await prisma.category.upsert({
     where: { name: "Coffee" },

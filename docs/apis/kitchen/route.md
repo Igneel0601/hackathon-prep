@@ -43,3 +43,4 @@ curl "http://localhost:3000/api/kitchen?status=COMPLETED"
 - Default (no `?status`) returns TO_COOK + PREPARING — the live queue the KDS displays.
 - Orders are sorted oldest-first so the kitchen works in arrival order.
 - The NONE status cannot be queried (those orders haven't entered the kitchen flow yet).
+- Only `DRAFT` (unpaid) orders are returned — as soon as an order is checked out (`POST /api/orders/[id]/payment` marks it `PAID`), it drops off the board immediately, even if some items are still TO_COOK/PREPARING.

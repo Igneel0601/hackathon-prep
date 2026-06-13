@@ -35,6 +35,8 @@ import type {
   CreateUserBody,
   UpdateUserBody,
   Role,
+  SelfCheckoutOrderBody,
+  SelfCheckoutOrderResponse,
   SelfOrderBody,
   SelfOrderResult,
 } from "@/lib/api-types";
@@ -291,4 +293,19 @@ export function adminArchiveUser(id: string, active: boolean): Promise<AdminUser
 }
 export function adminDeleteUser(id: string): Promise<void | { archived: true }> {
   return request<void | { archived: true }>(`/api/admin/users/${id}`, { method: "DELETE" });
+}
+
+// ─── Self-checkout (public kiosk, no auth) ───────────────────────────────────
+export function getSelfCheckoutMenu(): Promise<ProductsResponse> {
+  return request<ProductsResponse>("/api/self-checkout/menu");
+}
+
+export function getSelfCheckoutTables(): Promise<TablesResponse> {
+  return request<TablesResponse>("/api/self-checkout/tables");
+}
+
+export function submitSelfCheckoutOrder(
+  body: SelfCheckoutOrderBody,
+): Promise<SelfCheckoutOrderResponse> {
+  return request<SelfCheckoutOrderResponse>("/api/self-checkout", json(body));
 }

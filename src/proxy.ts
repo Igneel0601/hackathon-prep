@@ -24,7 +24,8 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Run on everything except API routes, Next internals, the login page, and assets.
+// Run on everything except API routes, Next internals, the login page, the
+// public self-checkout kiosk, and assets.
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login|self).*)"],
 };

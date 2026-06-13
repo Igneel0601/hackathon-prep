@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
     // per (order, round), so each fire batch is its own card on the display.
     const orders = await db.order.findMany({
       where: {
-        // Payment-agnostic: a paid-but-still-cooking order must stay on the board
-        // until the kitchen marks it done. Only a cancelled order drops off.
-        status: { not: "CANCELLED" },
+        // Checkout removes the order from the board immediately, even if some
+        // items are still TO_COOK/PREPARING — only DRAFT (unpaid) orders show.
+        status: "DRAFT",
         items: { some: { kitchenStatus: { in: statusFilter } } },
       },
       orderBy: { createdAt: "asc" },

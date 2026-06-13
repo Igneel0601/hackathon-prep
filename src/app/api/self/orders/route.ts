@@ -1,6 +1,7 @@
 // POST /api/self/orders — PUBLIC self-checkout order (no auth, kiosk-backed).
-// Guest picks a FREE table, adds items, gives an email; we create the order and
-// fire it to the kitchen in one step. Payment happens at the counter later.
+// Guest picks a FREE table and adds items; we create the order and fire it to
+// the kitchen in one step. Payment (and an optional emailed receipt) happens
+// at the counter later via the normal payment flow.
 // See docs/apis/self/orders/route.md.
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
       throw new ApiError(429, "Too many orders from this device — please wait a moment.");
     }
 
-    let body: { tableId?: unknown; items?: unknown; customer?: unknown };
+    let body: { tableId?: unknown; items?: unknown };
     try {
       body = (await request.json()) as typeof body;
     } catch {
@@ -30,7 +31,6 @@ export async function POST(request: Request) {
 
     const tableId = body.tableId;
     const rawItems = body.items;
-    const customer = body.customer as { email?: unknown; name?: unknown } | undefined;
 
     if (!tableId || typeof tableId !== "string") {
       throw new ApiError(400, "tableId is required");
@@ -41,11 +41,6 @@ export async function POST(request: Request) {
     if (rawItems.length > MAX_ITEMS) {
       throw new ApiError(400, `too many items (max ${MAX_ITEMS} per order)`);
     }
-    const email = typeof customer?.email === "string" ? customer.email.trim().toLowerCase() : "";
-    if (!email || !email.includes("@")) {
-      throw new ApiError(400, "a valid email is required");
-    }
-    const name = typeof customer?.name === "string" && customer.name.trim() ? customer.name.trim() : "Guest";
 
     // Validate item shapes.
     const itemInputs = rawItems.map((item, i) => {
@@ -106,11 +101,6 @@ export async function POST(request: Request) {
     });
     const total = subtotal.plus(taxTotal);
 
-    // Find-or-create the customer by email (Customer.email is not unique).
-    const existingCustomer = await db.customer.findFirst({ where: { email }, select: { id: true } });
-    const customerId =
-      existingCustomer?.id ?? (await db.customer.create({ data: { name, email }, select: { id: true } })).id;
-
     const { sessionId } = await ensureKioskSession();
 
     let order;
@@ -119,7 +109,6 @@ export async function POST(request: Request) {
         data: {
           tableId,
           sessionId,
-          customerId,
           discount: ZERO,
           subtotal,
           tax: taxTotal,

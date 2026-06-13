@@ -34,5 +34,8 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 | PATCH/DELETE | `/api/admin/users/[id]` | [admin/users/[id]/route.md](./admin/users/[id]/route.md) | Admin: update / archive-or-delete a user |
 | POST | `/api/admin/users/[id]/password` | [admin/users/[id]/password/route.md](./admin/users/[id]/password/route.md) | Admin: set a user's password |
 | PATCH | `/api/admin/users/[id]/archive` | [admin/users/[id]/archive/route.md](./admin/users/[id]/archive/route.md) | Admin: archive/restore a user |
+| GET | `/api/self-checkout/menu` | [self-checkout/menu/route.md](./self-checkout/menu/route.md) | Public kiosk: active menu (products + categories) |
+| GET | `/api/self-checkout/tables` | [self-checkout/tables/route.md](./self-checkout/tables/route.md) | Public kiosk: active tables with free/occupied flag |
+| POST | `/api/self-checkout` | [self-checkout/route.md](./self-checkout/route.md) | Public kiosk: place a Draft order (no payment), email receipt |
 
 > Rows above are pre-registered for the parallel API build. Each route's `route.md` is authored on its own branch alongside the handler.

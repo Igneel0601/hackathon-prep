@@ -153,6 +153,7 @@ export interface PaymentBody {
   method: PaymentMethod;
   amountReceived?: number; // required for CASH
   reference?: string; // CARD/UPI
+  email?: string; // optional — emails a receipt on success
 }
 
 export type KitchenAction = "send" | "advance";
@@ -161,7 +162,6 @@ export type KitchenAction = "send" | "advance";
 export interface SelfOrderBody {
   tableId: string;
   items: { productId: string; qty: number }[];
-  customer: { email: string; name?: string };
 }
 
 export interface SelfOrderResult {
@@ -285,3 +285,18 @@ export interface CreateUserBody {
   password: string;
 }
 export type UpdateUserBody = Partial<{ name: string; role: Role }>;
+
+// ─── Self-checkout (public kiosk) ────────────────────────────────────────────
+export interface SelfCheckoutOrderBody {
+  email: string;
+  tableId: string;
+  items: { productId: string; qty: number }[];
+}
+
+export interface SelfCheckoutOrderResponse {
+  orderNumber: number;
+  tableNumber: number;
+  subtotal: Money;
+  tax: Money;
+  total: Money;
+}
