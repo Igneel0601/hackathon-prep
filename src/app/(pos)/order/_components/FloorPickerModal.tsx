@@ -5,14 +5,24 @@ import { TableCard } from "./TableCard";
 
 interface FloorPickerModalProps {
   floors: Floor[];
-  onSelectTable: (table: TableInfo, floorName: string) => void;
+  onSelectTable: (table: TableInfo) => void;
+  onClose: () => void;
 }
 
-export function FloorPickerModal({ floors, onSelectTable }: FloorPickerModalProps) {
+export function FloorPickerModal({ floors, onSelectTable, onClose }: FloorPickerModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-        <h2 className="mb-6 text-xl font-bold text-gray-900">Select a Table</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900">Select a Table</h2>
+          <button onClick={onClose} className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" aria-label="Close">✕</button>
+        </div>
 
         {floors.length === 0 && (
           <p className="text-center text-gray-500">No floors found.</p>
@@ -30,7 +40,7 @@ export function FloorPickerModal({ floors, onSelectTable }: FloorPickerModalProp
                   number={table.number}
                   seats={table.seats}
                   status={table.hasActiveOrder ? "active" : "available"}
-                  onClick={() => onSelectTable(table, floor.name)}
+                  onClick={() => onSelectTable(table)}
                 />
               ))}
             </div>

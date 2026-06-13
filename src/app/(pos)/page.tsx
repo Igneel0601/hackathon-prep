@@ -31,10 +31,7 @@ export default function PosHomePage() {
         )}
 
         <button
-          onClick={() => {
-            refetch();
-            setShowPicker(true);
-          }}
+          onClick={() => setShowPicker(true)}
           disabled={loading}
           className="mt-8 rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
         >
@@ -49,6 +46,7 @@ export default function PosHomePage() {
             setShowPicker(false);
             handleSelectTable(table);
           }}
+          onClose={() => setShowPicker(false)}
         />
       )}
     </div>
