@@ -1,51 +1,88 @@
-"use client";
+'use client';
 
-import type { KitchenTicket } from "@/lib/api-types";
+import { useState } from 'react';
+import { sendToKitchen } from '@/lib/api-client';
+import type { KitchenStatus } from '@/lib/api-types';
 
-const STATUS_CONFIG = {
-  NONE:      { label: "Queued",    bg: "bg-gray-50",   border: "border-gray-300",   badge: "bg-gray-100 text-gray-700",      btn: "" },
-  TO_COOK:   { label: "To Cook",   bg: "bg-yellow-50", border: "border-yellow-300", badge: "bg-yellow-100 text-yellow-800",  btn: "🍳 Start Preparing" },
-  PREPARING: { label: "Preparing", bg: "bg-orange-50", border: "border-orange-300", badge: "bg-orange-100 text-orange-800",  btn: "✅ Mark Complete" },
-  COMPLETED: { label: "Completed", bg: "bg-green-50",  border: "border-green-300",  badge: "bg-green-100 text-green-800",   btn: "" },
-} as const;
-
-interface Props {
-  ticket: KitchenTicket;
-  onAdvance: (orderId: string, status: KitchenTicket["kitchenStatus"]) => void;
+interface TicketCardProps {
+  orderId: string;
+  number: number;
+  items: { name: string; qty: number }[];
+  status: KitchenStatus;
+  onAdvance: () => void;
 }
 
-export function TicketCard({ ticket, onAdvance }: Props) {
-  const cfg = STATUS_CONFIG[ticket.kitchenStatus];
-  const timeStr = new Date(ticket.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const STATUS_STYLES: Record<KitchenStatus, string> = {
+  NONE: 'border-zinc-300 bg-white',
+  TO_COOK: 'border-yellow-400 bg-yellow-50',
+  PREPARING: 'border-orange-400 bg-orange-50',
+  COMPLETED: 'border-green-400 bg-green-50',
+};
+
+const STATUS_LABEL: Record<KitchenStatus, string> = {
+  NONE: 'None',
+  TO_COOK: 'To Cook',
+  PREPARING: 'Preparing',
+  COMPLETED: 'Completed',
+};
+
+const STATUS_BADGE: Record<KitchenStatus, string> = {
+  NONE: 'bg-zinc-100 text-zinc-600',
+  TO_COOK: 'bg-yellow-100 text-yellow-800',
+  PREPARING: 'bg-orange-100 text-orange-800',
+  COMPLETED: 'bg-green-100 text-green-800',
+};
+
+export function TicketCard({ orderId, number, items, status, onAdvance }: TicketCardProps) {
+  const [advancing, setAdvancing] = useState(false);
+
+  const canAdvance = status === 'TO_COOK' || status === 'PREPARING';
+
+  async function handleAdvance() {
+    if (!canAdvance || advancing) return;
+    setAdvancing(true);
+    try {
+      await sendToKitchen(orderId, 'advance');
+      onAdvance();
+    } catch (err) {
+      console.error('Advance failed:', err);
+    } finally {
+      setAdvancing(false);
+    }
+  }
 
   return (
-    <div className={`flex flex-col rounded-xl border-2 ${cfg.border} ${cfg.bg} p-4 gap-3`}>
+    <div
+      className={`rounded-xl border-2 p-4 flex flex-col gap-3 shadow-sm ${STATUS_STYLES[status]}`}
+    >
       <div className="flex items-center justify-between">
-        <span className="text-lg font-bold text-gray-900">#{ticket.number}</span>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">{timeStr}</span>
-          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${cfg.badge}`}>
-            {cfg.label}
-          </span>
-        </div>
+        <span className="text-lg font-bold text-zinc-900">#{number}</span>
+        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_BADGE[status]}`}>
+          {STATUS_LABEL[status]}
+        </span>
       </div>
 
-      <ul className="space-y-1">
-        {ticket.items.map((item) => (
-          <li key={item.productId} className="flex items-center gap-2 text-sm text-gray-800">
-            <span className="w-6 text-center font-bold text-gray-600">{item.qty}×</span>
+      <ul className="flex flex-col gap-1">
+        {items.map((item, i) => (
+          <li key={i} className="flex justify-between text-sm text-zinc-700">
             <span>{item.name}</span>
+            <span className="font-medium">×{item.qty}</span>
           </li>
         ))}
       </ul>
 
-      {cfg.btn && (
+      {canAdvance && (
         <button
-          onClick={() => onAdvance(ticket.orderId, ticket.kitchenStatus)}
-          className="mt-auto w-full rounded-lg bg-white py-2 text-sm font-semibold text-gray-800 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+          onClick={handleAdvance}
+          disabled={advancing}
+          className="mt-auto w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
         >
-          {cfg.btn}
+          {advancing ? 'Updating…' : status === 'TO_COOK' ? 'Start Preparing' : 'Mark Complete'}
         </button>
+      )}
+
+      {status === 'COMPLETED' && (
+        <div className="mt-auto text-center text-sm font-medium text-green-700">Done</div>
       )}
     </div>
   );
