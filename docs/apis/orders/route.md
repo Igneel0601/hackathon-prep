@@ -23,7 +23,7 @@
     "discount": 0
   }
   ```
-  - `tableId` — required; must reference an existing Table.
+  - `tableId` — required; must reference an existing, **active** Table.
   - `items` — required non-empty array; each item needs `productId` (string) and `qty` (positive integer).
   - `customerId` — optional; must reference an existing Customer if provided.
   - `discount` — optional non-negative number (absolute amount, not percent); defaults to `0`.

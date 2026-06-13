@@ -82,12 +82,17 @@ export async function POST(request: Request) {
     const user = await requireEmployee();
     const session = await getOpenPosSession(user.id);
 
-    const body = (await request.json()) as {
+    let body: {
       tableId?: unknown;
       items?: unknown;
       customerId?: unknown;
       discount?: unknown;
     };
+    try {
+      body = (await request.json()) as typeof body;
+    } catch {
+      throw new ApiError(400, "Invalid JSON body");
+    }
 
     const tableId = body.tableId;
     const rawItems = body.items;
@@ -119,13 +124,18 @@ export async function POST(request: Request) {
       return { productId: item.productId as string, qty: item.qty as number };
     });
 
-    if (typeof discountRaw !== "number" || discountRaw < 0) {
-      throw new ApiError(400, "discount must be a non-negative number");
+    if (
+      typeof discountRaw !== "number" ||
+      !Number.isFinite(discountRaw) ||
+      discountRaw < 0
+    ) {
+      throw new ApiError(400, "discount must be a non-negative finite number");
     }
 
-    // Validate table exists
+    // Validate table exists and is active
     const table = await db.table.findUnique({ where: { id: tableId } });
     if (!table) throw new ApiError(400, `Table "${tableId}" not found`);
+    if (!table.active) throw new ApiError(400, `Table "${tableId}" is not active`);
 
     // Validate customer if provided
     if (customerId !== null) {

@@ -83,13 +83,13 @@ export async function PATCH(
 ) {
   try {
     const user = await requireEmployee();
-    // Ensure user has an open session (validates they're an active cashier)
-    await getOpenPosSession(user.id);
+    const session = await getOpenPosSession(user.id);
 
     const { id } = await params;
 
-    const order = await db.order.findUnique({
-      where: { id },
+    // Scope to the current session so a cashier can't edit another session's order.
+    const order = await db.order.findFirst({
+      where: { id, sessionId: session.id },
       include: ORDER_INCLUDE,
     });
 
@@ -100,11 +100,16 @@ export async function PATCH(
       throw new ApiError(409, "Only draft orders can be edited");
     }
 
-    const body = (await request.json()) as {
+    let body: {
       items?: unknown;
       discount?: unknown;
       customerId?: unknown;
     };
+    try {
+      body = (await request.json()) as typeof body;
+    } catch {
+      throw new ApiError(400, "Invalid JSON body");
+    }
 
     const rawItems = body.items;
     const discountRaw = body.discount;
@@ -130,8 +135,12 @@ export async function PATCH(
     // Determine discount
     let discount = order.discount;
     if (discountRaw !== undefined) {
-      if (typeof discountRaw !== "number" || discountRaw < 0) {
-        throw new ApiError(400, "discount must be a non-negative number");
+      if (
+        typeof discountRaw !== "number" ||
+        !Number.isFinite(discountRaw) ||
+        discountRaw < 0
+      ) {
+        throw new ApiError(400, "discount must be a non-negative finite number");
       }
       discount = new Prisma.Decimal(discountRaw);
     }
