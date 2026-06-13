@@ -14,6 +14,7 @@ import { CategoryTabs } from "./_components/CategoryTabs";
 import { ProductCard } from "./_components/ProductCard";
 import { CartLine } from "./_components/CartLine";
 import { OrderSummary } from "./_components/OrderSummary";
+import { productImage } from "@/lib/product-image";
 
 export default function OrderPage() {
   return (
@@ -293,7 +294,6 @@ function OrderView() {
     ? products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
     : products;
 
-  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.color]));
   const cartQtyMap = Object.fromEntries(items.map((i) => [i.productId, i.qty]));
 
   const isEmpty = items.length === 0;
@@ -469,7 +469,8 @@ function OrderView() {
                   key={product.id}
                   name={product.name}
                   price={product.price}
-                  categoryColor={categoryMap[product.categoryId] ?? "#7A4A33"}
+                  imageUrl={productImage(product.name)}
+                  description={product.description}
                   cartQty={cartQtyMap[product.id]}
                   onClick={() => addProduct(product)}
                 />

@@ -3,41 +3,61 @@
 interface ProductCardProps {
   name: string;
   price: string;
-  categoryColor: string;
+  imageUrl: string;
+  description?: string | null;
   onClick: () => void;
   cartQty?: number;
 }
 
-export function ProductCard({ name, price, categoryColor, onClick, cartQty }: ProductCardProps) {
+export function ProductCard({ name, price, imageUrl, description, onClick, cartQty }: ProductCardProps) {
   return (
-    <button
-      onClick={onClick}
-      className="relative flex flex-col items-start rounded-xl border p-3 text-left transition-all active:scale-[0.97]"
+    <div
+      className="flex flex-col overflow-hidden rounded-2xl transition-all"
       style={{
-        background: cartQty ? "rgba(255,188,13,0.04)" : "#fff",
-        borderColor: cartQty ? "#FFBC0D" : "rgba(92,48,32,0.10)",
-        borderWidth: "1.5px",
-      }}
-      onMouseEnter={e => {
-        if (!cartQty) (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,188,13,0.50)";
-      }}
-      onMouseLeave={e => {
-        if (!cartQty) (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(92,48,32,0.10)";
+        background: "#fff",
+        border: `1.5px solid ${cartQty ? "#FFBC0D" : "rgba(92,48,32,0.10)"}`,
+        boxShadow: "0 2px 12px rgba(13,5,2,0.05)",
       }}
     >
-      <div className="mb-2 h-1.5 w-8 rounded-full" style={{ backgroundColor: categoryColor }} />
-      <span className="text-sm font-semibold leading-tight" style={{ color: "#1A0A04" }}>{name}</span>
-      <span className="mt-1 text-base font-bold" style={{ fontFamily: "var(--cafe-font-display)", color: "#FFBC0D" }}>
-        ₹{parseFloat(price).toFixed(0)}
-      </span>
-      {cartQty && (
-        <span
-          className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
-          style={{ background: "#1A0A04", color: "#FAF3E8" }}
+      {/* Image */}
+      <div className="relative" style={{ height: 116, background: "#F5F0EB" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} alt={name} className="h-full w-full object-cover" loading="lazy" />
+        {cartQty ? (
+          <span
+            className="absolute right-2 top-2 flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold"
+            style={{ background: "#1A0A04", color: "#FAF3E8", fontFamily: "var(--cafe-font-body)" }}
+          >
+            {cartQty}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-3">
+        <p className="text-sm font-semibold leading-tight" style={{ fontFamily: "var(--cafe-font-body)", color: "#1A0A04" }}>
+          {name}
+        </p>
+        {description && (
+          <p className="mt-0.5 line-clamp-1 text-xs" style={{ color: "#9B6B55" }}>
+            {description}
+          </p>
+        )}
+        <p className="mt-1.5 text-base font-bold" style={{ fontFamily: "var(--cafe-font-body)", color: "#1A0A04" }}>
+          ₹{parseFloat(price).toFixed(0)}
+        </p>
+
+        <button
+          onClick={onClick}
+          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-bold transition-transform active:scale-95"
+          style={{ background: "#FFBC0D", color: "#1A0A04" }}
         >
-          {cartQty}
-        </span>
-      )}
-    </button>
+          {cartQty ? "Add more" : "Add"}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14"/><path d="M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
   );
 }

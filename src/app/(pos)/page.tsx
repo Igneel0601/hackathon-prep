@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FloorPickerModal } from "./order/_components/FloorPickerModal";
 import { useTables } from "./order/_hooks/useTables";
 import { useProducts } from "./order/_hooks/useProducts";
+import { productImage } from "@/lib/product-image";
 import type { TableInfo } from "@/lib/api-types";
 
 const DISPLAY = "var(--cafe-font-display)";
@@ -14,10 +15,9 @@ const BODY = "var(--cafe-font-body)";
 export default function PosHomePage() {
   const router = useRouter();
   const { floors, loading } = useTables();
-  const { products, categories } = useProducts();
+  const { products } = useProducts();
   const [showPicker, setShowPicker] = useState(false);
 
-  const catColor = Object.fromEntries(categories.map((c) => [c.id, c.color]));
   const featured = products.slice(0, 3);
 
   function handleSelectTable(table: TableInfo) {
@@ -99,7 +99,8 @@ export default function PosHomePage() {
             {/* dark disc */}
             <div className="relative h-[300px] w-[300px] md:h-[400px] md:w-[400px]">
               <div className="absolute inset-0 overflow-hidden rounded-full" style={{ background: "#2A1008", boxShadow: "0 30px 70px rgba(13,5,2,0.45)" }}>
-                <Image src="/cafe-interior.jpg" alt="Coffee" fill className="object-cover opacity-90" priority />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="https://images.unsplash.com/photo-1561882468-9110e03e0f78?auto=format&fit=crop&w=800&q=75" alt="Latte" className="h-full w-full object-cover" />
               </div>
 
               {/* floating: Latte */}
@@ -131,9 +132,10 @@ export default function PosHomePage() {
                   {/* circle */}
                   <div
                     className="relative flex h-28 w-28 items-center justify-center rounded-full"
-                    style={{ background: "rgba(26,10,4,0.55)" }}
+                    style={{ background: "rgba(26,10,4,0.55)", boxShadow: "0 10px 26px rgba(13,5,2,0.3)" }}
                   >
-                    <div className="h-14 w-14 rounded-full" style={{ background: catColor[p.categoryId] ?? "#7A4A33", boxShadow: "0 4px 14px rgba(13,5,2,0.3)" }} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={productImage(p.name, 240)} alt={p.name} className="h-24 w-24 rounded-full object-cover" loading="lazy" />
                     <div className="absolute -bottom-2 flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-bold" style={{ color: "#2A1008" }}>
                       4.8
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFBC0D" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
