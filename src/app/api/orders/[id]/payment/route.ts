@@ -47,6 +47,12 @@ export async function POST(
       throw new ApiError(400, 'method must be "CASH", "CARD", or "UPI"');
     }
 
+    // Reject methods the admin has disabled (even if a stale client offers them).
+    const setting = await db.paymentMethodSetting.findUnique({ where: { method } });
+    if (setting && !setting.enabled) {
+      throw new ApiError(409, `${method} payments are currently disabled`);
+    }
+
     let changeDue: Prisma.Decimal | null = null;
 
     if (method === "CASH") {

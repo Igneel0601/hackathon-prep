@@ -24,6 +24,17 @@ import type {
   CreateProductBody,
   UpdateProductBody,
   Paginated,
+  PaymentMethodSettingDTO,
+  UpdatePaymentMethodBody,
+  EnabledPaymentMethod,
+  AdminFloor,
+  AdminTable,
+  CreateTableBody,
+  UpdateTableBody,
+  AdminUser,
+  CreateUserBody,
+  UpdateUserBody,
+  Role,
 } from "@/lib/api-types";
 
 export class ApiClientError extends Error {
@@ -169,4 +180,88 @@ export function adminDeleteProduct(
     `/api/admin/products/${id}`,
     { method: "DELETE" },
   );
+}
+
+// ─── Admin: payment methods ──────────────────────────────────────────────────
+export function adminGetPaymentMethods(): Promise<{ settings: PaymentMethodSettingDTO[] }> {
+  return request<{ settings: PaymentMethodSettingDTO[] }>("/api/admin/payment-methods");
+}
+export function adminUpdatePaymentMethod(
+  method: string,
+  body: UpdatePaymentMethodBody,
+): Promise<PaymentMethodSettingDTO> {
+  return request<PaymentMethodSettingDTO>(`/api/admin/payment-methods/${method}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+/** POS-facing: methods the cashier may offer at checkout. */
+export function getEnabledPaymentMethods(): Promise<{ methods: EnabledPaymentMethod[] }> {
+  return request<{ methods: EnabledPaymentMethod[] }>("/api/payment-methods");
+}
+
+// ─── Admin: floors & tables ──────────────────────────────────────────────────
+export function adminListFloors(): Promise<{ floors: AdminFloor[] }> {
+  return request<{ floors: AdminFloor[] }>("/api/admin/floors");
+}
+export function adminCreateFloor(name: string): Promise<AdminFloor> {
+  return request<AdminFloor>("/api/admin/floors", json({ name }));
+}
+export function adminUpdateFloor(id: string, name: string): Promise<{ id: string; name: string }> {
+  return request<{ id: string; name: string }>(`/api/admin/floors/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+}
+export function adminDeleteFloor(id: string): Promise<void> {
+  return request<void>(`/api/admin/floors/${id}`, { method: "DELETE" });
+}
+export function adminCreateTable(body: CreateTableBody): Promise<AdminTable> {
+  return request<AdminTable>("/api/admin/tables", json(body));
+}
+export function adminUpdateTable(id: string, body: UpdateTableBody): Promise<AdminTable> {
+  return request<AdminTable>(`/api/admin/tables/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+export function adminDeleteTable(id: string): Promise<void | { archived: true }> {
+  return request<void | { archived: true }>(`/api/admin/tables/${id}`, { method: "DELETE" });
+}
+
+// ─── Admin: users ────────────────────────────────────────────────────────────
+export function adminListUsers(opts?: {
+  q?: string;
+  role?: Role;
+  page?: number;
+  pageSize?: number;
+}): Promise<Paginated<AdminUser>> {
+  const params = new URLSearchParams();
+  if (opts?.q) params.set("q", opts.q);
+  if (opts?.role) params.set("role", opts.role);
+  if (opts?.page) params.set("page", String(opts.page));
+  if (opts?.pageSize) params.set("pageSize", String(opts.pageSize));
+  const qs = params.toString();
+  return request<Paginated<AdminUser>>(`/api/admin/users${qs ? `?${qs}` : ""}`);
+}
+export function adminCreateUser(body: CreateUserBody): Promise<AdminUser> {
+  return request<AdminUser>("/api/admin/users", json(body));
+}
+export function adminUpdateUser(id: string, body: UpdateUserBody): Promise<AdminUser> {
+  return request<AdminUser>(`/api/admin/users/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+export function adminSetUserPassword(id: string, password: string): Promise<{ ok: true }> {
+  return request<{ ok: true }>(`/api/admin/users/${id}/password`, json({ password }));
+}
+export function adminArchiveUser(id: string, active: boolean): Promise<AdminUser> {
+  return request<AdminUser>(`/api/admin/users/${id}/archive`, {
+    method: "PATCH",
+    body: JSON.stringify({ active }),
+  });
+}
+export function adminDeleteUser(id: string): Promise<void | { archived: true }> {
+  return request<void | { archived: true }>(`/api/admin/users/${id}`, { method: "DELETE" });
 }

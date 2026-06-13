@@ -30,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await db.user.findUnique({ where: { email } });
         if (!user?.passwordHash) return null;
+        if (!user.active) return null; // archived accounts can't log in
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
