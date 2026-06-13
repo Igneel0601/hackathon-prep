@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getOrders } from "@/lib/api-client";
+import { getOrders, voidOrder } from "@/lib/api-client";
 import { QRCodeSVG } from "qrcode.react";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
@@ -15,6 +15,7 @@ import { ProductCard } from "./_components/ProductCard";
 import { CartLine } from "./_components/CartLine";
 import { OrderSummary } from "./_components/OrderSummary";
 import { productImage } from "@/lib/product-image";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 export default function OrderPage() {
   return (
@@ -64,6 +65,14 @@ function CartContent({
 }: CartContentProps) {
   const isEmpty = items.length === 0;
 
+  // Rounds: round 0 = un-fired (editable); round > 0 = sent to kitchen (locked).
+  const newItems = items.filter((i) => i.round === 0);
+  const firedRounds = [...new Set(items.filter((i) => i.round > 0).map((i) => i.round))].sort(
+    (a, b) => a - b,
+  );
+  const hasUnfired = newItems.length > 0;
+  const hasFired = firedRounds.length > 0;
+
   if (isEmpty) {
     return (
       <div className="flex flex-1 items-center justify-center px-5 py-8">
@@ -77,17 +86,48 @@ function CartContent({
   return (
     <>
       <div className="flex-1 overflow-y-auto px-5" style={{ scrollbarWidth: "thin" }}>
-        {items.map((item) => (
-          <CartLine
-            key={item.productId}
-            name={item.name}
-            qty={item.qty}
-            unitPrice={item.unitPrice}
-            lineTotal={(parseFloat(item.unitPrice) * item.qty).toFixed(2)}
-            onInc={() => increment(item.productId)}
-            onDec={() => decrement(item.productId)}
-          />
+        {/* Fired rounds — locked, grouped by fire batch */}
+        {firedRounds.map((round) => (
+          <div key={`round-${round}`}>
+            <p className="pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#9B6B55" }}>
+              Round {round} · sent to kitchen
+            </p>
+            {items
+              .filter((i) => i.round === round)
+              .map((item) => (
+                <CartLine
+                  key={`${round}-${item.productId}`}
+                  name={item.name}
+                  qty={item.qty}
+                  unitPrice={item.unitPrice}
+                  lineTotal={(parseFloat(item.unitPrice) * item.qty).toFixed(2)}
+                  locked
+                />
+              ))}
+          </div>
         ))}
+
+        {/* New — editable, not yet sent */}
+        {newItems.length > 0 && (
+          <div>
+            {hasFired && (
+              <p className="pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#9B6B55" }}>
+                New · not sent yet
+              </p>
+            )}
+            {newItems.map((item) => (
+              <CartLine
+                key={item.productId}
+                name={item.name}
+                qty={item.qty}
+                unitPrice={item.unitPrice}
+                lineTotal={(parseFloat(item.unitPrice) * item.qty).toFixed(2)}
+                onInc={() => increment(item.productId)}
+                onDec={() => decrement(item.productId)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="shrink-0 space-y-3 p-5" style={{ borderTop: "1px solid rgba(92,48,32,0.10)", background: "#FDFAF5" }}>
@@ -121,22 +161,28 @@ function CartContent({
 
         {!showPayment ? (
           <div className="flex flex-col gap-2">
-            <button
-              onClick={onSendKitchen}
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
-              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.22)", color: "#2A1008" }}
-            >
-              🍳 Send to Kitchen
-            </button>
-            <button
-              onClick={onOpenPayment}
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-colors disabled:opacity-50"
-              style={{ background: "#1A0A04", color: "#FAF3E8" }}
-            >
-              💳 Checkout
-            </button>
+            {/* Send fires the un-fired (new) lines as the next kitchen round. */}
+            {hasUnfired && (
+              <button
+                onClick={onSendKitchen}
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
+                style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.22)", color: "#2A1008" }}
+              >
+                🍳 Send to Kitchen
+              </button>
+            )}
+            {/* Checkout opens only once at least one round has been sent. */}
+            {hasFired && (
+              <button
+                onClick={onOpenPayment}
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-colors disabled:opacity-50"
+                style={{ background: "#1A0A04", color: "#FAF3E8" }}
+              >
+                💳 Checkout
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -241,6 +287,7 @@ function OrderView() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tableId = searchParams.get("tableId") ?? "";
+  const tableNumber = searchParams.get("n");
 
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -251,38 +298,41 @@ function OrderView() {
   const { methods: enabledMethods } = useEnabledPaymentMethods();
   const upiId = enabledMethods.find((m) => m.method === "UPI")?.upiId ?? null;
 
+  // Load the table's open DRAFT order into the cart (resume). Reused after a
+  // Send-to-Kitchen so the freshly-fired lines pick up their new round and lock.
+  const loadDraft = useCallback(async () => {
+    const orders = await getOrders({ tableId, status: "DRAFT" });
+    const draft = orders[0];
+    if (!draft) return;
+    const taxByProduct = new Map(products.map((p) => [p.id, p.tax]));
+    loadItems(
+      draft.items.map((it) => ({
+        productId: it.productId,
+        name: it.name,
+        unitPrice: it.unitPrice,
+        tax: taxByProduct.get(it.productId) ?? "0",
+        qty: it.qty,
+        round: it.round,
+      })),
+    );
+    const sub = parseFloat(draft.subtotal);
+    const disc = parseFloat(draft.discount);
+    if (disc > 0 && sub > 0) setDiscountPct(Math.round((disc / sub) * 100));
+    resumeExisting(draft);
+  }, [tableId, products, loadItems, resumeExisting, setDiscountPct]);
+
+  // Resume once, after products load (products give us each line's tax rate).
   const [resumed, setResumed] = useState(false);
   useEffect(() => {
     if (resumed || !tableId || productsLoading) return;
     let cancelled = false;
-    getOrders({ tableId, status: "DRAFT" })
-      .then((orders) => {
-        if (cancelled) return;
-        const draft = orders[0];
-        if (draft) {
-          const taxByProduct = new Map(products.map((p) => [p.id, p.tax]));
-          loadItems(
-            draft.items.map((it) => ({
-              productId: it.productId,
-              name: it.name,
-              unitPrice: it.unitPrice,
-              tax: taxByProduct.get(it.productId) ?? "0",
-              qty: it.qty,
-            })),
-          );
-          const sub = parseFloat(draft.subtotal);
-          const disc = parseFloat(draft.discount);
-          if (disc > 0 && sub > 0) setDiscountPct(Math.round((disc / sub) * 100));
-          resumeExisting(draft);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setResumed(true);
-      });
+    loadDraft().finally(() => {
+      if (!cancelled) setResumed(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, [resumed, tableId, productsLoading, products, loadItems, resumeExisting, setDiscountPct]);
+  }, [resumed, tableId, productsLoading, loadDraft]);
 
   const [showPayment, setShowPayment] = useState(false);
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
@@ -299,6 +349,9 @@ function OrderView() {
   const isEmpty = items.length === 0;
   const isSubmitting = orderState.phase === "submitting";
   const isPaid = orderState.phase === "paid";
+  // Once any line has been fired to the kitchen, the order can't be cleared.
+  const hasFired = items.some((i) => i.round > 0);
+
   const cartCount = items.reduce((s, i) => s + i.qty, 0);
   const orderErrorMsg = orderState.phase === "error" ? orderState.message : "";
 
@@ -309,21 +362,42 @@ function OrderView() {
 
   async function handleSendToKitchen() {
     if (!tableId) return;
-    const order = await ensureOrder(tableId, items, totals.discountAmt || undefined);
+    const unfired = items.filter((i) => i.round === 0);
+    if (unfired.length === 0) return;
+    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
     if (!order) return;
-    await sendKitchen(order.id);
+    await sendKitchen(order);
+    await loadDraft(); // refresh rounds so the just-fired lines lock
   }
 
   async function handlePay() {
     if (!tableId) return;
     if (payMethod === "CASH" && !cashReady) return;
-    const order = await ensureOrder(tableId, items, totals.discountAmt || undefined);
+    // Persist any un-fired lines onto the bill first, then take payment.
+    const unfired = items.filter((i) => i.round === 0);
+    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
     if (!order) return;
     await pay(order.id, {
       method: payMethod,
       ...(payMethod === "CASH" ? { amountReceived: parseFloat(amountReceived) } : {}),
       ...(payReference.trim() ? { reference: payReference.trim() } : {}),
     });
+  }
+
+  // Customer left without paying: void the draft (if one was persisted) and
+  // free the table. No persisted order yet → nothing to cancel, just leave.
+  async function handleVoid() {
+    const existingId = orderState.phase === "ordered" ? orderState.order.id : null;
+    if (!window.confirm("Void this order and free the table? This can't be undone.")) return;
+    if (existingId) {
+      try {
+        await voidOrder(existingId);
+      } catch {
+        // best-effort: still clear locally and return to the floor
+      }
+    }
+    clear();
+    router.push("/tables");
   }
 
   function openPayment() {
@@ -400,7 +474,7 @@ function OrderView() {
             Print
           </button>
           <button
-            onClick={() => { clear(); router.push("/"); }}
+            onClick={() => { clear(); router.push("/tables"); }}
             className="flex-1 rounded-xl py-2.5 text-sm font-bold"
             style={{ background: "#1A0A04", color: "#FAF3E8" }}
           >
@@ -422,7 +496,7 @@ function OrderView() {
           style={{ height: "56px", background: "#FDFAF5", borderBottom: "1px solid rgba(92,48,32,0.10)" }}
         >
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/tables")}
             className="flex shrink-0 items-center gap-1 text-sm"
             style={{ color: "#9B6B55" }}
           >
@@ -433,8 +507,26 @@ function OrderView() {
           </button>
           <div className="h-4 w-px shrink-0" style={{ background: "rgba(92,48,32,0.20)" }} />
           <span className="truncate font-bold" style={{ color: "#1A0A04" }}>
-            Order — Table {tableId ? `(${tableId.slice(-4)})` : ""}
+            Table {tableNumber ?? (tableId ? tableId.slice(-4) : "")}
+            {orderState.phase === "ordered" && (
+              <span className="font-normal" style={{ color: "#9B6B55" }}> · Order #{orderState.order.number}</span>
+            )}
           </span>
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            {orderState.phase === "ordered" && (
+              <button
+                onClick={handleVoid}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                style={{ border: "1.5px solid rgba(196,26,26,0.30)", color: "#C41A1A", background: "#fff" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Free Table
+              </button>
+            )}
+            <PosUserMenu />
+          </div>
         </header>
 
         {/* Product browser */}
@@ -495,7 +587,7 @@ function OrderView() {
           style={{ borderBottom: "1px solid rgba(92,48,32,0.10)" }}
         >
           <span className="font-bold" style={{ color: "#1A0A04", fontSize: "1.0625rem" }}>Cart</span>
-          {!isEmpty && (
+          {!isEmpty && !hasFired && (
             <button
               onClick={() => { clear(); setShowPayment(false); }}
               className="text-xs font-semibold"
@@ -561,7 +653,7 @@ function OrderView() {
         >
           <span className="font-bold" style={{ color: "#1A0A04" }}>Cart</span>
           <div className="flex items-center gap-3">
-            {!isEmpty && (
+            {!isEmpty && !hasFired && (
               <button
                 onClick={() => { clear(); setShowPayment(false); }}
                 className="text-xs font-semibold"

@@ -111,12 +111,24 @@ export function updateOrder(id: string, body: UpdateOrderBody): Promise<Order> {
   return request<Order>(`/api/orders/${id}`, { method: "PATCH", body: JSON.stringify(body) });
 }
 
+// Void an unpaid order (cancel the DRAFT), freeing its table.
+export function voidOrder(id: string): Promise<{ id: string; status: string }> {
+  return request<{ id: string; status: string }>(`/api/orders/${id}`, { method: "DELETE" });
+}
+
 export function payOrder(id: string, body: PaymentBody): Promise<PaymentResponse> {
   return request<PaymentResponse>(`/api/orders/${id}/payment`, json(body));
 }
 
-export function sendToKitchen(id: string, action: KitchenAction): Promise<OrderSummary> {
-  return request<OrderSummary>(`/api/orders/${id}/kitchen`, json({ action }));
+export function sendToKitchen(
+  id: string,
+  action: KitchenAction,
+  round?: number,
+): Promise<OrderSummary> {
+  return request<OrderSummary>(
+    `/api/orders/${id}/kitchen`,
+    json({ action, ...(round !== undefined ? { round } : {}) }),
+  );
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────

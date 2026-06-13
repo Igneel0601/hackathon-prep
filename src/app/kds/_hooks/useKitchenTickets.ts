@@ -12,7 +12,7 @@ type State =
 type Action =
   | { type: "fetched"; tickets: KitchenTicket[]; completed: KitchenTicket[] }
   | { type: "error"; message: string }
-  | { type: "optimistic"; orderId: string; nextStatus: KitchenTicket["kitchenStatus"] };
+  | { type: "optimistic"; orderId: string; round: number; nextStatus: KitchenTicket["kitchenStatus"] };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -23,7 +23,9 @@ function reducer(state: State, action: Action): State {
     case "optimistic": {
       const tickets = state.tickets
         .map((t) =>
-          t.orderId === action.orderId ? { ...t, kitchenStatus: action.nextStatus } : t,
+          t.orderId === action.orderId && t.round === action.round
+            ? { ...t, kitchenStatus: action.nextStatus }
+            : t,
         )
         .filter((t) => t.kitchenStatus !== "COMPLETED");
       return { ...state, tickets };
@@ -71,12 +73,16 @@ export function useKitchenTickets() {
     };
   }, []);
 
-  async function advance(orderId: string, currentStatus: KitchenTicket["kitchenStatus"]) {
+  async function advance(
+    orderId: string,
+    round: number,
+    currentStatus: KitchenTicket["kitchenStatus"],
+  ) {
     const nextStatus = NEXT_STATUS[currentStatus];
     if (!nextStatus) return;
-    dispatch({ type: "optimistic", orderId, nextStatus });
+    dispatch({ type: "optimistic", orderId, round, nextStatus });
     try {
-      await sendToKitchen(orderId, "advance");
+      await sendToKitchen(orderId, "advance", round);
     } catch (e: unknown) {
       // Surface the failure; the next poll (≤3s) reconciles the real state.
       const message = e instanceof Error ? e.message : "Couldn't update ticket";

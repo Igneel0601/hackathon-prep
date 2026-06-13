@@ -90,7 +90,7 @@ function ElapsedTimer({ createdAt, status }: { createdAt: string; status: "TO_CO
 
 interface Props {
   ticket: KitchenTicket;
-  onAdvance: (orderId: string, status: KitchenTicket["kitchenStatus"]) => void;
+  onAdvance: (orderId: string, round: number, status: KitchenTicket["kitchenStatus"]) => void;
 }
 
 export function TicketCard({ ticket, onAdvance }: Props) {
@@ -113,20 +113,25 @@ export function TicketCard({ ticket, onAdvance }: Props) {
         }}
       >
         <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-          {/* Header row */}
+          {/* Header row — table is what the cook plates for; order # + round identify the batch */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <span
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "1.25rem",
-                fontWeight: 800,
-                color: "#1A0A04",
-                letterSpacing: "-0.02em",
-                lineHeight: 1,
-              }}
-            >
-              #{ticket.number}
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "1.25rem",
+                  fontWeight: 800,
+                  color: "#1A0A04",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                }}
+              >
+                Table {ticket.tableNumber}
+              </span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", color: "#7A5C3A" }}>
+                #{ticket.number} · Round {ticket.round}
+              </span>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", color: "#7A5C3A" }}>
                 {timeStr}
@@ -172,7 +177,7 @@ export function TicketCard({ ticket, onAdvance }: Props) {
                 letterSpacing: "0.01em",
               }}
             >
-              KDS #{ticket.number}
+              KDS #{ticket.number} · R{ticket.round}
             </div>
 
             <div
@@ -234,10 +239,10 @@ export function TicketCard({ ticket, onAdvance }: Props) {
             )}
           </div>
 
-          {/* Action button */}
+          {/* Action button — advances THIS round */}
           {cfg.btnLabel && (
           <button
-            onClick={() => onAdvance(ticket.orderId, status)}
+            onClick={() => onAdvance(ticket.orderId, ticket.round, status)}
             style={{
               width: "100%",
               height: 36,

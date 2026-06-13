@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useKitchenTickets } from "./_hooks/useKitchenTickets";
 import { TicketCard } from "./_components/TicketCard";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 export default function KdsPage() {
   const router = useRouter();
@@ -114,26 +115,8 @@ export default function KdsPage() {
             + New Order
           </button>
 
-          {/* Avatar */}
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              background: "#2A1008",
-              border: "1.5px solid rgba(255,255,255,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: "#FAF3E8",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            N
-          </div>
+          {/* Account menu */}
+          <PosUserMenu />
         </div>
       </header>
 
@@ -167,7 +150,7 @@ export default function KdsPage() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, alignItems: "start" }} className="sm:grid-cols-3 lg:grid-cols-4">
                   {toCook.map((ticket) => (
-                    <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
+                    <TicketCard key={`${ticket.orderId}-${ticket.round}`} ticket={ticket} onAdvance={advance} />
                   ))}
                 </div>
               </section>
@@ -183,7 +166,7 @@ export default function KdsPage() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, alignItems: "start" }} className="sm:grid-cols-3 lg:grid-cols-4">
                   {preparing.map((ticket) => (
-                    <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
+                    <TicketCard key={`${ticket.orderId}-${ticket.round}`} ticket={ticket} onAdvance={advance} />
                   ))}
                 </div>
               </section>
@@ -199,7 +182,7 @@ export default function KdsPage() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, alignItems: "start" }} className="sm:grid-cols-3 lg:grid-cols-4">
                   {completed.map((ticket) => (
-                    <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
+                    <TicketCard key={`${ticket.orderId}-${ticket.round}`} ticket={ticket} onAdvance={advance} />
                   ))}
                 </div>
               </section>

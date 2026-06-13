@@ -1,47 +1,41 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { FloorPickerModal } from "./order/_components/FloorPickerModal";
-import { useTables } from "./order/_hooks/useTables";
+import { useSession } from "next-auth/react";
 import { useProducts } from "./order/_hooks/useProducts";
+import { CafeLogo } from "@/components/CafeLogo";
 import { productImage } from "@/lib/product-image";
-import type { TableInfo } from "@/lib/api-types";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 const DISPLAY = "var(--cafe-font-display)";
 const BODY = "var(--cafe-font-body)";
 
 export default function PosHomePage() {
   const router = useRouter();
-  const { floors, loading } = useTables();
+  const { data: session } = useSession();
   const { products } = useProducts();
-  // Table picker is the POS landing: open by default so a fresh login AND the
-  // "← Tables" back-navigation from the order screen both land on the floor
-  // grid (not the marketing hero). Closing it (X) reveals the hero behind.
-  const [showPicker, setShowPicker] = useState(true);
 
+  const isAdmin = session?.user?.role === "ADMIN";
   const featured = products.slice(0, 3);
-
-  function handleSelectTable(table: TableInfo) {
-    router.push(`/order?tableId=${table.id}`);
-  }
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden" style={{ background: "#EFEAE4", fontFamily: BODY }}>
       {/* ── Navbar ── */}
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-10">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo-badge.png" alt="" width={38} height={38} className="object-contain" />
+          <CafeLogo size={38} />
           <span className="text-xl" style={{ fontFamily: DISPLAY, color: "#2A1008" }}>
             Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
           </span>
         </div>
 
         <nav className="hidden items-center gap-8 text-sm font-medium md:flex" style={{ color: "#5C3020" }}>
-          <button onClick={() => setShowPicker(true)} className="transition-colors hover:text-[#1A0A04]">Tables</button>
+          <button onClick={() => router.push("/tables")} className="transition-colors hover:text-[#1A0A04]">Tables</button>
           <button onClick={() => router.push("/orders")} className="transition-colors hover:text-[#1A0A04]">Orders</button>
           <button onClick={() => router.push("/kds")} className="transition-colors hover:text-[#1A0A04]">Kitchen</button>
+          {isAdmin && (
+            <button onClick={() => router.push("/admin")} className="transition-colors hover:text-[#1A0A04]">Admin</button>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
@@ -54,13 +48,7 @@ export default function PosHomePage() {
             </svg>
             <span className="text-sm" style={{ color: "#9B6B55" }}>Coffee</span>
           </div>
-          <button
-            onClick={() => router.push("/admin")}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold"
-            style={{ background: "#2A1008", color: "#FAF3E8" }}
-          >
-            N
-          </button>
+          <PosUserMenu />
         </div>
       </header>
 
@@ -81,12 +69,11 @@ export default function PosHomePage() {
 
             <div className="mt-8 flex items-center gap-5">
               <button
-                onClick={() => setShowPicker(true)}
-                disabled={loading}
+                onClick={() => router.push("/tables")}
                 className="flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold text-[#FAF3E8] transition-all active:scale-95 disabled:opacity-50"
                 style={{ background: "#2A1008", boxShadow: "0 10px 26px rgba(42,16,8,0.32)" }}
               >
-                {loading ? "Loading…" : "Order now"}
+                Order now
                 <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "#FFBC0D", color: "#1A0A04" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
                 </span>
@@ -147,7 +134,7 @@ export default function PosHomePage() {
                   <p className="mt-4 text-base font-semibold" style={{ color: "#fff" }}>{p.name}</p>
                   <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>₹{parseFloat(p.price).toFixed(0)}</p>
                   <button
-                    onClick={() => setShowPicker(true)}
+                    onClick={() => router.push("/tables")}
                     className="mt-2 flex items-center gap-1 text-sm font-semibold"
                     style={{ color: "#FAF3E8" }}
                   >
@@ -160,17 +147,6 @@ export default function PosHomePage() {
           </div>
         )}
       </main>
-
-      {showPicker && !loading && (
-        <FloorPickerModal
-          floors={floors}
-          onClose={() => setShowPicker(false)}
-          onSelectTable={(table) => {
-            setShowPicker(false);
-            handleSelectTable(table);
-          }}
-        />
-      )}
     </div>
   );
 }

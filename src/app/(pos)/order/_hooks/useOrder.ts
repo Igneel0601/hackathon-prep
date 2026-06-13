@@ -40,16 +40,25 @@ export function useOrder() {
   // Create the order if none exists for this table yet, otherwise PATCH the
   // existing draft. One draft per table → no duplicates, current items synced.
   async function ensureOrder(tableId: string, items: CartItem[], discount?: number) {
-    const existingId = state.phase === "ordered" ? state.order.id : null;
+    const existing = state.phase === "ordered" ? state.order : null;
     dispatch({ type: "submitting" });
     try {
-      const payload = {
-        items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
-        ...(discount ? { discount } : {}),
-      };
-      const order = existingId
-        ? await updateOrder(existingId, payload)
-        : await createOrder({ tableId, ...payload });
+      // `items` here is the un-fired (round 0) set. PATCH replaces only those —
+      // the server keeps fired rounds frozen — so this is always safe to send.
+      const lineItems = items.map((i) => ({ productId: i.productId, qty: i.qty }));
+      let order: Order;
+      if (existing) {
+        order = await updateOrder(existing.id, {
+          items: lineItems,
+          ...(discount ? { discount } : {}),
+        });
+      } else {
+        order = await createOrder({
+          tableId,
+          items: lineItems,
+          ...(discount ? { discount } : {}),
+        });
+      }
       dispatch({ type: "ordered", order });
       return order;
     } catch (e: unknown) {
@@ -59,9 +68,14 @@ export function useOrder() {
     }
   }
 
-  async function sendKitchen(orderId: string) {
+  async function sendKitchen(order: Order) {
     try {
-      await sendToKitchen(orderId, "send");
+      const summary = await sendToKitchen(order.id, "send");
+      // Reflect the new kitchen/payment state so the UI can switch to checkout.
+      dispatch({
+        type: "ordered",
+        order: { ...order, status: summary.status, kitchenStatus: summary.kitchenStatus },
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send to kitchen";
       dispatch({ type: "error", message: msg });

@@ -9,6 +9,7 @@ export interface CartItem {
   unitPrice: string;
   tax: string;
   qty: number;
+  round: number; // 0 = new/editable; >0 = already fired to the kitchen (locked)
 }
 
 type Action =
@@ -23,22 +24,28 @@ function reducer(items: CartItem[], action: Action): CartItem[] {
     case "load":
       return action.items;
     case "add": {
-      const existing = items.find((i) => i.productId === action.product.id);
+      // Only merge into the un-fired (round 0) line for this product — fired
+      // lines are locked, so re-ordering the same item starts a new round-0 line.
+      const existing = items.find((i) => i.productId === action.product.id && i.round === 0);
       if (existing) {
         return items.map((i) =>
-          i.productId === action.product.id ? { ...i, qty: i.qty + 1 } : i
+          i.productId === action.product.id && i.round === 0 ? { ...i, qty: i.qty + 1 } : i
         );
       }
       return [
         ...items,
-        { productId: action.product.id, name: action.product.name, unitPrice: action.product.price, tax: action.product.tax, qty: 1 },
+        { productId: action.product.id, name: action.product.name, unitPrice: action.product.price, tax: action.product.tax, qty: 1, round: 0 },
       ];
     }
     case "inc":
-      return items.map((i) => (i.productId === action.productId ? { ...i, qty: i.qty + 1 } : i));
+      return items.map((i) =>
+        i.productId === action.productId && i.round === 0 ? { ...i, qty: i.qty + 1 } : i,
+      );
     case "dec":
       return items
-        .map((i) => (i.productId === action.productId ? { ...i, qty: i.qty - 1 } : i))
+        .map((i) =>
+          i.productId === action.productId && i.round === 0 ? { ...i, qty: i.qty - 1 } : i,
+        )
         .filter((i) => i.qty > 0);
     case "clear":
       return [];
