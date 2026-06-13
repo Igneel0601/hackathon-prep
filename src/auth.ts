@@ -15,6 +15,10 @@ import { db } from "@/lib/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
+  // Trust the request host. Dev auto-trusts localhost, but `next start`
+  // (production) does not — without this every /api/auth/* call throws
+  // UntrustedHost. Fine for a self-hosted POS / local demo.
+  trustHost: true,
   session: { strategy: "jwt" },
   providers: [
     Credentials({
