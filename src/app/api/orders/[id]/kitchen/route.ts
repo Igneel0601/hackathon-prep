@@ -43,9 +43,18 @@ export async function POST(
         order.kitchenStatus === "TO_COOK" ? "PREPARING" : "COMPLETED";
     }
 
-    const updated = await db.order.update({
-      where: { id },
+    // Atomic: only transition if kitchenStatus is still what we read, so two
+    // concurrent advances can't double-step the ticket.
+    const moved = await db.order.updateMany({
+      where: { id, kitchenStatus: order.kitchenStatus },
       data: { kitchenStatus: nextStatus },
+    });
+    if (moved.count === 0) {
+      throw new ApiError(409, "Kitchen status changed concurrently, retry");
+    }
+
+    const updated = await db.order.findUniqueOrThrow({
+      where: { id },
       select: {
         id: true,
         number: true,

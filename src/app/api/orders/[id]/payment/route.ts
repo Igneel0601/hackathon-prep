@@ -1,4 +1,4 @@
-import { Decimal } from "@prisma/client/runtime/client";
+import { Prisma } from "@/generated/prisma/client";
 import { ApiError, errorResponse, json, requireEmployee } from "@/lib/api";
 import { db } from "@/lib/db";
 
@@ -47,7 +47,7 @@ export async function POST(
       throw new ApiError(400, 'method must be "CASH", "CARD", or "UPI"');
     }
 
-    let changeDue: Decimal | null = null;
+    let changeDue: Prisma.Decimal | null = null;
 
     if (method === "CASH") {
       if (body.amountReceived === undefined || body.amountReceived === null) {
@@ -57,10 +57,15 @@ export async function POST(
         typeof body.amountReceived !== "number" &&
         typeof body.amountReceived !== "string"
       ) {
-        throw new ApiError(400, "amountReceived must be a number");
+        throw new ApiError(400, "amountReceived must be a number or numeric string");
       }
-      const received = new Decimal(String(body.amountReceived));
-      const total = new Decimal(order.total.toString());
+      let received: Prisma.Decimal;
+      try {
+        received = new Prisma.Decimal(String(body.amountReceived));
+      } catch {
+        throw new ApiError(400, "amountReceived must be a valid number");
+      }
+      const total = new Prisma.Decimal(order.total.toString());
       if (received.lessThan(total)) {
         throw new ApiError(400, "amountReceived is less than order total");
       }
@@ -70,10 +75,18 @@ export async function POST(
     const reference =
       typeof body.reference === "string" ? body.reference : undefined;
 
-    const [updatedOrder, payment] = await db.$transaction([
-      db.order.update({
-        where: { id },
+    // Atomic: flip DRAFT→PAID only if still DRAFT, so two concurrent payments
+    // can't both succeed. If the guard matches nothing, the order was already paid.
+    const { updatedOrder, payment } = await db.$transaction(async (tx) => {
+      const flipped = await tx.order.updateMany({
+        where: { id, status: "DRAFT" },
         data: { status: "PAID" },
+      });
+      if (flipped.count === 0) {
+        throw new ApiError(409, "Order is not payable");
+      }
+      const updatedOrder = await tx.order.findUniqueOrThrow({
+        where: { id },
         select: {
           id: true,
           number: true,
@@ -84,11 +97,11 @@ export async function POST(
           discount: true,
           total: true,
         },
-      }),
-      db.payment.create({
+      });
+      const payment = await tx.payment.create({
         data: {
           method,
-          amount: new Decimal(order.total.toString()),
+          amount: new Prisma.Decimal(order.total.toString()),
           reference: reference ?? null,
           changeDue: changeDue,
           orderId: id,
@@ -101,8 +114,9 @@ export async function POST(
           changeDue: true,
           createdAt: true,
         },
-      }),
-    ]);
+      });
+      return { updatedOrder, payment };
+    });
 
     return json({
       order: {
