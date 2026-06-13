@@ -42,7 +42,7 @@ export default function SelfTablesPage() {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-5">
-        <button onClick={() => router.push("/welcome")} className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(250,243,232,0.7)" }}>
+        <button onClick={() => router.push("/")} className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(250,243,232,0.7)" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
           Back
         </button>

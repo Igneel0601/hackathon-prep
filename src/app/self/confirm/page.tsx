@@ -40,7 +40,7 @@ function ConfirmView() {
         </p>
 
         <button
-          onClick={() => router.push("/welcome")}
+          onClick={() => router.push("/")}
           className="mt-9 rounded-full px-8 py-3.5 text-sm font-bold transition-transform active:scale-95"
           style={{ background: "#FFBC0D", color: "#1A0A04", boxShadow: "0 10px 26px rgba(255,188,13,0.4)" }}
         >
