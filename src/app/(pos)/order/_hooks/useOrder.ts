@@ -40,16 +40,27 @@ export function useOrder() {
   // Create the order if none exists for this table yet, otherwise PATCH the
   // existing draft. One draft per table → no duplicates, current items synced.
   async function ensureOrder(tableId: string, items: CartItem[], discount?: number) {
-    const existingId = state.phase === "ordered" ? state.order.id : null;
+    const existing = state.phase === "ordered" ? state.order : null;
     dispatch({ type: "submitting" });
     try {
-      const payload = {
-        items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
-        ...(discount ? { discount } : {}),
-      };
-      const order = existingId
-        ? await updateOrder(existingId, payload)
-        : await createOrder({ tableId, ...payload });
+      const lineItems = items.map((i) => ({ productId: i.productId, qty: i.qty }));
+      let order: Order;
+      if (existing) {
+        // Once an order is sent to the kitchen its items are frozen (server 409s
+        // on item edits). Only sync items while still editable; discount always
+        // goes through — so paying an already-cooking order isn't blocked.
+        const patch =
+          existing.kitchenStatus === "NONE"
+            ? { items: lineItems, ...(discount ? { discount } : {}) }
+            : { ...(discount ? { discount } : {}) };
+        order = await updateOrder(existing.id, patch);
+      } else {
+        order = await createOrder({
+          tableId,
+          items: lineItems,
+          ...(discount ? { discount } : {}),
+        });
+      }
       dispatch({ type: "ordered", order });
       return order;
     } catch (e: unknown) {
