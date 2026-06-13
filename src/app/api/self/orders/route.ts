@@ -6,9 +6,21 @@ import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { ApiError, errorResponse, json } from "@/lib/api";
 import { ensureKioskSession } from "@/lib/kiosk";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+
+// Public endpoint guards (no auth). Generous for a real guest, but enough to
+// blunt scripted floods that would spam the KDS / occupy every table.
+const MAX_ORDERS_PER_MIN = 10;
+const MAX_ITEMS = 50;
+const MAX_QTY = 99;
 
 export async function POST(request: Request) {
   try {
+    // Rate-limit per IP — unauthenticated write that fires kitchen tickets.
+    if (!rateLimit(`self-orders:${clientIp(request)}`, MAX_ORDERS_PER_MIN, 60_000)) {
+      throw new ApiError(429, "Too many orders from this device — please wait a moment.");
+    }
+
     let body: { tableId?: unknown; items?: unknown; customer?: unknown };
     try {
       body = (await request.json()) as typeof body;
@@ -26,6 +38,9 @@ export async function POST(request: Request) {
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
       throw new ApiError(400, "items must be a non-empty array");
     }
+    if (rawItems.length > MAX_ITEMS) {
+      throw new ApiError(400, `too many items (max ${MAX_ITEMS} per order)`);
+    }
     const email = typeof customer?.email === "string" ? customer.email.trim().toLowerCase() : "";
     if (!email || !email.includes("@")) {
       throw new ApiError(400, "a valid email is required");
@@ -40,9 +55,10 @@ export async function POST(request: Request) {
         typeof item.productId !== "string" ||
         typeof item.qty !== "number" ||
         !Number.isInteger(item.qty) ||
-        item.qty < 1
+        item.qty < 1 ||
+        item.qty > MAX_QTY
       ) {
-        throw new ApiError(400, `items[${i}]: productId (string) and qty (positive integer) are required`);
+        throw new ApiError(400, `items[${i}]: productId (string) and qty (integer 1–${MAX_QTY}) are required`);
       }
       return { productId: item.productId as string, qty: item.qty as number };
     });

@@ -6,6 +6,8 @@
 
 **Auth:** none — public kiosk endpoint. Orders are backed server-side by a lazily-created **kiosk service account** + its PosSession (`src/lib/kiosk.ts`), so no logged-in cashier is required.
 
+**Limits (public-abuse guards):** rate-limited to **10 orders/min per IP**; max **50 items** per order; per-item `qty` **1–99**.
+
 ## Request
 - **Body** (JSON):
   ```json
@@ -18,8 +20,9 @@
 
 ## Response
 - **201** — `{ "id": "string", "number": 123 }`
-- **400** — invalid body / unknown product / invalid email.
+- **400** — invalid body / unknown product / invalid email / too many items / `qty` out of range (1–99).
 - **409** — the table already has an open (DRAFT) order — pick another or ask staff.
+- **429** — too many orders from this device (rate limit) — wait and retry.
 - **5xx** — `{ "error": "string" }`
 
 ## Example
