@@ -18,6 +18,7 @@ export async function POST(
     await requireEmployee();
     const { id } = await params;
 
+    // Floor-shared: any employee can take payment for any table's order.
     const order = await db.order.findUnique({
       where: { id },
       select: {
@@ -45,6 +46,12 @@ export async function POST(
 
     if (!["CASH", "CARD", "UPI"].includes(method)) {
       throw new ApiError(400, 'method must be "CASH", "CARD", or "UPI"');
+    }
+
+    // Reject methods the admin has disabled (even if a stale client offers them).
+    const setting = await db.paymentMethodSetting.findUnique({ where: { method } });
+    if (setting && !setting.enabled) {
+      throw new ApiError(409, `${method} payments are currently disabled`);
     }
 
     let changeDue: Prisma.Decimal | null = null;

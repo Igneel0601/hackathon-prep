@@ -3,11 +3,13 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getOrders } from "@/lib/api-client";
+import { QRCodeSVG } from "qrcode.react";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
 import type { CartItem } from "./_hooks/useCart";
 import { Receipt } from "./_components/Receipt";
 import { useOrder } from "./_hooks/useOrder";
+import { useEnabledPaymentMethods } from "./_hooks/useEnabledPaymentMethods";
 import { CategoryTabs } from "./_components/CategoryTabs";
 import { ProductCard } from "./_components/ProductCard";
 import { CartLine } from "./_components/CartLine";
@@ -41,6 +43,8 @@ interface CartContentProps {
   payReference: string;
   setPayReference: (v: string) => void;
   cashReady: boolean;
+  enabledMethods: { method: "CASH" | "CARD" | "UPI"; upiId?: string | null }[];
+  upiId: string | null;
   onSendKitchen: () => void;
   onOpenPayment: () => void;
   onPay: () => void;
@@ -54,7 +58,7 @@ function CartContent({
   payMethod, setPayMethod,
   amountReceived, setAmountReceived,
   payReference, setPayReference,
-  cashReady,
+  cashReady, enabledMethods, upiId,
   onSendKitchen, onOpenPayment, onPay,
 }: CartContentProps) {
   const isEmpty = items.length === 0;
@@ -137,7 +141,7 @@ function CartContent({
           <div className="space-y-2.5">
             {/* Pay method tabs */}
             <div className="flex overflow-hidden rounded-xl" style={{ border: "1.5px solid rgba(92,48,32,0.18)" }}>
-              {(["CASH", "CARD", "UPI"] as const).map((m) => {
+              {enabledMethods.map(({ method: m }) => {
                 const active = payMethod === m;
                 const activeStyles: Record<string, React.CSSProperties> = {
                   CASH: { background: "rgba(22,128,60,0.10)", color: "#16803C" },
@@ -179,6 +183,21 @@ function CartContent({
                   </div>
                 )}
               </>
+            )}
+
+            {payMethod === "UPI" && (
+              <div className="flex flex-col items-center gap-2 rounded-xl px-3 py-3" style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.18)" }}>
+                {upiId ? (
+                  <>
+                    <QRCodeSVG value={`upi://pay?pa=${upiId}&am=${totals.total}&cu=INR`} size={132} />
+                    <p className="text-center text-xs" style={{ color: "#9B6B55" }}>
+                      Scan to pay ₹{parseFloat(totals.total).toFixed(2)} · {upiId}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs" style={{ color: "rgba(92,48,32,0.45)" }}>No UPI ID configured in admin</p>
+                )}
+              </div>
             )}
 
             {(payMethod === "CARD" || payMethod === "UPI") && (
@@ -228,6 +247,8 @@ function OrderView() {
   const { categories, products, loading: productsLoading } = useProducts(activeCategoryId ?? undefined);
   const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, loadItems, clear } = useCart();
   const { state: orderState, ensureOrder, resumeExisting, sendKitchen, pay } = useOrder();
+  const { methods: enabledMethods } = useEnabledPaymentMethods();
+  const upiId = enabledMethods.find((m) => m.method === "UPI")?.upiId ?? null;
 
   const [resumed, setResumed] = useState(false);
   useEffect(() => {
@@ -306,7 +327,7 @@ function OrderView() {
   }
 
   function openPayment() {
-    setPayMethod("CASH");
+    setPayMethod(enabledMethods[0]?.method ?? "CASH");
     setAmountReceived("");
     setPayReference("");
     setShowPayment(true);
@@ -322,7 +343,7 @@ function OrderView() {
     payMethod, setPayMethod,
     amountReceived, setAmountReceived,
     payReference, setPayReference,
-    cashReady,
+    cashReady, enabledMethods, upiId,
     onSendKitchen: handleSendToKitchen,
     onOpenPayment: openPayment,
     onPay: handlePay,
