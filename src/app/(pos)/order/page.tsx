@@ -32,7 +32,9 @@ function OrderView() {
   const { state: orderState, placeOrder, sendKitchen, pay } = useOrder();
 
   const [showPayment, setShowPayment] = useState(false);
+  const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
   const [amountReceived, setAmountReceived] = useState("");
+  const [payReference, setPayReference] = useState("");
 
   const filteredProducts = search.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
@@ -56,15 +58,32 @@ function OrderView() {
     await sendKitchen(id);
   }
 
+  const cashReady =
+    payMethod === "CASH" &&
+    !!amountReceived &&
+    parseFloat(amountReceived) >= parseFloat(totals.total);
+
   async function handlePay() {
-    if (!tableId || !amountReceived) return;
+    if (!tableId) return;
+    if (payMethod === "CASH" && !cashReady) return;
     let id = orderId;
     if (!id) {
       const order = await placeOrder(tableId, items);
       if (!order) return;
       id = order.id;
     }
-    await pay(id, parseFloat(amountReceived));
+    await pay(id, {
+      method: payMethod,
+      ...(payMethod === "CASH" ? { amountReceived: parseFloat(amountReceived) } : {}),
+      ...(payReference.trim() ? { reference: payReference.trim() } : {}),
+    });
+  }
+
+  function openPayment() {
+    setPayMethod("CASH");
+    setAmountReceived("");
+    setPayReference("");
+    setShowPayment(true);
   }
 
   if (isPaid && orderState.phase === "paid") {
@@ -199,35 +218,80 @@ function OrderView() {
               <Button
                 className="w-full"
                 disabled={isSubmitting}
-                onClick={() => setShowPayment(true)}
+                onClick={openPayment}
               >
                 💳 Checkout
               </Button>
             ) : (
-              <div className="space-y-2">
-                <input
-                  type="number"
-                  placeholder="Amount received (₹)"
-                  value={amountReceived}
-                  onChange={(e) => setAmountReceived(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                />
-                {amountReceived && parseFloat(amountReceived) >= parseFloat(totals.total) && (
-                  <p className="text-xs text-green-600">
-                    Change: ₹{(parseFloat(amountReceived) - parseFloat(totals.total)).toFixed(2)}
-                  </p>
+              <div className="space-y-3">
+                {/* Method tabs */}
+                <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
+                  {(["CASH", "CARD", "UPI"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => { setPayMethod(m); setAmountReceived(""); setPayReference(""); }}
+                      className={`flex-1 py-2 transition-colors ${
+                        payMethod === m
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {m === "CASH" ? "💵 Cash" : m === "CARD" ? "💳 Card" : "📱 UPI"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* CASH fields */}
+                {payMethod === "CASH" && (
+                  <>
+                    <input
+                      type="number"
+                      placeholder="Amount received (₹)"
+                      value={amountReceived}
+                      onChange={(e) => setAmountReceived(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                    />
+                    {cashReady && (
+                      <p className="text-xs text-green-600">
+                        Change: ₹{(parseFloat(amountReceived) - parseFloat(totals.total)).toFixed(2)}
+                      </p>
+                    )}
+                  </>
                 )}
+
+                {/* CARD fields */}
+                {payMethod === "CARD" && (
+                  <input
+                    type="text"
+                    placeholder="Transaction reference (optional)"
+                    value={payReference}
+                    onChange={(e) => setPayReference(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                  />
+                )}
+
+                {/* UPI fields */}
+                {payMethod === "UPI" && (
+                  <input
+                    type="text"
+                    placeholder="UPI reference / note (optional)"
+                    value={payReference}
+                    onChange={(e) => setPayReference(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                  />
+                )}
+
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" onClick={() => setShowPayment(false)}>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowPayment(false)}
+                  >
                     Cancel
                   </Button>
                   <Button
                     className="flex-1"
-                    disabled={
-                      isSubmitting ||
-                      !amountReceived ||
-                      parseFloat(amountReceived) < parseFloat(totals.total)
-                    }
+                    disabled={isSubmitting || (payMethod === "CASH" && !cashReady)}
                     onClick={handlePay}
                   >
                     {isSubmitting ? "Processing…" : "Confirm Pay"}

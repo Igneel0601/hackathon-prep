@@ -57,10 +57,13 @@ export function useOrder() {
     }
   }
 
-  async function pay(orderId: string, amountReceived: number) {
+  async function pay(
+    orderId: string,
+    opts: { method: "CASH" | "CARD" | "UPI"; amountReceived?: number; reference?: string },
+  ) {
     dispatch({ type: "submitting" });
     try {
-      const result = await payOrder(orderId, { method: "CASH", amountReceived });
+      const result = await payOrder(orderId, opts);
       dispatch({ type: "paid", result });
       return result;
     } catch (e: unknown) {
