@@ -6,9 +6,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export function proxy(req: NextRequest) {
-  // The root is always the kiosk entry (Self Checkout vs Service) for everyone.
+  // The root is public: it renders the kiosk entry (Self Checkout vs Service)
+  // for guests, and the staff hero once signed in (decided in the page itself).
   if (req.nextUrl.pathname === "/") {
-    return NextResponse.redirect(new URL("/welcome", req.url));
+    return NextResponse.next();
   }
 
   const hasSession =
@@ -25,5 +26,5 @@ export function proxy(req: NextRequest) {
 
 // Run on everything except API routes, Next internals, the login page, and assets.
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login|welcome|self).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login|self).*)"],
 };

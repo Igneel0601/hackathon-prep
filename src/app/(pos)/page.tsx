@@ -6,17 +6,23 @@ import { useProducts } from "./order/_hooks/useProducts";
 import { CafeLogo } from "@/components/CafeLogo";
 import { productImage } from "@/lib/product-image";
 import { PosUserMenu } from "@/components/PosUserMenu";
+import { WelcomeEntry } from "@/components/WelcomeEntry";
 
 const DISPLAY = "var(--cafe-font-display)";
 const BODY = "var(--cafe-font-body)";
 
 export default function PosHomePage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { products } = useProducts();
 
   const isAdmin = session?.user?.role === "ADMIN";
   const featured = products.slice(0, 3);
+
+  // Root is the kiosk entry for guests; the staff hero once signed in.
+  if (status !== "authenticated") {
+    return <WelcomeEntry />;
+  }
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden" style={{ background: "#EFEAE4", fontFamily: BODY }}>

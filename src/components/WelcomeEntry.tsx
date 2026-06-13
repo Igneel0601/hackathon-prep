@@ -1,5 +1,6 @@
 "use client";
 
+// Kiosk entry shown at "/" for guests (not signed in): Self Checkout vs Service.
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { CafeLogo } from "@/components/CafeLogo";
@@ -7,7 +8,7 @@ import { CafeLogo } from "@/components/CafeLogo";
 const DISPLAY = "var(--cafe-font-display)";
 const BODY = "var(--cafe-font-body)";
 
-export default function WelcomePage() {
+export function WelcomeEntry() {
   const router = useRouter();
 
   return (
