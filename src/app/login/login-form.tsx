@@ -79,6 +79,17 @@ export function LoginForm() {
     >
       {/* Header */}
       <div className="px-7 pt-7 pb-5" style={{ borderBottom: "1px solid rgba(92,48,32,0.10)" }}>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="mb-3 flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-70"
+          style={{ color: "#9B6B55", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/>
+          </svg>
+          Back
+        </button>
         <p
           className="mb-1.5 text-[0.6875rem] font-semibold uppercase"
           style={{ letterSpacing: "0.22em", color: "#C2570A" }}
