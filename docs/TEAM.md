@@ -40,9 +40,9 @@ Everyone points at the **same Neon database**, so migrations are tightly owned.
 
 Split along the MVP spine (see [`SCOPE.md`](./SCOPE.md)) so two people can own the demo end-to-end.
 
-- **Vertical A (Rajat) — Order View + Ordering.** The POS terminal's core screen: floor pop-up → table → Order View (product cards, category tabs, search, cart, qty, order summary). Cash payment + "order marked Paid". Owns the `Order`/`OrderItem`/`Payment` write APIs.
-- **Vertical B (Mukund) — Kitchen Display + Orders.** `Send to Kitchen` → KDS screen (separate tab, ticket cards, To Cook → Preparing → Completed, polling). Orders list for the session. Owns the KDS + order-status APIs.
-- **Platform (Vaibhav).** `prisma/schema.prisma` (Product, Category, Floor, Table, Order, OrderItem, Payment, Session, Customer), Auth roles (User/admin vs Employee), seed data, integration/merges.
+- **Vertical A (Rajat) — Order View + Ordering UI.** The POS terminal's core screen: floor pop-up → table → Order View (product cards, category tabs, search, cart, qty, order summary). Cash payment + "order marked Paid". Consumes Vaibhav's order/payment endpoints (see plan-aware split below).
+- **Vertical B (Mukund) — Kitchen Display + Orders UI.** `Send to Kitchen` → KDS screen (separate tab, ticket cards, To Cook → Preparing → Completed, polling). Orders list for the session. Consumes Vaibhav's status/orders endpoints.
+- **Platform + API layer (Vaibhav).** `prisma/schema.prisma`, Auth roles, seed, **and all API routes / server actions** the Pro screens consume (orders, payments, KDS status, reads), each with its `docs/apis/` contract. Integration/merges/review. (Max 5x absorbs the Claude-heavy backend — see split below.)
 - **Shared/cross-feature UI (Vinayak).** POS shell + top nav, design tokens from the mockup, reusable cards/buttons/modals in `src/components/`, demo polish. Pairs with Rajat/Mukund to skin their screens.
 
 > Add-ons (admin CRUD, coupons, UPI/Card, dashboard, customers) are pulled from `SCOPE.md` **only after** the spine demos clean — assign owners then.
@@ -51,31 +51,44 @@ Split along the MVP spine (see [`SCOPE.md`](./SCOPE.md)) so two people can own t
 
 The 5-step spine in [`SCOPE.md`](./SCOPE.md), divided so all four work in parallel.
 
-**Vaibhav — Platform (do FIRST, unblocks A & B).**
-- Schema + migration: `Product, Category, Floor, Table, Order, OrderItem, Payment, Session, Customer`.
-- Seed: a few products across 2-3 categories, one floor + a couple tables, Cash enabled, one admin + one employee account.
-- Auth role gate (admin vs employee); on login, open/resume a POS `Session` and redirect to the terminal.
-- Nail the **shared Order contract** (status enum, OrderItem shape) so A writes it and B reads it — see "Shared contract" below. Stub the API routes + `docs/apis/` so A/B build against a fixed shape.
+> **Plan-aware distribution.** Vaibhav is on **Claude Max 5x**; everyone else is on **Pro**.
+> So the Claude-heavy, wide-context, cross-cutting work (the **API/data layer** + integration
+> + PR review) lands on the Max budget. Pro users each own **one UI screen** built against a
+> **fixed `docs/apis/` contract** — small surface, short sessions, low context = fits Pro limits.
+> They consume endpoints; they don't need the backend in context.
 
-**Rajat (Vertical A) — Order View + Cash payment.**
+**Vaibhav — Platform + API layer (Max 5x; do API stubs FIRST, unblocks everyone).**
+- Schema + migration ✅ (done) + seed ✅.
+- **All API routes / server actions** the Pro screens consume: orders + items (create/update Draft), payment (Cash → Paid), `Send to Kitchen` + KDS status advance, and read endpoints (products by category, tables/floors, session orders).
+- Each route ships with its `docs/apis/<path>/route.md` contract **before** the Pro user starts — that contract is all they need.
+- Auth role gate (admin vs employee); on login open/resume a POS `Session` and redirect to the terminal.
+- Integration glue + reviewing every PR + firefighting. This is where the Max budget goes.
+
+**Rajat (Pro) — Order View UI.** Consumes Vaibhav's order/payment endpoints.
 - Floor pop-up → select table → Order View.
-- Product section (cards from API, category tabs, name search) → click adds to cart.
+- Product section (cards, category tabs, name search) → click adds to cart.
 - Cart: qty +/-, line totals, order summary (subtotal / tax / total).
-- Persist order as **Draft** (`POST/PATCH` order + items).
-- Cash checkout: amount received → change due → mark **Paid** → receipt view.
+- Cash checkout UI: amount received → change due → mark Paid → receipt view.
+- _Builds against `docs/apis/` — does not need to read the backend._
 
-**Mukund (Vertical B) — Send to Kitchen + Kitchen Display + Orders.**
-- `Send to Kitchen` action (sets order → kitchen queue).
+**Mukund (Pro) — KDS + Orders UI.** Consumes Vaibhav's status/orders endpoints.
+- `Send to Kitchen` button (calls the status endpoint).
 - KDS screen at a fixed route (separate tab): ticket cards, **poll every 2-3s**, stages To Cook → Preparing → Completed; clicking a card advances the stage.
 - Orders list for the current session (order #, customer, amount, status).
+- _Builds against `docs/apis/` — does not need to read the backend._
 
-**Vinayak — UI shell + skinning (parallel from hour 0, no DB dependency).**
+**Vinayak (Pro) — UI shell + components (cheapest sessions; no backend at all).**
 - shadcn init, app shell + top nav (POS Order, Orders, Table View, employee icon, hamburger).
-- Design tokens pulled from the mockup; reusable `ProductCard`, `CartLine`, `TicketCard`, `Modal`, `Button` in `src/components/`.
+- Design tokens from the mockup; reusable `ProductCard`, `CartLine`, `TicketCard`, `Modal`, `Button` in `src/components/`.
 - Skin Rajat's Order View and Mukund's KDS to match the mockup; login screen + demo polish.
 
+### Pro-budget tips (pass to the team)
+- Build against the `docs/apis/` contract — Claude needn't read backend code.
+- `AGENTS.md` is auto-loaded; don't re-explain conventions each session.
+- One screen per branch, small PRs → short review loops, less re-reading.
+
 ### Sequencing
-1. **Hour 0:** Vaibhav ships schema + seed + Order contract; Vinayak starts shell + components (no DB needed).
+1. **Hour 0:** Vaibhav (Max) ships the API stubs + `docs/apis/` contracts; Vinayak starts shell + components (no DB needed).
 2. **Once seed lands:** Rajat + Mukund build against seeded data and the fixed contract.
 3. **Integration checkpoint:** an order Rajat creates must show on Mukund's KDS — test that handoff early, don't leave it to the end.
 
