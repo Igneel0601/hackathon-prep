@@ -1,16 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useReducer, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FloorPickerModal } from "./order/_components/FloorPickerModal";
 import { useTables } from "./order/_hooks/useTables";
 import type { TableInfo } from "@/lib/api-types";
 
+type ClockState = { clock: string; date: string };
+function clockReducer(_: ClockState, now: Date): ClockState {
+  return {
+    clock: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    date: now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+  };
+}
+
 export default function PosHomePage() {
   const router = useRouter();
   const { floors, loading, error, refetch } = useTables();
   const [showPicker, setShowPicker] = useState(false);
+  const [clockState, dispatchClock] = useReducer(clockReducer, { clock: "", date: "" });
+
+  useEffect(() => {
+    const tick = () => dispatchClock(new Date());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const allTables = floors.flatMap((f) => f.tables);
+  const totalTables = allTables.length;
+  const occupiedTables = allTables.filter((t) => t.hasActiveOrder).length;
+  const availableTables = totalTables - occupiedTables;
 
   function handleSelectTable(table: TableInfo) {
     router.push(`/order?tableId=${table.id}`);
@@ -33,38 +54,69 @@ export default function PosHomePage() {
 
       {/* Navbar */}
       <header
-        className="relative z-10 flex h-16 shrink-0 items-center justify-between px-5 md:h-[72px] md:px-9"
-        style={{ background: "rgba(13,5,2,0.42)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        className="relative z-10 flex shrink-0 items-center justify-between px-5 md:px-9"
+        style={{ height: 64, background: "rgba(13,5,2,0.48)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
       >
+        {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <Image src="/logo-badge.png" alt="Odoo Cafe" width={34} height={34} className="object-contain" />
-          <span className="hidden text-base font-extrabold uppercase tracking-tight text-[#FAF3E8] md:block" style={{ fontFamily: "var(--cafe-font-display)" }}>
+          <Image src="/logo-badge.png" alt="Odoo Cafe" width={32} height={32} className="object-contain" />
+          <span className="hidden text-base font-extrabold uppercase tracking-tight md:block" style={{ fontFamily: "var(--cafe-font-display)", color: "#FAF3E8" }}>
             Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
           </span>
         </div>
 
-        {/* Nav links */}
-        <div className="flex items-center gap-3">
+        {/* Clock (desktop) */}
+        {clockState.clock && (
+          <div className="absolute left-1/2 hidden -translate-x-1/2 flex-col items-center md:flex">
+            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.125rem", fontWeight: 700, color: "#FAF3E8", letterSpacing: "-0.01em" }}>
+              {clockState.clock}
+            </span>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", color: "rgba(250,243,232,0.50)", letterSpacing: "0.02em" }}>
+              {clockState.date}
+            </span>
+          </div>
+        )}
+
+        {/* Right: nav links + badge + avatar */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => router.push("/orders")}
-            className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors"
-            style={{ background: "rgba(255,188,13,0.10)", border: "1px solid rgba(255,188,13,0.22)", color: "#FAF3E8" }}
+            className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors md:block"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(250,243,232,0.70)" }}
           >
-            📋 Orders
+            Orders
           </button>
           <button
             onClick={() => router.push("/kds")}
-            className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors"
-            style={{ background: "rgba(255,188,13,0.10)", border: "1px solid rgba(255,188,13,0.22)", color: "#FAF3E8" }}
+            className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors md:block"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(250,243,232,0.70)" }}
           >
-            🍳 Kitchen
+            Kitchen
           </button>
+
+          {/* OPEN badge */}
           <div
-            className="flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3"
+            className="flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-2.5"
             style={{ background: "rgba(255,188,13,0.12)", border: "1px solid rgba(255,188,13,0.25)" }}
           >
-            <span className="h-2 w-2 rounded-full bg-green-400" style={{ boxShadow: "0 0 6px #4ade80" }} />
-            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#FAF3E8" }}>Open</span>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#4ade80", boxShadow: "0 0 6px #4ade80" }} />
+            <span className="text-[0.7rem] font-bold uppercase tracking-[0.05em]" style={{ color: "rgba(250,243,232,0.90)" }}>Open</span>
+          </div>
+
+          {/* Avatar */}
+          <div
+            className="flex items-center justify-center rounded-full text-xs font-bold"
+            style={{
+              width: 34,
+              height: 34,
+              background: "rgba(26,10,4,0.70)",
+              border: "1.5px solid rgba(255,255,255,0.18)",
+              color: "#FAF3E8",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            N
           </div>
         </div>
       </header>
@@ -126,6 +178,17 @@ export default function PosHomePage() {
               </>
             )}
           </button>
+
+          {/* Mobile nav links */}
+          <div className="mt-5 flex items-center justify-center gap-4 md:hidden">
+            <button onClick={() => router.push("/orders")} className="text-xs font-semibold" style={{ color: "rgba(250,243,232,0.55)" }}>
+              Orders
+            </button>
+            <span style={{ color: "rgba(250,243,232,0.20)" }}>·</span>
+            <button onClick={() => router.push("/kds")} className="text-xs font-semibold" style={{ color: "rgba(250,243,232,0.55)" }}>
+              Kitchen
+            </button>
+          </div>
         </div>
       </main>
 
@@ -134,6 +197,22 @@ export default function PosHomePage() {
         className="relative z-10 flex shrink-0 items-center justify-center gap-5 px-5 py-2.5"
         style={{ background: "rgba(13,5,2,0.42)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
       >
+        {!loading && totalTables > 0 && (
+          <>
+            <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
+              Tables: <span className="font-semibold" style={{ color: "#FAF3E8" }}>{totalTables}</span>
+            </span>
+            <span style={{ color: "rgba(212,169,122,0.30)" }}>·</span>
+            <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
+              Available: <span className="font-semibold" style={{ color: "#4ade80" }}>{availableTables}</span>
+            </span>
+            <span style={{ color: "rgba(212,169,122,0.30)" }}>·</span>
+            <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
+              Occupied: <span className="font-semibold" style={{ color: "#FFBC0D" }}>{occupiedTables}</span>
+            </span>
+            <span style={{ color: "rgba(212,169,122,0.30)" }}>·</span>
+          </>
+        )}
         <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
           Version <span className="font-semibold" style={{ color: "#FAF3E8" }}>1.0.0</span>
         </span>
