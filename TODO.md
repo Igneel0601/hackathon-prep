@@ -1,26 +1,26 @@
 # TODO
 
-## Tonight (optional)
-- [ ] Google OAuth creds → `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` in `.env` (only blocker for working login; skip if idea may not need login)
-- [x] Rulesets active: `dev` (PR + Copilot review) and `main` (PR, no review). Flow: `feat/* → dev → main`, both PR-gated.
-- [ ] `DIRECT_URL` lock (optional) — to truly enforce only-Vaibhav-migrates, share only `DATABASE_URL` in chat and pull `DIRECT_URL`
+## Now — team building the MVP (Cafe POS)
+Branch off `dev`, PR back into `dev`. Spine in `docs/SCOPE.md`; endpoints in `docs/apis/`.
+- [ ] **Vinayak** — `feat/ui-shell`: shadcn init, app shell + top nav, components from the mockup
+- [ ] **Rajat** — `feat/order-view`: floor → Order View → cart → cash pay (`/api/tables`, `/api/products`, `/api/orders`, `…/payment`)
+- [ ] **Mukund** — `feat/kitchen-display`: Send-to-Kitchen → KDS (poll 2-3s) → Orders list (`…/kitchen`, `/api/kitchen`, `/api/orders`)
+- [ ] **Vaibhav** — integration, PR review, wire login UI to `signIn()`; add-on APIs when spine is green
 
-## Tomorrow (once problem statement drops)
-- [ ] Name feature verticals in `docs/TEAM.md` (Rajat = A, Mukund = B)
-- [ ] Vinayak: shadcn/ui init
-- [ ] First real models → Vaibhav runs `pnpm db:migrate`
-
-## Nice-to-have
+## Optional / later
+- [ ] Real Google OAuth creds (secondary login) — email/password already works without them
+- [ ] `DIRECT_URL` lock — share only `DATABASE_URL` in chat to enforce only-Vaibhav-migrates
 - [ ] Bump CI actions off Node 20 (cosmetic deprecation warning)
+- [ ] Add-ons (only after MVP demos clean) — see `docs/SCOPE.md`: coupons, UPI/Card, dashboard, customer mgmt
 
 ---
 
 ## Done ✅
-- Next.js 16 + React 19 + TS + Tailwind, pnpm, on `main`
-- Prisma 7 + Neon — migrated + seeded, connection verified
-- Pooled/direct URL split (`DATABASE_URL` / `DIRECT_URL`)
-- Auth.js v5 wired (Google provider, DB sessions); `AUTH_SECRET` set
-- CI gates all PRs: lint/typecheck/build + API-doc-sync (no local pre-push hook)
-- Docs: AGENTS.md, ARCHITECTURE, TEAM.md, API template+index, seed, Copilot instructions
-- Onboarding README; DB-safety guard in AGENTS.md
-- Secrets shared with team
+- Next.js 16 + React 19 + TS + Tailwind, pnpm; `feat → dev → main` flow, rulesets + CI (lint/typecheck/build + doc-sync)
+- Prisma 7 + Neon — schema, migrations, seed live (6 products / 3 categories / 1 floor + 4 tables)
+- **Problem locked: Odoo Cafe POS** — brief + mockup in `docs/{brief,design}`; MVP cut + plan-aware split in `docs/{SCOPE,TEAM}`
+- **POS API layer** — 7 routes (products, tables, orders CRUD, payment, kitchen, KDS) + docs, Copilot-reviewed
+- **Auth** — email/password (primary) + Google (secondary), JWT sessions; `POST /api/signup`
+  - Seed logins: `cashier@test.com` / `cashier123` · `admin@test.com` / `admin123`
+- Docs: AGENTS, ARCHITECTURE (decision log + data model), TEAM, SCOPE, DEMO, seed, API index
+- Secrets (`DATABASE_URL` / `AUTH_SECRET`) shared with team
