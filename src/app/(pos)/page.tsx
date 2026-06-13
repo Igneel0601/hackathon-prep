@@ -39,16 +39,15 @@ export default function PosHomePage() {
 
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden">
-      {/* Background */}
+      {/* Background — coffee beans */}
       <div className="absolute inset-0 z-0">
-        <Image src="/cafe-interior.jpg" alt="" fill className="object-cover object-center md:hidden" priority />
-        <Image src="/cafe-moody.jpg" alt="" fill className="hidden object-cover object-center md:block" priority />
+        <Image src="/coffee-beans.jpg" alt="" fill className="object-cover object-center" priority />
       </div>
       {/* Overlay */}
       <div
         className="absolute inset-0 z-[1]"
         style={{
-          background: "radial-gradient(ellipse 80% 70% at 50% 60%, rgba(13,5,2,0.62) 0%, transparent 100%), linear-gradient(to bottom, rgba(13,5,2,0.55) 0%, rgba(13,5,2,0.30) 40%, rgba(13,5,2,0.70) 100%)",
+          background: "radial-gradient(ellipse 75% 65% at 50% 50%, rgba(13,5,2,0.70) 0%, rgba(13,5,2,0.86) 100%), linear-gradient(to bottom, rgba(13,5,2,0.55) 0%, rgba(13,5,2,0.40) 45%, rgba(13,5,2,0.80) 100%)",
         }}
       />
 
@@ -121,51 +120,47 @@ export default function PosHomePage() {
         </div>
       </header>
 
-      {/* Main card */}
-      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8">
-        <div
-          className="w-full max-w-sm rounded-3xl px-9 py-10 text-center md:max-w-md md:px-12 md:py-14"
-          style={{
-            background: "rgba(26,10,4,0.72)",
-            backdropFilter: "blur(32px)",
-            border: "1px solid rgba(255,188,13,0.22)",
-            borderTop: "2px solid rgba(255,188,13,0.55)",
-            boxShadow: "0 32px 80px rgba(13,5,2,0.75), 0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 60px rgba(255,188,13,0.06)",
-          }}
+      {/* Hero */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-8 text-center">
+        {/* Logo */}
+        <div className="relative mb-6 flex justify-center">
+          <div
+            className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(255,188,13,0.28) 0%, transparent 70%)" }}
+          />
+          <Image src="/logo-badge.png" alt="Odoo Cafe" width={76} height={76} className="relative z-10 object-contain" style={{ filter: "drop-shadow(0 6px 18px rgba(255,188,13,0.35))" }} />
+        </div>
+
+        <h1
+          className="text-6xl font-extrabold uppercase leading-none tracking-tight text-[#FAF3E8] md:text-8xl"
+          style={{ fontFamily: "var(--cafe-font-display)", textShadow: "0 4px 30px rgba(13,5,2,0.8)" }}
         >
-          {/* Logo */}
-          <div className="relative mb-5 flex justify-center">
-            <div
-              className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ background: "radial-gradient(circle, rgba(255,188,13,0.22) 0%, transparent 70%)" }}
-            />
-            <Image src="/logo-badge.png" alt="Odoo Cafe" width={64} height={64} className="relative z-10 object-contain" style={{ filter: "drop-shadow(0 4px 12px rgba(255,188,13,0.30))" }} />
-          </div>
+          Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
+        </h1>
+        <div className="mx-auto my-5 h-0.5 w-16 rounded-full" style={{ background: "linear-gradient(to right, transparent, #FFBC0D, transparent)" }} />
+        <p className="mb-9 text-sm uppercase tracking-[0.28em]" style={{ color: "rgba(212,169,122,0.85)" }}>
+          Cozy · Warm · Freshly Brewed
+        </p>
 
-          <h1 className="mb-3 text-5xl font-extrabold uppercase leading-none tracking-tight text-[#FAF3E8] md:text-6xl" style={{ fontFamily: "var(--cafe-font-display)" }}>
-            Odoo Cafe
-          </h1>
-          <div className="mx-auto mb-4 h-0.5 w-10 rounded-full" style={{ background: "linear-gradient(to right, transparent, #FFBC0D, transparent)" }} />
-          <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(212,169,122,0.80)" }}>
-            Select a table to start an order
+        {error && (
+          <p className="mb-5 rounded-lg px-4 py-2 text-sm" style={{ background: "rgba(139,0,0,0.30)", color: "#F2A8A8" }}>
+            {error} —{" "}
+            <button onClick={refetch} className="underline">retry</button>
           </p>
+        )}
 
-          {error && (
-            <p className="mb-4 rounded-lg px-4 py-2 text-sm" style={{ background: "rgba(139,0,0,0.20)", color: "#F28B8B" }}>
-              {error} —{" "}
-              <button onClick={refetch} className="underline">retry</button>
-            </p>
-          )}
-
+        {/* Actions */}
+        <div className="flex w-full max-w-xs flex-col gap-3">
+          {/* Open Table — primary */}
           <button
             onClick={() => setShowPicker(true)}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl text-base font-bold transition-all disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-xl text-base font-bold transition-all active:scale-[0.98] disabled:opacity-50"
             style={{
-              height: "52px",
+              height: 54,
               background: "#FFBC0D",
               color: "#1A0A04",
-              boxShadow: "0 4px 20px rgba(255,188,13,0.40), 0 1px 0 rgba(255,255,255,0.15) inset",
+              boxShadow: "0 6px 24px rgba(255,188,13,0.45), 0 1px 0 rgba(255,255,255,0.18) inset",
             }}
           >
             {loading ? "Loading tables…" : (
@@ -178,13 +173,32 @@ export default function PosHomePage() {
             )}
           </button>
 
-          {/* Mobile nav links */}
-          <div className="mt-5 flex items-center justify-center gap-4 md:hidden">
-            <button onClick={() => router.push("/orders")} className="text-xs font-semibold" style={{ color: "rgba(250,243,232,0.55)" }}>
+          {/* Orders + Kitchen — secondary, same shape */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/orders")}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl text-base font-bold transition-all active:scale-[0.98]"
+              style={{
+                height: 54,
+                background: "rgba(255,188,13,0.08)",
+                color: "#FFBC0D",
+                border: "1.5px solid rgba(255,188,13,0.45)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
               Orders
             </button>
-            <span style={{ color: "rgba(250,243,232,0.20)" }}>·</span>
-            <button onClick={() => router.push("/kds")} className="text-xs font-semibold" style={{ color: "rgba(250,243,232,0.55)" }}>
+            <button
+              onClick={() => router.push("/kds")}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl text-base font-bold transition-all active:scale-[0.98]"
+              style={{
+                height: 54,
+                background: "rgba(255,188,13,0.08)",
+                color: "#FFBC0D",
+                border: "1.5px solid rgba(255,188,13,0.45)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
               Kitchen
             </button>
           </div>
