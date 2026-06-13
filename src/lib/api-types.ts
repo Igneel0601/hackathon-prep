@@ -273,3 +273,18 @@ export interface CreateUserBody {
   password: string;
 }
 export type UpdateUserBody = Partial<{ name: string; role: Role }>;
+
+// ─── Self-checkout (public kiosk) ────────────────────────────────────────────
+export interface SelfCheckoutOrderBody {
+  email: string;
+  tableId: string;
+  items: { productId: string; qty: number }[];
+}
+
+export interface SelfCheckoutOrderResponse {
+  orderNumber: number;
+  tableNumber: number;
+  subtotal: Money;
+  tax: Money;
+  total: Money;
+}

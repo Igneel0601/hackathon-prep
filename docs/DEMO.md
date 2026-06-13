@@ -44,6 +44,20 @@ One web app with three connected surfaces: a **POS terminal** (cashier), a **Kit
 6. Back on the terminal: **Checkout → Cash**, enter amount → **change shown** → **receipt** (hit Print).
 7. Reopen tables — table 1 is **free** again.
 
+## Self-checkout kiosk (add-on)
+
+Open **`/self-checkout`** (no login — could run on a tablet at the door). A guest:
+
+1. Browses the menu and builds a cart.
+2. Picks a **free table** (occupied tables aren't shown).
+3. Enters their **email** for the receipt.
+4. Hits **Place Order** — order goes straight to the kitchen (no cashier step needed), the
+   table shows as occupied on the POS, and the guest gets an emailed receipt with the
+   **total due**. No payment is taken here — staff collect it at the table as normal.
+
+"Wow" moment: place an order from `/self-checkout` on one device, watch it appear on `/kds`
+instantly, then resume it from `/order` to take payment.
+
 ## What's next (if we had more time)
 
 Admin back-office (manage products/tables in-app instead of seeded), coupons & promotions, a reporting dashboard (revenue, top items), and per-item kitchen tracking.

@@ -18,6 +18,11 @@ Document every record a test might depend on. Update this table whenever `prisma
 
 > Passwords are bcrypt-hashed by the seed. Dev-only — fine to log in with these locally. Both seed users are `active: true`.
 
+### Kiosk system user
+| email | name | role | password | notes |
+|-------|------|------|----------|-------|
+| `kiosk@cafe.internal` | Self-Checkout Kiosk | EMPLOYEE | none | owns the PosSession self-checkout orders attach to (see `src/lib/kiosk.ts`); never logs in |
+
 ### Payment method settings
 | method | enabled | upiId |
 |--------|---------|-------|
@@ -47,4 +52,4 @@ Document every record a test might depend on. Update this table whenever `prisma
 |-------|--------|-----------|
 | Ground Floor (`id: seed-floor-ground`) | 1, 2, 3, 4 | 4 |
 
-> No orders/sessions seeded — those are created live during the demo.
+> No orders seeded — those are created live during the demo. The kiosk user's PosSession is the one exception (seeded so self-checkout works immediately).
