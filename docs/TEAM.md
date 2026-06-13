@@ -36,13 +36,54 @@ Everyone points at the **same Neon database**, so migrations are tightly owned.
 - **Demo / pitch** → Vinayak leads (owns what judges see) + owner of the hero feature.
 - **Onboarding README** → Vaibhav.
 
-## Feature verticals — TBD
+## Feature verticals — Odoo Cafe POS
 
-Fill once the problem statement lands:
+Split along the MVP spine (see [`SCOPE.md`](./SCOPE.md)) so two people can own the demo end-to-end.
 
-- **Vertical A (Rajat):** _TBD_
-- **Vertical B (Mukund):** _TBD_
-- Shared/cross-feature UI (Vinayak): _TBD_
+- **Vertical A (Rajat) — Order View + Ordering.** The POS terminal's core screen: floor pop-up → table → Order View (product cards, category tabs, search, cart, qty, order summary). Cash payment + "order marked Paid". Owns the `Order`/`OrderItem`/`Payment` write APIs.
+- **Vertical B (Mukund) — Kitchen Display + Orders.** `Send to Kitchen` → KDS screen (separate tab, ticket cards, To Cook → Preparing → Completed, polling). Orders list for the session. Owns the KDS + order-status APIs.
+- **Platform (Vaibhav).** `prisma/schema.prisma` (Product, Category, Floor, Table, Order, OrderItem, Payment, Session, Customer), Auth roles (User/admin vs Employee), seed data, integration/merges.
+- **Shared/cross-feature UI (Vinayak).** POS shell + top nav, design tokens from the mockup, reusable cards/buttons/modals in `src/components/`, demo polish. Pairs with Rajat/Mukund to skin their screens.
+
+> Add-ons (admin CRUD, coupons, UPI/Card, dashboard, customers) are pulled from `SCOPE.md` **only after** the spine demos clean — assign owners then.
+
+## MVP build split — who does what (everyone builds)
+
+The 5-step spine in [`SCOPE.md`](./SCOPE.md), divided so all four work in parallel.
+
+**Vaibhav — Platform (do FIRST, unblocks A & B).**
+- Schema + migration: `Product, Category, Floor, Table, Order, OrderItem, Payment, Session, Customer`.
+- Seed: a few products across 2-3 categories, one floor + a couple tables, Cash enabled, one admin + one employee account.
+- Auth role gate (admin vs employee); on login, open/resume a POS `Session` and redirect to the terminal.
+- Nail the **shared Order contract** (status enum, OrderItem shape) so A writes it and B reads it — see "Shared contract" below. Stub the API routes + `docs/apis/` so A/B build against a fixed shape.
+
+**Rajat (Vertical A) — Order View + Cash payment.**
+- Floor pop-up → select table → Order View.
+- Product section (cards from API, category tabs, name search) → click adds to cart.
+- Cart: qty +/-, line totals, order summary (subtotal / tax / total).
+- Persist order as **Draft** (`POST/PATCH` order + items).
+- Cash checkout: amount received → change due → mark **Paid** → receipt view.
+
+**Mukund (Vertical B) — Send to Kitchen + Kitchen Display + Orders.**
+- `Send to Kitchen` action (sets order → kitchen queue).
+- KDS screen at a fixed route (separate tab): ticket cards, **poll every 2-3s**, stages To Cook → Preparing → Completed; clicking a card advances the stage.
+- Orders list for the current session (order #, customer, amount, status).
+
+**Vinayak — UI shell + skinning (parallel from hour 0, no DB dependency).**
+- shadcn init, app shell + top nav (POS Order, Orders, Table View, employee icon, hamburger).
+- Design tokens pulled from the mockup; reusable `ProductCard`, `CartLine`, `TicketCard`, `Modal`, `Button` in `src/components/`.
+- Skin Rajat's Order View and Mukund's KDS to match the mockup; login screen + demo polish.
+
+### Sequencing
+1. **Hour 0:** Vaibhav ships schema + seed + Order contract; Vinayak starts shell + components (no DB needed).
+2. **Once seed lands:** Rajat + Mukund build against seeded data and the fixed contract.
+3. **Integration checkpoint:** an order Rajat creates must show on Mukund's KDS — test that handoff early, don't leave it to the end.
+
+### Shared contract (agree before coding — Vaibhav owns)
+- `Order.status`: `DRAFT → PAID → CANCELLED` (payment lifecycle).
+- `Order.kitchenStatus`: `NONE → TO_COOK → PREPARING → COMPLETED` (set by `Send to Kitchen`, advanced on KDS). Keep it **order-level** for MVP; item-level strikethrough is an add-on.
+- `OrderItem`: `productId, name, unitPrice, qty, lineTotal` (snapshot price at add-time).
+- Rajat **writes** orders/items + payment; Mukund **reads** + advances `kitchenStatus`. Both go through Vaibhav's API shapes.
 
 ## Who built what
 
