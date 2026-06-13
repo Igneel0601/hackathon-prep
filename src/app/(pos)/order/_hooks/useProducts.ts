@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useReducer } from "react";
+import { use$ } from "@legendapp/state/react";
 import { getProducts } from "@/lib/api-client";
 import type { Category, Product } from "@/lib/api-types";
+import { OFFLINE_ENABLED } from "@/lib/offline/flag";
+import { products$ } from "@/lib/offline/store";
 
 type State = { categories: Category[]; products: Product[]; loading: boolean; error: string | null };
 type Action =
@@ -18,7 +21,8 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export function useProducts(categoryId?: string) {
+// Online: fetch (optionally category-filtered) directly — current behavior.
+function useProductsOnline(categoryId?: string) {
   const [state, dispatch] = useReducer(reducer, { categories: [], products: [], loading: true, error: null });
 
   useEffect(() => {
@@ -36,3 +40,19 @@ export function useProducts(categoryId?: string) {
 
   return state;
 }
+
+// Offline-mode: read the full menu from the Legend-State cache (products$ caches
+// ALL products + categories), then filter by category client-side — you can't
+// fetch per-category with no network. Serves IndexedDB offline, refreshes online.
+function useProductsOffline(categoryId?: string): State {
+  const data = use$(products$);
+  const all = data?.products ?? [];
+  return {
+    categories: data?.categories ?? [],
+    products: categoryId ? all.filter((p) => p.categoryId === categoryId) : all,
+    loading: data === undefined,
+    error: null,
+  };
+}
+
+export const useProducts = OFFLINE_ENABLED ? useProductsOffline : useProductsOnline;
