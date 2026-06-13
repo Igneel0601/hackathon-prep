@@ -6,6 +6,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export function proxy(req: NextRequest) {
+  // The root is public: it renders the kiosk entry (Self Checkout vs Service)
+  // for guests, and the staff hero once signed in (decided in the page itself).
+  if (req.nextUrl.pathname === "/") {
+    return NextResponse.next();
+  }
+
   const hasSession =
     req.cookies.has("authjs.session-token") ||
     req.cookies.has("__Secure-authjs.session-token");
@@ -18,11 +24,12 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Run on everything except API routes, Next internals, the login page, and any
-// static file (a path with an extension). Crucially, PWA assets like
-// /manifest.webmanifest, /sw.js and the icon PNGs are fetched WITHOUT credentials,
-// so the cookie check would 307 them to /login — serving HTML where the browser
-// expects JSON/JS. Excluding extensioned paths keeps those public.
+// Run on everything except API routes, Next internals, the login page, the
+// public self-checkout kiosk (`self`), and any static file (a path with an
+// extension). Crucially, PWA assets like /manifest.webmanifest, /sw.js and the
+// icon PNGs are fetched WITHOUT credentials, so the cookie check would 307 them
+// to /login — serving HTML where the browser expects JSON/JS. Excluding
+// extensioned paths keeps those public.
 export const config = {
-  matcher: ["/((?!api|_next|favicon.ico|login|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|favicon.ico|login|self|.*\\..*).*)"],
 };

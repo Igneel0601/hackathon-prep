@@ -210,7 +210,7 @@ export function useOrder() {
 
   async function pay(
     orderId: string,
-    opts: { method: "CASH" | "CARD" | "UPI"; amountReceived?: number; reference?: string },
+    opts: { method: "CASH" | "CARD" | "UPI"; amountReceived?: number; reference?: string; email?: string },
   ) {
     dispatch({ type: "submitting" });
     try {

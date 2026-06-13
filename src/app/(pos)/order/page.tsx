@@ -48,6 +48,8 @@ interface CartContentProps {
   setAmountReceived: (v: string) => void;
   payReference: string;
   setPayReference: (v: string) => void;
+  payEmail: string;
+  setPayEmail: (v: string) => void;
   cashReady: boolean;
   enabledMethods: { method: "CASH" | "CARD" | "UPI"; upiId?: string | null }[];
   upiId: string | null;
@@ -64,6 +66,7 @@ function CartContent({
   payMethod, setPayMethod,
   amountReceived, setAmountReceived,
   payReference, setPayReference,
+  payEmail, setPayEmail,
   cashReady, enabledMethods, upiId,
   onSendKitchen, onOpenPayment, onPay,
 }: CartContentProps) {
@@ -194,17 +197,12 @@ function CartContent({
             <div className="flex overflow-hidden rounded-xl" style={{ border: "1.5px solid rgba(92,48,32,0.18)" }}>
               {enabledMethods.map(({ method: m }) => {
                 const active = payMethod === m;
-                const activeStyles: Record<string, React.CSSProperties> = {
-                  CASH: { background: "rgba(92,48,32,0.10)", color: "#5C3020" },
-                  CARD: { background: "#1A0A04", color: "#FAF3E8" },
-                  UPI:  { background: "#FFBC0D", color: "#1A0A04" },
-                };
                 return (
                   <button
                     key={m}
                     onClick={() => { setPayMethod(m); setAmountReceived(""); setPayReference(""); }}
                     className="flex-1 py-2 text-xs font-semibold transition-colors"
-                    style={active ? activeStyles[m] : { background: "#fff", color: "#5C3020" }}
+                    style={active ? { background: "#1A0A04", color: "#FAF3E8" } : { background: "#fff", color: "#5C3020" }}
                   >
                     {m === "CASH" ? "💵 Cash" : m === "CARD" ? "💳 Card" : "📱 UPI"}
                   </button>
@@ -261,6 +259,15 @@ function CartContent({
                 style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.18)", color: "#1A0A04" }}
               />
             )}
+
+            <input
+              type="email"
+              placeholder="Email receipt (optional)"
+              value={payEmail}
+              onChange={(e) => setPayEmail(e.target.value)}
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.18)", color: "#1A0A04" }}
+            />
 
             <div className="flex gap-2">
               <button
@@ -352,6 +359,7 @@ function OrderView() {
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
   const [amountReceived, setAmountReceived] = useState("");
   const [payReference, setPayReference] = useState("");
+  const [payEmail, setPayEmail] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const filteredProducts = search.trim()
@@ -422,6 +430,7 @@ function OrderView() {
       method: payMethod,
       ...(payMethod === "CASH" ? { amountReceived: parseFloat(amountReceived) } : {}),
       ...(payReference.trim() ? { reference: payReference.trim() } : {}),
+      ...(payEmail.trim() ? { email: payEmail.trim() } : {}),
     });
   }
 
@@ -445,6 +454,7 @@ function OrderView() {
     setPayMethod(enabledMethods[0]?.method ?? "CASH");
     setAmountReceived("");
     setPayReference("");
+    setPayEmail("");
     setShowPayment(true);
   }
 
@@ -458,6 +468,7 @@ function OrderView() {
     payMethod, setPayMethod,
     amountReceived, setAmountReceived,
     payReference, setPayReference,
+    payEmail, setPayEmail,
     cashReady, enabledMethods, upiId,
     onSendKitchen: handleSendToKitchen,
     onOpenPayment: openPayment,

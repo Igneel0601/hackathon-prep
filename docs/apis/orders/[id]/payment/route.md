@@ -16,12 +16,14 @@
   {
     "method": "CASH" | "CARD" | "UPI",
     "amountReceived": 250.00,
-    "reference": "optional-card-or-upi-ref"
+    "reference": "optional-card-or-upi-ref",
+    "email": "optional-receipt@example.com"
   }
   ```
   - `method` — required. Payment method.
   - `amountReceived` — required for CASH (must be ≥ order total). Ignored for CARD/UPI.
   - `reference` — optional string. Card transaction ref or UPI note (simulated in MVP).
+  - `email` — optional. If provided (and a valid address), a paid receipt is emailed via SMTP after payment succeeds (best-effort, see `src/lib/mailer.ts`).
 
 ## Response
 
@@ -44,6 +46,7 @@
   - `'method must be "CASH", "CARD", or "UPI"'`
   - `"amountReceived is required for CASH payments"`
   - `"amountReceived is less than order total"`
+  - `"email must be a valid email address"`
 - **401** — `{ "error": "Not authenticated" }`
 - **404** — `{ "error": "Order not found" }` — unknown order id.
 - **409** — `{ "error": "Order is not payable" }` — order is not in DRAFT status (already PAID or CANCELLED).
@@ -69,3 +72,5 @@ curl -X POST http://localhost:3000/api/orders/clxyz123/payment \
 - The order status update and Payment row creation happen in a single Prisma `$transaction` — no partial writes.
 - CARD and UPI are simulated in the MVP: the endpoint accepts a `reference` string but does not call any payment gateway.
 - An order can only be paid once — attempting to pay a PAID or CANCELLED order returns 409.
+- Receipt email (if `email` given) is sent after the payment transaction commits and never fails the request — SMTP errors are logged (`[orders/payment] failed to send receipt email:`) but the 200 response is still returned. If `SMTP_HOST` isn't configured, the email is logged instead of sent (`src/lib/mailer.ts`).
+- Checkout also closes the kitchen ticket: the order's `kitchenStatus` and any item still `TO_COOK`/`PREPARING` are set to `COMPLETED`, so the order drops off `GET /api/kitchen` immediately (see `docs/apis/kitchen/route.md`).

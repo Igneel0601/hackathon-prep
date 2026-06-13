@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 const LINKS: { label: string; href: string; adminOnly?: boolean }[] = [
-  { label: "New Order", href: "/" },
+  { label: "New Order", href: "/tables" },
   { label: "Orders", href: "/orders" },
   { label: "Kitchen Display", href: "/kds" },
   { label: "Admin", href: "/admin", adminOnly: true },
@@ -80,7 +80,7 @@ export function PosUserMenu() {
           {/* Sign out */}
           <div style={{ borderTop: "1px solid rgba(92,48,32,0.10)" }}>
             <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
+              onClick={() => signOut({ callbackUrl: "/" })}
               className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold transition-colors hover:bg-[rgba(196,26,26,0.06)]"
               style={{ color: "#C41A1A" }}
             >

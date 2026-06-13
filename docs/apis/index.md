@@ -11,6 +11,9 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 | POST | `/api/signup` | [signup/route.md](./signup/route.md) | Create an email/password account |
 | GET | `/api/products` | [products/route.md](./products/route.md) | List active products (optional `?categoryId=`); categories |
 | GET | `/api/tables` | [tables/route.md](./tables/route.md) | Floors + their tables (with active-order flag) |
+| GET | `/api/self/menu` | [self/menu/route.md](./self/menu/route.md) | PUBLIC kiosk menu (active products + categories) |
+| GET | `/api/self/tables` | [self/tables/route.md](./self/tables/route.md) | PUBLIC kiosk floors + tables (free/occupied) |
+| POST | `/api/self/orders` | [self/orders/route.md](./self/orders/route.md) | PUBLIC self-checkout: place order on a free table, fire to kitchen |
 | GET/POST | `/api/orders` | [orders/route.md](./orders/route.md) | List session orders / create a Draft order |
 | PATCH | `/api/orders/[id]` | [orders/[id]/route.md](./orders/[id]/route.md) | Update a Draft order (items, qty, discount) |
 | POST | `/api/orders/[id]/payment` | [orders/[id]/payment/route.md](./orders/[id]/payment/route.md) | Take payment (Cash) → mark Paid |
@@ -31,5 +34,8 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 | PATCH/DELETE | `/api/admin/users/[id]` | [admin/users/[id]/route.md](./admin/users/[id]/route.md) | Admin: update / archive-or-delete a user |
 | POST | `/api/admin/users/[id]/password` | [admin/users/[id]/password/route.md](./admin/users/[id]/password/route.md) | Admin: set a user's password |
 | PATCH | `/api/admin/users/[id]/archive` | [admin/users/[id]/archive/route.md](./admin/users/[id]/archive/route.md) | Admin: archive/restore a user |
+| GET | `/api/self-checkout/menu` | [self-checkout/menu/route.md](./self-checkout/menu/route.md) | Public kiosk: active menu (products + categories) |
+| GET | `/api/self-checkout/tables` | [self-checkout/tables/route.md](./self-checkout/tables/route.md) | Public kiosk: active tables with free/occupied flag |
+| POST | `/api/self-checkout` | [self-checkout/route.md](./self-checkout/route.md) | Public kiosk: place a Draft order (no payment), email receipt |
 
 > Rows above are pre-registered for the parallel API build. Each route's `route.md` is authored on its own branch alongside the handler.
