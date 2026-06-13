@@ -51,7 +51,7 @@ Docs live with code. A blocking `pre-push` hook rejects pushes that change an AP
 
 - **Ownership:** see `docs/TEAM.md` for who owns what. Notably `prisma/schema.prisma` has a single owner (Vaibhav) — don't edit the schema on someone else's branch; request the model change instead. Shared UI lives in `src/components/`.
 - **DB safety — do NOT run `pnpm db:migrate`, `prisma migrate`, or `pnpm db:reset`** unless you are the schema owner (Vaibhav). These hit the **shared Neon DB** and can wipe everyone's data. Need a schema change? Ask the owner. `pnpm db:seed` (idempotent) is fine.
-- Branch per feature: `feat/<thing>`. Open PRs into `main`. Don't push broken builds to `main`.
+- Branch per change: `feat/<thing>` (also `fix/`, `chore/`, `docs/`, `refactor/`) → PR into `dev`; Copilot auto-reviews on push. Promote `dev → main` via PR at integration/demo checkpoints (merge commit, not squash). Direct push to `dev` and `main` is blocked by rulesets. Don't push broken builds.
 - Commit often, small messages. Speed over polish, but `pnpm build` must pass before merge.
 - Deploy target: TBD. `main` = source of truth for the demo.
 - If you add an env var, tell the team — it must be set wherever we deploy too, or the deploy breaks.

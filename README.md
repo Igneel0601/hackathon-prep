@@ -43,7 +43,7 @@ pnpm dev                     # http://localhost:3000
 
 ## How we work
 
-- **Branch per feature** (`feat/<thing>`) → PR into `main`. Keep PRs small, merge often.
+- **Branch per change** (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/<thing>`) → PR into `dev` (Copilot auto-reviews). Keep PRs small, merge often. `dev → main` is promoted via PR at demo checkpoints. Direct push to `dev`/`main` is blocked.
 - `pnpm build` must pass before merge. Pre-push runs typecheck + checks API docs are updated.
 - **Don't edit `prisma/schema.prisma`** unless you own it — request the model change instead.
 
