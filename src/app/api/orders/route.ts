@@ -217,6 +217,7 @@ export async function GET(request: NextRequest) {
     const session = await getOpenPosSession(user.id);
 
     const status = request.nextUrl.searchParams.get("status");
+    const tableId = request.nextUrl.searchParams.get("tableId");
     const allowedStatuses = ["DRAFT", "PAID", "CANCELLED"];
     if (status && !allowedStatuses.includes(status)) {
       throw new ApiError(
@@ -229,6 +230,7 @@ export async function GET(request: NextRequest) {
       where: {
         sessionId: session.id,
         ...(status ? { status: status as "DRAFT" | "PAID" | "CANCELLED" } : {}),
+        ...(tableId ? { tableId } : {}),
       },
       orderBy: { createdAt: "desc" },
       include: ORDER_INCLUDE,

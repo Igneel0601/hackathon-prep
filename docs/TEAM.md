@@ -147,11 +147,16 @@ Keep this log current as features ship — it's everyone's prep sheet.
 |----------------|-------|-------|
 | Project scaffold, DB, Auth, CI | Vaibhav | platform/infra |
 | POS data model (schema + migrations) | Vaibhav | 9 models + enums |
-| POS API layer (8 routes) | Vaibhav | products, tables, orders, payment, kitchen, KDS |
-| Auth — email/password + Google, JWT | Vaibhav | Credentials + signup |
-| Order View UI | Rajat | _in progress_ |
-| Kitchen Display + Orders UI | Mukund | _in progress_ |
-| Design + UI shell/components | Vinayak | _in progress_ |
+| POS API layer (all routes) | Vaibhav | products, tables, orders, payment, kitchen |
+| Auth — email/password + Google, JWT + auth shell | Vaibhav | Credentials + signup + middleware/login |
+| API client + types, integration, PR review | Vaibhav | `src/lib/api-*`; merges + conflict resolution |
+| Per-table order persistence (resume/ensureOrder) | Vaibhav | one draft per table; idempotency fix |
+| Admin backend — Products & Categories CRUD + authz | Vaibhav | role-gated `/admin`, validate.ts, archive policy |
+| Order View — floor picker, cart, checkout, receipt | Rajat | products grid, qty, discount, cash/card/upi, print |
+| Kitchen Display (KDS) | Rajat | live polling, stage advance |
+| Session orders list + home nav | Rajat | `/orders`, `/kds` buttons |
+| Manual QA (browser testing) | Mukund | `docs/mukund.md`; bug reports + verification |
+| Design + UI shell/components | Vinayak | _in progress_ (Claude Design) |
 
 ## Understand your own code
 

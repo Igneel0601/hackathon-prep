@@ -18,6 +18,12 @@ import type {
   TablesResponse,
   OrderStatus,
   UpdateOrderBody,
+  AdminCategory,
+  AdminProduct,
+  CategoryBody,
+  CreateProductBody,
+  UpdateProductBody,
+  Paginated,
 } from "@/lib/api-types";
 
 export class ApiClientError extends Error {
@@ -67,9 +73,15 @@ export function getTables(): Promise<TablesResponse> {
   return request<TablesResponse>("/api/tables");
 }
 
-export function getOrders(status?: OrderStatus): Promise<Order[]> {
-  const q = status ? `?status=${status}` : "";
-  return request<Order[]>(`/api/orders${q}`);
+export function getOrders(opts?: {
+  status?: OrderStatus;
+  tableId?: string;
+}): Promise<Order[]> {
+  const params = new URLSearchParams();
+  if (opts?.status) params.set("status", opts.status);
+  if (opts?.tableId) params.set("tableId", opts.tableId);
+  const q = params.toString();
+  return request<Order[]>(`/api/orders${q ? `?${q}` : ""}`);
 }
 
 export function getKitchenTickets(
@@ -99,4 +111,62 @@ export function sendToKitchen(id: string, action: KitchenAction): Promise<OrderS
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export function signup(body: SignupBody): Promise<Account> {
   return request<Account>("/api/signup", json(body));
+}
+
+// ─── Admin: categories ───────────────────────────────────────────────────────
+export function adminListCategories(): Promise<{ categories: AdminCategory[] }> {
+  return request<{ categories: AdminCategory[] }>("/api/admin/categories");
+}
+
+export function adminCreateCategory(body: CategoryBody): Promise<AdminCategory> {
+  return request<AdminCategory>("/api/admin/categories", json(body));
+}
+
+export function adminUpdateCategory(id: string, body: CategoryBody): Promise<AdminCategory> {
+  return request<AdminCategory>(`/api/admin/categories/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function adminDeleteCategory(id: string): Promise<void> {
+  return request<void>(`/api/admin/categories/${id}`, { method: "DELETE" });
+}
+
+// ─── Admin: products ─────────────────────────────────────────────────────────
+export function adminListProducts(opts?: {
+  q?: string;
+  categoryId?: string;
+  active?: boolean;
+  page?: number;
+  pageSize?: number;
+}): Promise<Paginated<AdminProduct>> {
+  const params = new URLSearchParams();
+  if (opts?.q) params.set("q", opts.q);
+  if (opts?.categoryId) params.set("categoryId", opts.categoryId);
+  if (opts?.active !== undefined) params.set("active", String(opts.active));
+  if (opts?.page) params.set("page", String(opts.page));
+  if (opts?.pageSize) params.set("pageSize", String(opts.pageSize));
+  const qs = params.toString();
+  return request<Paginated<AdminProduct>>(`/api/admin/products${qs ? `?${qs}` : ""}`);
+}
+
+export function adminCreateProduct(body: CreateProductBody): Promise<AdminProduct> {
+  return request<AdminProduct>("/api/admin/products", json(body));
+}
+
+export function adminUpdateProduct(id: string, body: UpdateProductBody): Promise<AdminProduct> {
+  return request<AdminProduct>(`/api/admin/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function adminDeleteProduct(
+  id: string,
+): Promise<void | { archived: true; product: AdminProduct }> {
+  return request<void | { archived: true; product: AdminProduct }>(
+    `/api/admin/products/${id}`,
+    { method: "DELETE" },
+  );
 }
