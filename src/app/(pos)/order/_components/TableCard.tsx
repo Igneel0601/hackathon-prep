@@ -13,12 +13,11 @@ export function TableCard({ number, seats, status, onClick }: TableCardProps) {
   return (
     <button
       onClick={onClick}
-      disabled={isActive}
       className={[
-        "flex flex-col items-center justify-center rounded-xl border-2 p-4 text-center transition-colors",
+        "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 text-center transition-colors",
         isActive
-          ? "cursor-not-allowed border-orange-400 bg-orange-50 text-orange-700"
-          : "border-gray-200 bg-white text-gray-800 hover:border-blue-400 hover:bg-blue-50 cursor-pointer",
+          ? "border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100"
+          : "border-gray-200 bg-white text-gray-800 hover:border-blue-400 hover:bg-blue-50",
       ].join(" ")}
     >
       <span className="text-2xl font-bold">{number}</span>
