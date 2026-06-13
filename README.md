@@ -1,12 +1,13 @@
-# hackathon-prep
+# cafe-pos
 
+Odoo Cafe POS — a web-based restaurant point-of-sale (backend admin + POS terminal + live Kitchen Display).
 Next.js 16 (App Router) + React 19 + TypeScript + Tailwind, pnpm, Prisma 7 (Postgres/Neon), Auth.js v5.
 
 ## Quick start
 
 ```bash
-git clone git@github.com:Igneel0601/hackathon-prep.git
-cd hackathon-prep
+git clone https://github.com/Igneel0601/cafe-pos.git
+cd cafe-pos
 pnpm install                 # also generates the Prisma client (postinstall)
 cp .env.example .env         # then fill in the values (see below)
 pnpm db:migrate              # apply migrations to the DB
