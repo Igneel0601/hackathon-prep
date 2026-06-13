@@ -22,7 +22,7 @@ export function TableCard({ number, seats, status, selected = false, occupiedSin
   let statusBg = "rgba(74,222,128,0.15)";
   let statusColor = "#16803C";
   let statusLabel = "Free";
-  let cursor = "pointer";
+  const cursor = "pointer";
 
   if (isSelected) {
     bg = "rgba(255,188,13,0.12)";
@@ -40,16 +40,15 @@ export function TableCard({ number, seats, status, selected = false, occupiedSin
     statusBg = "rgba(255,188,13,0.18)";
     statusColor = "#8B5E00";
     statusLabel = "Occupied";
-    cursor = "default";
   }
 
   return (
     <div
-      role={isFree ? "button" : undefined}
-      tabIndex={isFree ? 0 : -1}
+      role="button"
+      tabIndex={0}
       aria-label={`Table ${number}, ${seats} seats, ${statusLabel}`}
-      onClick={isFree ? onClick : undefined}
-      onKeyDown={isFree ? (e) => { if (e.key === "Enter") onClick?.(); } : undefined}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter") onClick?.(); }}
       style={{
         aspectRatio: "3/4",
         borderRadius: 14,

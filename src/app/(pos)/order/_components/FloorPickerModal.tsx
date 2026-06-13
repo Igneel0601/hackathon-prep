@@ -17,7 +17,12 @@ export function FloorPickerModal({ floors, onSelectTable, onClose }: FloorPicker
   const selectedTable = allTables.find((t) => t.id === selectedId) ?? null;
 
   function handleTableClick(table: TableInfo) {
-    if (table.hasActiveOrder) return;
+    // Occupied table -> resume its existing order immediately.
+    if (table.hasActiveOrder) {
+      onSelectTable(table);
+      return;
+    }
+    // Free table -> select, confirm via footer CTA.
     setSelectedId((prev) => (prev === table.id ? null : table.id));
   }
 
