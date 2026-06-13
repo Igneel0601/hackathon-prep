@@ -212,3 +212,59 @@ export type UpdateProductBody = Partial<{
   active: boolean;
   categoryId: string;
 }>;
+
+// ─── Admin: payment methods ──────────────────────────────────────────────────
+export interface PaymentMethodSettingDTO {
+  method: PaymentMethod;
+  enabled: boolean;
+  upiId: string | null;
+  label: string | null;
+}
+export type UpdatePaymentMethodBody = Partial<{
+  enabled: boolean;
+  upiId: string | null;
+  label: string | null;
+}>;
+/** POS-facing: a method the cashier may offer (upiId only for UPI). */
+export interface EnabledPaymentMethod {
+  method: PaymentMethod;
+  upiId: string | null;
+}
+
+// ─── Admin: floors & tables ──────────────────────────────────────────────────
+export interface AdminTable {
+  id: string;
+  number: number;
+  seats: number;
+  active: boolean;
+  orderCount: number;
+}
+export interface AdminFloor {
+  id: string;
+  name: string;
+  tables: AdminTable[];
+}
+export interface CreateTableBody {
+  floorId: string;
+  number: number;
+  seats?: number;
+  active?: boolean;
+}
+export type UpdateTableBody = Partial<{ number: number; seats: number; active: boolean }>;
+
+// ─── Admin: users ────────────────────────────────────────────────────────────
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  role: Role;
+  active: boolean;
+  createdAt: string;
+}
+export interface CreateUserBody {
+  name: string;
+  email: string;
+  role: Role;
+  password: string;
+}
+export type UpdateUserBody = Partial<{ name: string; role: Role }>;

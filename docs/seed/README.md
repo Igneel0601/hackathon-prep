@@ -16,7 +16,14 @@ Document every record a test might depend on. Update this table whenever `prisma
 | `admin@test.com` | Admin | ADMIN | `admin123` | backend/admin login |
 | `cashier@test.com` | Cashier | EMPLOYEE | `cashier123` | POS terminal login |
 
-> Passwords are bcrypt-hashed by the seed. Dev-only — fine to log in with these locally.
+> Passwords are bcrypt-hashed by the seed. Dev-only — fine to log in with these locally. Both seed users are `active: true`.
+
+### Payment method settings
+| method | enabled | upiId |
+|--------|---------|-------|
+| CASH | yes | — |
+| CARD | yes | — |
+| UPI | yes | `cafe@okhdfc` |
 
 ### Categories
 | name | color |

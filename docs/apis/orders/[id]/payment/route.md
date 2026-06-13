@@ -6,6 +6,8 @@
 
 **Auth:** Requires a valid session (any authenticated employee). Returns 401 if signed out.
 
+> **Enabled-method guard:** the chosen `method` must be enabled in the admin Payment-Method settings; a disabled method returns **409** (`<METHOD> payments are currently disabled`), even if a stale client offered it.
+
 ## Request
 
 - **Path params:** `id` (string) — the order CUID.
