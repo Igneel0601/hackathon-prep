@@ -1,40 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { getTables } from "@/lib/api-client";
 import type { Floor } from "@/lib/api-types";
 
-interface UseTablesResult {
-  floors: Floor[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
+type State = { floors: Floor[]; loading: boolean; error: string | null };
+type Action =
+  | { type: "loading" }
+  | { type: "success"; floors: Floor[] }
+  | { type: "error"; message: string };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "loading": return { ...state, loading: true, error: null };
+    case "success": return { floors: action.floors, loading: false, error: null };
+    case "error":   return { ...state, loading: false, error: action.message };
+  }
 }
 
-export function useTables(): UseTablesResult {
-  const [floors, setFloors] = useState<Floor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
+export function useTables() {
+  const [state, dispatch] = useReducer(reducer, { floors: [], loading: true, error: null });
+  const [tick, refetch] = useReducer((n: number) => n + 1, 0);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    dispatch({ type: "loading" });
     getTables()
-      .then((data) => {
-        if (!cancelled) setFloors(data.floors);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => { if (!cancelled) dispatch({ type: "success", floors: data.floors }); })
+      .catch((e: Error) => { if (!cancelled) dispatch({ type: "error", message: e.message }); });
+    return () => { cancelled = true; };
   }, [tick]);
 
-  return { floors, loading, error, refetch: () => setTick((t) => t + 1) };
+  return { ...state, refetch };
 }
