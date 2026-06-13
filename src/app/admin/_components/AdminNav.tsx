@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { CafeLogo } from "@/components/CafeLogo";
 
 type IconName =
   | "dashboard" | "products" | "categories" | "tables"
@@ -73,7 +73,7 @@ export function AdminNav({ user, badges }: AdminNavProps) {
     >
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-4" style={{ height: 64, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <Image src="/logo-badge.png" alt="" width={34} height={34} className="rounded-full object-contain" style={{ background: "rgba(255,188,13,0.10)" }} />
+        <CafeLogo size={34} className="rounded-full" />
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold uppercase tracking-tight" style={{ fontFamily: "var(--font-display)", color: "#FAF3E8" }}>
             Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>

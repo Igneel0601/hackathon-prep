@@ -25,6 +25,8 @@ function serializeOrder(order: {
     unitPrice: Prisma.Decimal;
     qty: number;
     lineTotal: Prisma.Decimal;
+    round: number;
+    kitchenStatus: string;
   }[];
   customer: { id: string; name: string } | null;
 }) {
@@ -47,6 +49,8 @@ function serializeOrder(order: {
       unitPrice: item.unitPrice.toString(),
       qty: item.qty,
       lineTotal: item.lineTotal.toString(),
+      round: item.round,
+      kitchenStatus: item.kitchenStatus,
     })),
     customer: order.customer
       ? { id: order.customer.id, name: order.customer.name }
@@ -64,6 +68,8 @@ const ORDER_INCLUDE = {
       unitPrice: true,
       qty: true,
       lineTotal: true,
+      round: true,
+      kitchenStatus: true,
     },
   },
   customer: { select: { id: true, name: true } },
@@ -109,12 +115,6 @@ export async function PATCH(
     const discountRaw = body.discount;
     const customerIdInput = body.customerId;
 
-    // Items already sent to the kitchen are being cooked — block changes to them
-    // (discount/customer may still be edited). kitchenStatus is the cooking state.
-    if (rawItems !== undefined && order.kitchenStatus !== "NONE") {
-      throw new ApiError(409, "Items already sent to kitchen and can't be changed");
-    }
-
     // Validate customer update if provided
     let resolvedCustomerId = order.customerId;
     if (customerIdInput !== undefined) {
@@ -145,10 +145,14 @@ export async function PATCH(
       discount = new Prisma.Decimal(discountRaw);
     }
 
-    // If items provided, validate + recompute; otherwise keep existing totals
+    // Items already fired to the kitchen (round > 0) are frozen and always kept.
+    // `items`, when supplied, is the desired set of UN-FIRED (round 0) lines — it
+    // replaces only the editable portion; fired rounds are never touched.
+    const firedItems = order.items.filter((it) => it.round > 0);
+
     let subtotal = order.subtotal;
     let taxTotal = order.tax;
-    let itemsCreateData:
+    let newItemsCreateData:
       | {
           productId: string;
           name: string;
@@ -159,8 +163,8 @@ export async function PATCH(
       | null = null;
 
     if (rawItems !== undefined) {
-      if (!Array.isArray(rawItems) || rawItems.length === 0) {
-        throw new ApiError(400, "items must be a non-empty array");
+      if (!Array.isArray(rawItems)) {
+        throw new ApiError(400, "items must be an array");
       }
 
       const itemInputs = rawItems.map((item, i) => {
@@ -180,40 +184,49 @@ export async function PATCH(
         return { productId: item.productId as string, qty: item.qty as number };
       });
 
-      const productIds = itemInputs.map((i) => i.productId);
+      // Need tax rates for BOTH fired and new items to recompute the bill.
+      const allProductIds = [
+        ...new Set([
+          ...firedItems.map((f) => f.productId),
+          ...itemInputs.map((i) => i.productId),
+        ]),
+      ];
       const products = await db.product.findMany({
-        where: { id: { in: productIds } },
+        where: { id: { in: allProductIds } },
         select: { id: true, name: true, price: true, tax: true, active: true },
       });
-
       const productMap = new Map(products.map((p) => [p.id, p]));
+
       for (const { productId } of itemInputs) {
         const product = productMap.get(productId);
-        if (!product)
-          throw new ApiError(400, `Product "${productId}" not found`);
+        if (!product) throw new ApiError(400, `Product "${productId}" not found`);
         if (!product.active)
           throw new ApiError(400, `Product "${productId}" is not active`);
       }
 
       const ZERO = new Prisma.Decimal(0);
-      let newSubtotal = ZERO;
-      let newTax = ZERO;
+      let sub = ZERO;
+      let tax = ZERO;
 
-      itemsCreateData = itemInputs.map(({ productId, qty }) => {
+      // Fired lines keep their snapshotted price; tax re-derived from current rate.
+      for (const f of firedItems) {
+        const lineTotal = new Prisma.Decimal(f.lineTotal.toString());
+        const rate = productMap.get(f.productId)?.tax.toString() ?? "0";
+        sub = sub.plus(lineTotal);
+        tax = tax.plus(lineTotal.times(rate).div(100));
+      }
+
+      newItemsCreateData = itemInputs.map(({ productId, qty }) => {
         const product = productMap.get(productId)!;
         const unitPrice = new Prisma.Decimal(product.price.toString());
         const lineTotal = unitPrice.times(qty);
-        const lineTax = lineTotal.times(product.tax.toString()).div(100);
-        newSubtotal = newSubtotal.plus(lineTotal);
-        newTax = newTax.plus(lineTax);
+        sub = sub.plus(lineTotal);
+        tax = tax.plus(lineTotal.times(product.tax.toString()).div(100));
         return { productId, name: product.name, unitPrice, qty, lineTotal };
       });
 
-      subtotal = newSubtotal;
-      taxTotal = newTax;
-    } else if (discountRaw !== undefined) {
-      // Only discount changed — recompute total from existing subtotal/tax
-      // (subtotal/tax unchanged; just need new total)
+      subtotal = sub;
+      taxTotal = tax;
     }
 
     const total = subtotal.plus(taxTotal).minus(discount);
@@ -221,10 +234,7 @@ export async function PATCH(
       throw new ApiError(400, "discount cannot exceed the order subtotal + tax");
     }
 
-    // Transactional update with a compare-and-swap guard: updateMany can put
-    // `status` in the WHERE (order.update can't), so a payment landing between
-    // the read above and this write makes the guard match 0 rows → 409, instead
-    // of silently editing a now-PAID order or losing a concurrent edit.
+    // CAS guard: a payment can't land between the read above and this write.
     const updatedOrder = await db.$transaction(async (tx) => {
       const guard = await tx.order.updateMany({
         where: { id, status: "DRAFT" },
@@ -234,17 +244,54 @@ export async function PATCH(
         throw new ApiError(409, "Order is no longer editable");
       }
 
-      if (itemsCreateData !== null) {
-        await tx.orderItem.deleteMany({ where: { orderId: id } });
-        await tx.orderItem.createMany({
-          data: itemsCreateData.map((item) => ({ ...item, orderId: id })),
-        });
+      if (newItemsCreateData !== null) {
+        // Replace only the un-fired (round 0) lines; fired rounds stay put.
+        await tx.orderItem.deleteMany({ where: { orderId: id, round: 0 } });
+        if (newItemsCreateData.length > 0) {
+          await tx.orderItem.createMany({
+            data: newItemsCreateData.map((item) => ({ ...item, orderId: id, round: 0 })),
+          });
+        }
       }
 
       return tx.order.findUniqueOrThrow({ where: { id }, include: ORDER_INCLUDE });
     });
 
     return json(serializeOrder(updatedOrder));
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+// ─── DELETE /api/orders/[id] — void an unpaid order, freeing its table ─────────
+//
+// "Customer came and went": cancel a DRAFT order so the table reads free again
+// (a table is occupied iff it has a DRAFT order). Floor-shared, so any employee
+// can void any table's open order. PAID orders can't be voided — they already
+// freed the table by leaving DRAFT. CAS-guarded so a payment can't slip in
+// between read and write; cancelling also drops the order's KDS tickets (the
+// kitchen query excludes CANCELLED).
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await requireEmployee();
+    const { id } = await params;
+
+    const cancelled = await db.order.updateMany({
+      where: { id, status: "DRAFT" },
+      data: { status: "CANCELLED" },
+    });
+
+    if (cancelled.count === 0) {
+      // Either it doesn't exist or it's already PAID/CANCELLED.
+      const exists = await db.order.findUnique({ where: { id }, select: { status: true } });
+      if (!exists) throw new ApiError(404, `Order "${id}" not found`);
+      throw new ApiError(409, `Only draft orders can be voided (order is ${exists.status})`);
+    }
+
+    return json({ id, status: "CANCELLED" });
   } catch (e) {
     return errorResponse(e);
   }

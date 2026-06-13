@@ -3,20 +3,12 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-// Basic shadcn login — email/password (primary) + Google (secondary) + signup toggle.
-// Visual design is Vinayak's job; this is the functional shell.
+const DISPLAY = "var(--cafe-font-display)";
+const BODY = "var(--cafe-font-body)";
+
+// Odoo Cafe staff login — email/password (primary) + Google (secondary) + signup
+// toggle. Themed to the cafe design system (espresso / gold / cream).
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
@@ -63,73 +55,99 @@ export function LoginForm() {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    borderRadius: 12,
+    padding: "11px 14px",
+    fontSize: "0.9375rem",
+    outline: "none",
+    background: "#fff",
+    border: "1.5px solid rgba(92,48,32,0.18)",
+    color: "#1A0A04",
+    fontFamily: BODY,
+  };
+
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>{mode === "login" ? "Sign in" : "Create account"}</CardTitle>
-        <CardDescription>Odoo Cafe — staff access</CardDescription>
-      </CardHeader>
-      <form onSubmit={onSubmit}>
-        <CardContent className="flex flex-col gap-4">
-          {mode === "signup" && (
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-          )}
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div
+      className="w-full max-w-sm overflow-hidden rounded-3xl"
+      style={{
+        background: "rgba(253,250,245,0.96)",
+        border: "1px solid rgba(255,188,13,0.22)",
+        boxShadow: "0 40px 90px rgba(13,5,2,0.6)",
+        fontFamily: BODY,
+      }}
+    >
+      {/* Header */}
+      <div className="px-7 pt-7 pb-5" style={{ borderBottom: "1px solid rgba(92,48,32,0.10)" }}>
+        <p
+          className="mb-1.5 text-[0.6875rem] font-semibold uppercase"
+          style={{ letterSpacing: "0.22em", color: "#C2570A" }}
+        >
+          Odoo Cafe
+        </p>
+        <h1
+          className="leading-none"
+          style={{ fontFamily: DISPLAY, fontSize: "2rem", textTransform: "uppercase", color: "#1A0A04" }}
+        >
+          {mode === "login" ? "Sign In" : "Create Account"}
+        </h1>
+        <p className="mt-1.5 text-sm" style={{ color: "#9B6B55" }}>
+          Staff access — POS terminal
+        </p>
+      </div>
+
+      <form onSubmit={onSubmit} className="flex flex-col gap-4 px-7 py-6">
+        {mode === "signup" && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="name" className="text-sm font-semibold" style={{ color: "#2A1008" }}>Name</label>
+            <input id="name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-        </CardContent>
-        <CardFooter className="mt-4 flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "…" : mode === "login" ? "Sign in" : "Sign up"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => signIn("google", { callbackUrl })}
-          >
-            Continue with Google
-          </Button>
-          <button
-            type="button"
-            className="text-sm text-muted-foreground underline"
-            onClick={() => {
-              setMode(mode === "login" ? "signup" : "login");
-              setError(null);
-            }}
-          >
-            {mode === "login"
-              ? "Need an account? Sign up"
-              : "Have an account? Sign in"}
-          </button>
-        </CardFooter>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="text-sm font-semibold" style={{ color: "#2A1008" }}>Email</label>
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className="text-sm font-semibold" style={{ color: "#2A1008" }}>Password</label>
+          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
+        </div>
+
+        {error && (
+          <p className="rounded-lg px-3 py-2 text-sm" style={{ background: "rgba(196,26,26,0.10)", color: "#C41A1A" }}>
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-1 w-full rounded-xl py-3 text-sm font-bold transition-all active:scale-[0.99] disabled:opacity-50"
+          style={{ background: "#1A0A04", color: "#FAF3E8", boxShadow: "0 8px 22px rgba(26,10,4,0.30)" }}
+        >
+          {loading ? "…" : mode === "login" ? "Sign in" : "Sign up"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => signIn("google", { callbackUrl })}
+          className="w-full rounded-xl py-3 text-sm font-semibold transition-colors"
+          style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.22)", color: "#2A1008" }}
+        >
+          Continue with Google
+        </button>
+
+        <button
+          type="button"
+          className="text-center text-sm font-medium underline"
+          style={{ color: "#9B6B55" }}
+          onClick={() => {
+            setMode(mode === "login" ? "signup" : "login");
+            setError(null);
+          }}
+        >
+          {mode === "login" ? "Need an account? Sign up" : "Have an account? Sign in"}
+        </button>
       </form>
-    </Card>
+    </div>
   );
 }

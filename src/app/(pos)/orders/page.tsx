@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOrders } from "./_hooks/useOrders";
-import { UserMenu } from "@/components/UserMenu";
+import { PosUserMenu } from "@/components/PosUserMenu";
 
 const PAYMENT_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   DRAFT:     { bg: "rgba(255,188,13,0.10)", color: "#8B5E00",  border: "rgba(255,188,13,0.30)" },
@@ -63,7 +63,7 @@ export default function OrdersPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/tables")}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "#9B6B55", padding: "6px 0" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -93,7 +93,7 @@ export default function OrdersPage() {
             </svg>
             Refresh
           </button>
-          <UserMenu />
+          <PosUserMenu />
         </div>
       </header>
 
