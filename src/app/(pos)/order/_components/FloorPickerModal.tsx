@@ -16,6 +16,9 @@ export function FloorPickerModal({ floors, onSelectTable, onClose }: FloorPicker
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Select a Table"
         className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >

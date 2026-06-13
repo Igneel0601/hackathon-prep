@@ -10,12 +10,14 @@ async function openTable(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: /open table/i }).click();
   // Wait for the floor picker modal
-  await expect(page.getByRole('dialog')).toBeVisible();
-  // Pick the first available table
-  const firstTable = page.locator('[data-testid="table-card"], button').filter({ hasText: /table|T\d+|\d+/i }).first();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible({ timeout: 10_000 });
+  // Pick first table card inside the dialog
+  const firstTable = dialog.locator('[data-testid="table-card"]').first();
+  await expect(firstTable).toBeVisible({ timeout: 8_000 });
   await firstTable.click();
   // Should navigate to order view
-  await expect(page).toHaveURL(/\/order\?tableId=/);
+  await expect(page).toHaveURL(/\/order\?tableId=/, { timeout: 10_000 });
 }
 
 async function addFirstProduct(page: Page) {
@@ -72,7 +74,8 @@ test('incrementing qty reflects in totals', async ({ page }) => {
   await addFirstProduct(page);
   // Click + button to increment
   await page.getByRole('button', { name: /\+/ }).first().click();
-  await expect(page.getByText('2')).toBeVisible();
+  // Qty span inside CartLine shows the count — look for any '2' in the cart area
+  await expect(page.locator('span').filter({ hasText: /^2$/ }).first()).toBeVisible({ timeout: 5000 });
 });
 
 test('decrementing to 0 removes the line from cart', async ({ page }) => {
@@ -206,6 +209,7 @@ test('back button on Order View returns to POS home', async ({ page }) => {
   const backBtn = page.getByRole('button', { name: /back|tables|←/i }).first();
   if (await backBtn.count() > 0) {
     await backBtn.click();
-    await expect(page).toHaveURL(/^\//);
+    // Full URL check — not on the order page any more
+    await expect(page).not.toHaveURL(/\/order/, { timeout: 8000 });
   }
 });

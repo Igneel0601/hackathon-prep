@@ -4,6 +4,7 @@
  *   GET  /api/kitchen             (ticket list)
  */
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { setupIntegration, teardownIntegration, seedOrder, type IntegrationCtx } from './helpers';
 import { db } from '@/lib/db';
 
@@ -160,12 +161,14 @@ describe('kitchen concurrent advance — optimistic lock', () => {
 
 describe('GET /api/kitchen', () => {
   it('returns only TO_COOK and PREPARING tickets by default', async () => {
-    const toCook = await seedOrder(ctx, 'TO_COOK');
-    const preparing = await seedOrder(ctx, 'PREPARING');
-    const completed = await seedOrder(ctx, 'COMPLETED');
-    const none = await seedOrder(ctx, 'NONE');
+    // One DRAFT per table: use table1 for TO_COOK, table2 for PREPARING.
+    // For COMPLETED/NONE (negative assertions) use PAID status — no table conflict.
+    const toCook    = await seedOrder(ctx, 'TO_COOK',    ctx.tableId);
+    const preparing = await seedOrder(ctx, 'PREPARING',  ctx.table2Id);
+    const completed = await seedOrder(ctx, 'COMPLETED',  ctx.tableId,  'PAID');
+    const none      = await seedOrder(ctx, 'NONE',       ctx.table2Id, 'PAID');
 
-    const res = await GET_KITCHEN(new Request('http://localhost/api/kitchen'));
+    const res = await GET_KITCHEN(new NextRequest('http://localhost/api/kitchen'));
     expect(res.status).toBe(200);
     const body = await res.json() as { tickets: { orderId: string }[] };
 
@@ -181,7 +184,7 @@ describe('GET /api/kitchen', () => {
     if (!ctx.kitchenProducts.length) return; // skip if no kitchen products in seed
 
     const order = await seedOrder(ctx, 'TO_COOK');
-    const res = await GET_KITCHEN(new Request('http://localhost/api/kitchen'));
+    const res = await GET_KITCHEN(new NextRequest('http://localhost/api/kitchen'));
     const body = await res.json() as { tickets: { orderId: string; items: object[] }[] };
 
     const ticket = body.tickets.find((t) => t.orderId === order.id);
@@ -193,10 +196,11 @@ describe('GET /api/kitchen', () => {
   });
 
   it('filters by explicit status=COMPLETED', async () => {
-    const completed = await seedOrder(ctx, 'COMPLETED');
-    const toCook = await seedOrder(ctx, 'TO_COOK');
+    // One DRAFT per table: COMPLETED (negative for TO_COOK check) uses PAID to avoid conflict
+    const completed = await seedOrder(ctx, 'COMPLETED', ctx.tableId,  'PAID');
+    const toCook    = await seedOrder(ctx, 'TO_COOK',   ctx.table2Id);
 
-    const res = await GET_KITCHEN(new Request('http://localhost/api/kitchen?status=COMPLETED'));
+    const res = await GET_KITCHEN(new NextRequest('http://localhost/api/kitchen?status=COMPLETED'));
     expect(res.status).toBe(200);
     const body = await res.json() as { tickets: { orderId: string }[] };
 
@@ -206,13 +210,13 @@ describe('GET /api/kitchen', () => {
   });
 
   it('400 for invalid status filter value', async () => {
-    const res = await GET_KITCHEN(new Request('http://localhost/api/kitchen?status=BURNED'));
+    const res = await GET_KITCHEN(new NextRequest('http://localhost/api/kitchen?status=BURNED'));
     expect(res.status).toBe(400);
   });
 
   it('returns empty tickets array when no active orders', async () => {
     // Don't seed any orders
-    const res = await GET_KITCHEN(new Request('http://localhost/api/kitchen'));
+    const res = await GET_KITCHEN(new NextRequest('http://localhost/api/kitchen'));
     expect(res.status).toBe(200);
     const body = await res.json() as { tickets: object[] };
     // Other tests may have left tickets; just assert shape is correct

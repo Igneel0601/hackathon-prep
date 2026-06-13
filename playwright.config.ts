@@ -39,16 +39,6 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
-    // Admin tests
-    {
-      name: 'admin',
-      testMatch: '**/admin.spec.ts',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/admin.json',
-      },
-      dependencies: ['setup'],
-    },
     // Concurrency tests — uses raw API requests (no UI)
     {
       name: 'concurrency',

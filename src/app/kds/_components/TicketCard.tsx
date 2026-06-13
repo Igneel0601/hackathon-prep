@@ -53,6 +53,7 @@ export function TicketCard({ orderId, number, items, status, onAdvance }: Ticket
 
   return (
     <div
+      data-testid="ticket-card"
       className={`rounded-xl border-2 p-4 flex flex-col gap-3 shadow-sm ${STATUS_STYLES[status]}`}
     >
       <div className="flex items-center justify-between">

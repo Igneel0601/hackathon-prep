@@ -12,6 +12,7 @@ export function TableCard({ number, seats, status, onClick }: TableCardProps) {
 
   return (
     <button
+      data-testid="table-card"
       onClick={onClick}
       className={[
         "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 text-center transition-colors",

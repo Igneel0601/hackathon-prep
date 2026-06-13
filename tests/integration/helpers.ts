@@ -21,11 +21,23 @@ export interface IntegrationCtx {
 export async function setupIntegration(): Promise<IntegrationCtx> {
   const user = await db.user.findUniqueOrThrow({ where: { email: 'cashier@test.com' } });
 
-  // Create a dedicated test session so we don't pollute live sessions
-  const session = await db.posSession.create({ data: { userId: user.id } });
-
   const tables = await db.table.findMany({ where: { active: true }, orderBy: { number: 'asc' }, take: 2 });
   if (tables.length < 2) throw new Error('Need at least 2 active tables in seed data');
+
+  // Cancel any lingering DRAFT orders on the test tables so the partial-unique index is clear
+  await db.order.updateMany({
+    where: { tableId: { in: tables.map((t) => t.id) }, status: 'DRAFT' },
+    data: { status: 'CANCELLED' },
+  });
+
+  // Close any existing open session — new constraint allows only one per user.
+  await db.posSession.updateMany({
+    where: { userId: user.id, closedAt: null },
+    data: { closedAt: new Date() },
+  });
+
+  // Create a dedicated test session so we don't pollute live sessions
+  const session = await db.posSession.create({ data: { userId: user.id } });
 
   const allProducts = await db.product.findMany({ where: { active: true } });
   if (!allProducts.length) throw new Error('Need seeded products');
@@ -98,11 +110,13 @@ export function makeKitchenGetReq(status?: string): Request {
 export async function seedOrder(
   ctx: IntegrationCtx,
   kitchenStatus: 'NONE' | 'TO_COOK' | 'PREPARING' | 'COMPLETED' = 'NONE',
+  tableId?: string,
+  status: 'DRAFT' | 'PAID' | 'CANCELLED' = 'DRAFT',
 ) {
   const product = ctx.kitchenProducts[0] ?? ctx.products[0];
   const order = await db.order.create({
     data: {
-      tableId: ctx.tableId,
+      tableId: tableId ?? ctx.tableId,
       sessionId: ctx.sessionId,
       subtotal: product.price,
       tax: (parseFloat(product.price) * parseFloat(product.tax)) / 100,
@@ -110,6 +124,7 @@ export async function seedOrder(
       total:
         parseFloat(product.price) +
         (parseFloat(product.price) * parseFloat(product.tax)) / 100,
+      status,
       kitchenStatus,
       items: {
         create: {

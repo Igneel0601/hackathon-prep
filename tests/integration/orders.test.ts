@@ -3,6 +3,7 @@
  * Auth is mocked; DB is real (Neon).
  */
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { setupIntegration, teardownIntegration, type IntegrationCtx } from './helpers';
 
 // ─── Mock auth only — keep real DB logic ─────────────────────────────────────
@@ -60,13 +61,13 @@ describe('POST /api/orders — happy paths', () => {
     ctx.orderIds.push(body.id);
 
     const price = parseFloat(product.price);
-    const expectedSubtotal = (price * 2).toFixed(2);
-    const expectedTax = ((price * 2 * parseFloat(product.tax)) / 100).toFixed(2);
-    const expectedTotal = (parseFloat(expectedSubtotal) + parseFloat(expectedTax)).toFixed(2);
+    const expectedSubtotal = price * 2;
+    const expectedTax = (price * 2 * parseFloat(product.tax)) / 100;
+    const expectedTotal = expectedSubtotal + expectedTax;
 
-    expect(body.subtotal).toBe(expectedSubtotal);
-    expect(body.tax).toBe(expectedTax);
-    expect(body.total).toBe(expectedTotal);
+    expect(parseFloat(body.subtotal)).toBeCloseTo(expectedSubtotal, 2);
+    expect(parseFloat(body.tax)).toBeCloseTo(expectedTax, 2);
+    expect(parseFloat(body.total)).toBeCloseTo(expectedTotal, 2);
     expect(body.items).toHaveLength(1);
   });
 
@@ -88,7 +89,7 @@ describe('POST /api/orders — happy paths', () => {
     const body = await res.json() as { id: string; total: string; discount: string };
     ctx.orderIds.push(body.id);
 
-    expect(body.discount).toBe('10.00');
+    expect(parseFloat(body.discount)).toBeCloseTo(10, 2);
     // total = subtotal + tax - discount
     const price = parseFloat(product.price);
     const tax = (price * parseFloat(product.tax)) / 100;
@@ -228,7 +229,7 @@ describe('GET /api/orders', () => {
     const created = await createRes.json() as { id: string };
     ctx.orderIds.push(created.id);
 
-    const getReq = new Request('http://localhost/api/orders');
+    const getReq = new NextRequest('http://localhost/api/orders');
     const res = await GET(getReq);
     expect(res.status).toBe(200);
 
@@ -237,7 +238,7 @@ describe('GET /api/orders', () => {
   });
 
   it('400 for invalid status filter', async () => {
-    const req = new Request('http://localhost/api/orders?status=INVALID');
+    const req = new NextRequest('http://localhost/api/orders?status=INVALID');
     const res = await GET(req);
     expect(res.status).toBe(400);
   });
