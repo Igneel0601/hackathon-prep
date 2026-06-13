@@ -10,11 +10,13 @@ type State =
   | { phase: "error"; message: string };
 
 type Action =
+  | { type: "loading" }
   | { type: "fetched"; orders: Order[] }
   | { type: "error"; message: string };
 
 function reducer(_: State, action: Action): State {
   switch (action.type) {
+    case "loading": return { phase: "loading" };
     case "fetched": return { phase: "ready", orders: action.orders };
     case "error":   return { phase: "error", message: action.message };
   }
@@ -22,9 +24,11 @@ function reducer(_: State, action: Action): State {
 
 export function useOrders() {
   const [state, dispatch] = useReducer(reducer, { phase: "loading" });
+  const [tick, refetch] = useReducer((n: number) => n + 1, 0);
 
   useEffect(() => {
     let cancelled = false;
+    dispatch({ type: "loading" });
     getOrders()
       .then((orders) => { if (!cancelled) dispatch({ type: "fetched", orders }); })
       .catch((e: unknown) => {
@@ -34,7 +38,7 @@ export function useOrders() {
         }
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [tick]);
 
-  return state;
+  return { ...state, refetch };
 }
