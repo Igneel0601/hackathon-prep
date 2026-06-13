@@ -43,17 +43,15 @@ export function useOrder() {
     const existing = state.phase === "ordered" ? state.order : null;
     dispatch({ type: "submitting" });
     try {
+      // `items` here is the un-fired (round 0) set. PATCH replaces only those —
+      // the server keeps fired rounds frozen — so this is always safe to send.
       const lineItems = items.map((i) => ({ productId: i.productId, qty: i.qty }));
       let order: Order;
       if (existing) {
-        // Once an order is sent to the kitchen its items are frozen (server 409s
-        // on item edits). Only sync items while still editable; discount always
-        // goes through — so paying an already-cooking order isn't blocked.
-        const patch =
-          existing.kitchenStatus === "NONE"
-            ? { items: lineItems, ...(discount ? { discount } : {}) }
-            : { ...(discount ? { discount } : {}) };
-        order = await updateOrder(existing.id, patch);
+        order = await updateOrder(existing.id, {
+          items: lineItems,
+          ...(discount ? { discount } : {}),
+        });
       } else {
         order = await createOrder({
           tableId,
@@ -70,9 +68,14 @@ export function useOrder() {
     }
   }
 
-  async function sendKitchen(orderId: string) {
+  async function sendKitchen(order: Order) {
     try {
-      await sendToKitchen(orderId, "send");
+      const summary = await sendToKitchen(order.id, "send");
+      // Reflect the new kitchen/payment state so the UI can switch to checkout.
+      dispatch({
+        type: "ordered",
+        order: { ...order, status: summary.status, kitchenStatus: summary.kitchenStatus },
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send to kitchen";
       dispatch({ type: "error", message: msg });

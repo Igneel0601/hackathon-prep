@@ -31,6 +31,8 @@ function serializeOrder(order: {
     unitPrice: Prisma.Decimal;
     qty: number;
     lineTotal: Prisma.Decimal;
+    round: number;
+    kitchenStatus: string;
   }[];
   customer: { id: string; name: string } | null;
 }) {
@@ -53,6 +55,8 @@ function serializeOrder(order: {
       unitPrice: item.unitPrice.toString(),
       qty: item.qty,
       lineTotal: item.lineTotal.toString(),
+      round: item.round,
+      kitchenStatus: item.kitchenStatus,
     })),
     customer: order.customer
       ? { id: order.customer.id, name: order.customer.name }
@@ -70,6 +74,8 @@ const ORDER_INCLUDE = {
       unitPrice: true,
       qty: true,
       lineTotal: true,
+      round: true,
+      kitchenStatus: true,
     },
   },
   customer: { select: { id: true, name: true } },

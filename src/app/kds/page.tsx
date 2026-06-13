@@ -40,12 +40,12 @@ export default function KdsPage() {
               {tickets
                 .filter((t) => t.kitchenStatus === "TO_COOK")
                 .map((ticket) => (
-                  <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
+                  <TicketCard key={`${ticket.orderId}-${ticket.round}`} ticket={ticket} onAdvance={advance} />
                 ))}
               {tickets
                 .filter((t) => t.kitchenStatus === "PREPARING")
                 .map((ticket) => (
-                  <TicketCard key={ticket.orderId} ticket={ticket} onAdvance={advance} />
+                  <TicketCard key={`${ticket.orderId}-${ticket.round}`} ticket={ticket} onAdvance={advance} />
                 ))}
             </div>
           </>

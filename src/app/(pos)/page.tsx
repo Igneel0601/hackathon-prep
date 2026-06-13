@@ -12,7 +12,7 @@ export default function PosHomePage() {
   const [showPicker, setShowPicker] = useState(false);
 
   function handleSelectTable(table: TableInfo) {
-    router.push(`/order?tableId=${table.id}`);
+    router.push(`/order?tableId=${table.id}&n=${table.number}`);
   }
 
   return (

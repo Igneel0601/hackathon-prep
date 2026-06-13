@@ -53,6 +53,8 @@ export interface OrderItem {
   unitPrice: Money; // snapshot at add-time
   qty: number;
   lineTotal: Money;
+  round: number; // 0 = in cart (un-fired); 1+ = kitchen fire batch
+  kitchenStatus: KitchenStatus; // per-item cooking state
 }
 
 export interface Order {
@@ -93,10 +95,13 @@ export interface Payment {
   createdAt: string;
 }
 
+/** One fire batch (round) of an order, as shown on the Kitchen Display. */
 export interface KitchenTicket {
   orderId: string;
-  number: number;
-  kitchenStatus: KitchenStatus;
+  number: number; // order number
+  round: number; // which fire batch
+  tableNumber: number; // table the cook is plating for
+  kitchenStatus: KitchenStatus; // status of THIS round
   items: { productId: string; name: string; qty: number }[];
   createdAt: string;
 }

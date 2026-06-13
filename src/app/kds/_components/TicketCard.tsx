@@ -11,7 +11,7 @@ const STATUS_CONFIG = {
 
 interface Props {
   ticket: KitchenTicket;
-  onAdvance: (orderId: string, status: KitchenTicket["kitchenStatus"]) => void;
+  onAdvance: (orderId: string, round: number, status: KitchenTicket["kitchenStatus"]) => void;
 }
 
 export function TicketCard({ ticket, onAdvance }: Props) {
@@ -21,7 +21,10 @@ export function TicketCard({ ticket, onAdvance }: Props) {
   return (
     <div className={`flex flex-col rounded-xl border-2 ${cfg.border} ${cfg.bg} p-4 gap-3`}>
       <div className="flex items-center justify-between">
-        <span className="text-lg font-bold text-gray-900">#{ticket.number}</span>
+        <div className="flex flex-col">
+          <span className="text-lg font-bold text-gray-900">Table {ticket.tableNumber}</span>
+          <span className="text-xs text-gray-500">#{ticket.number} · Round {ticket.round}</span>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">{timeStr}</span>
           <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${cfg.badge}`}>
@@ -41,7 +44,7 @@ export function TicketCard({ ticket, onAdvance }: Props) {
 
       {cfg.btn && (
         <button
-          onClick={() => onAdvance(ticket.orderId, ticket.kitchenStatus)}
+          onClick={() => onAdvance(ticket.orderId, ticket.round, ticket.kitchenStatus)}
           className="mt-auto w-full rounded-lg bg-white py-2 text-sm font-semibold text-gray-800 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
         >
           {cfg.btn}

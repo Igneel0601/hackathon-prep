@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getOrders } from "@/lib/api-client";
 import { QRCodeSVG } from "qrcode.react";
@@ -26,6 +26,7 @@ function OrderView() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tableId = searchParams.get("tableId") ?? "";
+  const tableNumber = searchParams.get("n");
 
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -36,40 +37,41 @@ function OrderView() {
   const { methods: enabledMethods } = useEnabledPaymentMethods();
   const upiId = enabledMethods.find((m) => m.method === "UPI")?.upiId ?? null;
 
-  // Resume the table's open DRAFT order (if any) once, after products load
-  // (products give us each line's tax rate). One draft per table.
+  // Load the table's open DRAFT order into the cart (resume). Reused after a
+  // Send-to-Kitchen so the freshly-fired lines pick up their new round and lock.
+  const loadDraft = useCallback(async () => {
+    const orders = await getOrders({ tableId, status: "DRAFT" });
+    const draft = orders[0];
+    if (!draft) return;
+    const taxByProduct = new Map(products.map((p) => [p.id, p.tax]));
+    loadItems(
+      draft.items.map((it) => ({
+        productId: it.productId,
+        name: it.name,
+        unitPrice: it.unitPrice,
+        tax: taxByProduct.get(it.productId) ?? "0",
+        qty: it.qty,
+        round: it.round,
+      })),
+    );
+    const sub = parseFloat(draft.subtotal);
+    const disc = parseFloat(draft.discount);
+    if (disc > 0 && sub > 0) setDiscountPct(Math.round((disc / sub) * 100));
+    resumeExisting(draft);
+  }, [tableId, products, loadItems, resumeExisting, setDiscountPct]);
+
+  // Resume once, after products load (products give us each line's tax rate).
   const [resumed, setResumed] = useState(false);
   useEffect(() => {
     if (resumed || !tableId || productsLoading) return;
     let cancelled = false;
-    getOrders({ tableId, status: "DRAFT" })
-      .then((orders) => {
-        if (cancelled) return;
-        const draft = orders[0];
-        if (draft) {
-          const taxByProduct = new Map(products.map((p) => [p.id, p.tax]));
-          loadItems(
-            draft.items.map((it) => ({
-              productId: it.productId,
-              name: it.name,
-              unitPrice: it.unitPrice,
-              tax: taxByProduct.get(it.productId) ?? "0",
-              qty: it.qty,
-            })),
-          );
-          const sub = parseFloat(draft.subtotal);
-          const disc = parseFloat(draft.discount);
-          if (disc > 0 && sub > 0) setDiscountPct(Math.round((disc / sub) * 100));
-          resumeExisting(draft);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setResumed(true);
-      });
+    loadDraft().finally(() => {
+      if (!cancelled) setResumed(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, [resumed, tableId, productsLoading, products, loadItems, resumeExisting, setDiscountPct]);
+  }, [resumed, tableId, productsLoading, loadDraft]);
 
   const [showPayment, setShowPayment] = useState(false);
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
@@ -85,12 +87,22 @@ function OrderView() {
   const isEmpty = items.length === 0;
   const isSubmitting = orderState.phase === "submitting";
   const isPaid = orderState.phase === "paid";
+  // Rounds: un-fired (round 0) lines are editable; fired (round > 0) lines are locked.
+  const hasUnfired = items.some((i) => i.round === 0);
+  const hasFired = items.some((i) => i.round > 0);
+  const firedRounds = [...new Set(items.filter((i) => i.round > 0).map((i) => i.round))].sort(
+    (a, b) => a - b,
+  );
+  const newItems = items.filter((i) => i.round === 0);
 
   async function handleSendToKitchen() {
     if (!tableId) return;
-    const order = await ensureOrder(tableId, items, totals.discountAmt || undefined);
+    const unfired = items.filter((i) => i.round === 0);
+    if (unfired.length === 0) return;
+    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
     if (!order) return;
-    await sendKitchen(order.id);
+    await sendKitchen(order);
+    await loadDraft(); // refresh rounds so the just-fired lines lock
   }
 
   const cashReady =
@@ -101,7 +113,9 @@ function OrderView() {
   async function handlePay() {
     if (!tableId) return;
     if (payMethod === "CASH" && !cashReady) return;
-    const order = await ensureOrder(tableId, items, totals.discountAmt || undefined);
+    // Persist any un-fired lines onto the bill first, then take payment.
+    const unfired = items.filter((i) => i.round === 0);
+    const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined);
     if (!order) return;
     await pay(order.id, {
       method: payMethod,
@@ -172,7 +186,12 @@ function OrderView() {
             ← Tables
           </button>
           <h1 className="text-lg font-bold text-gray-900">
-            Order — Table {tableId ? `(${tableId.slice(-4)})` : ""}
+            Table {tableNumber ?? (tableId ? tableId.slice(-4) : "")}
+            {orderState.phase === "ordered" && (
+              <span className="ml-2 font-normal text-gray-500">
+                · Order #{orderState.order.number}
+              </span>
+            )}
           </h1>
         </div>
 
@@ -215,7 +234,7 @@ function OrderView() {
       <div className="flex w-full flex-col border-t border-gray-200 bg-white lg:w-80 lg:border-l lg:border-t-0">
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <h2 className="font-semibold text-gray-900">Cart</h2>
-          {!isEmpty && (
+          {!isEmpty && !hasFired && (
             <button onClick={clear} className="text-xs text-red-500 hover:underline">Clear</button>
           )}
         </div>
@@ -225,18 +244,53 @@ function OrderView() {
           {isEmpty ? (
             <p className="py-8 text-center text-sm text-gray-400">Add items to start an order</p>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {items.map((item) => (
-                <CartLine
-                  key={item.productId}
-                  name={item.name}
-                  qty={item.qty}
-                  unitPrice={item.unitPrice}
-                  lineTotal={(parseFloat(item.unitPrice) * item.qty).toFixed(2)}
-                  onInc={() => increment(item.productId)}
-                  onDec={() => decrement(item.productId)}
-                />
+            <div className="space-y-3 py-2">
+              {/* Fired rounds — locked, grouped by fire batch */}
+              {firedRounds.map((round) => (
+                <div key={`round-${round}`}>
+                  <p className="py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                    Round {round} · sent to kitchen
+                  </p>
+                  <div className="divide-y divide-gray-100">
+                    {items
+                      .filter((i) => i.round === round)
+                      .map((item) => (
+                        <CartLine
+                          key={`${round}-${item.productId}`}
+                          name={item.name}
+                          qty={item.qty}
+                          unitPrice={item.unitPrice}
+                          lineTotal={(parseFloat(item.unitPrice) * item.qty).toFixed(2)}
+                          locked
+                        />
+                      ))}
+                  </div>
+                </div>
               ))}
+
+              {/* New — editable, not yet fired */}
+              {newItems.length > 0 && (
+                <div>
+                  {hasFired && (
+                    <p className="py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                      New · not sent yet
+                    </p>
+                  )}
+                  <div className="divide-y divide-gray-100">
+                    {newItems.map((item) => (
+                      <CartLine
+                        key={item.productId}
+                        name={item.name}
+                        qty={item.qty}
+                        unitPrice={item.unitPrice}
+                        lineTotal={(parseFloat(item.unitPrice) * item.qty).toFixed(2)}
+                        onInc={() => increment(item.productId)}
+                        onDec={() => decrement(item.productId)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -272,24 +326,27 @@ function OrderView() {
               <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{orderState.message}</p>
             )}
 
-            <Button
-              variant="outline"
-              className="w-full"
-              disabled={isSubmitting}
-              onClick={handleSendToKitchen}
-            >
-              🍳 Send to Kitchen
-            </Button>
-
-            {!showPayment ? (
+            {hasUnfired && !showPayment && (
               <Button
+                variant="outline"
                 className="w-full"
                 disabled={isSubmitting}
-                onClick={openPayment}
+                onClick={handleSendToKitchen}
               >
-                💳 Checkout
+                🍳 Send to Kitchen
               </Button>
-            ) : (
+            )}
+
+            {hasFired &&
+              (!showPayment ? (
+                <Button
+                  className="w-full"
+                  disabled={isSubmitting}
+                  onClick={openPayment}
+                >
+                  💳 Checkout
+                </Button>
+              ) : (
               <div className="space-y-3">
                 {/* Method tabs */}
                 <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
@@ -377,7 +434,7 @@ function OrderView() {
                   </Button>
                 </div>
               </div>
-            )}
+              ))}
           </div>
         )}
       </div>

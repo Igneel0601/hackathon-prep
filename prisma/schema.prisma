@@ -211,18 +211,21 @@ model Order {
 
 // Line snapshot — name + unitPrice frozen at add-time so product edits don't rewrite history.
 model OrderItem {
-  id        String   @id @default(cuid())
-  name      String
-  unitPrice Decimal  @db.Decimal(10, 2)
-  qty       Int      @default(1)
-  lineTotal Decimal  @db.Decimal(10, 2)
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  createdAt DateTime @default(now())
+  id            String        @id @default(cuid())
+  name          String
+  unitPrice     Decimal       @db.Decimal(10, 2)
+  qty           Int           @default(1)
+  lineTotal     Decimal       @db.Decimal(10, 2)
+  round         Int           @default(0) // 0 = in cart (un-fired); 1+ = kitchen fire batch
+  kitchenStatus KitchenStatus @default(NONE) // per-item cooking state (rounds fire independently)
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+  createdAt     DateTime      @default(now())
 
   @@index([orderId])
+  @@index([kitchenStatus])
 }
 
 model Payment {

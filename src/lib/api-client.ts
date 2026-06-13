@@ -115,8 +115,15 @@ export function payOrder(id: string, body: PaymentBody): Promise<PaymentResponse
   return request<PaymentResponse>(`/api/orders/${id}/payment`, json(body));
 }
 
-export function sendToKitchen(id: string, action: KitchenAction): Promise<OrderSummary> {
-  return request<OrderSummary>(`/api/orders/${id}/kitchen`, json({ action }));
+export function sendToKitchen(
+  id: string,
+  action: KitchenAction,
+  round?: number,
+): Promise<OrderSummary> {
+  return request<OrderSummary>(
+    `/api/orders/${id}/kitchen`,
+    json({ action, ...(round !== undefined ? { round } : {}) }),
+  );
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
