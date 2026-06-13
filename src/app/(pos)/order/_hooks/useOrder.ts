@@ -5,7 +5,7 @@ import { createOrder, updateOrder, sendToKitchen, payOrder } from "@/lib/api-cli
 import type { Order, OrderItem, PaymentResponse } from "@/lib/api-types";
 import type { CartItem } from "./useCart";
 import { OFFLINE_ENABLED } from "@/lib/offline/flag";
-import { orders$ } from "@/lib/offline/store";
+import { orders$, queuePayment } from "@/lib/offline/store";
 
 type State =
   | { phase: "idle" }
@@ -155,6 +155,37 @@ export function useOrder() {
     }
   }
 
+  // Offline CASH checkout: cash is a local fact (no gateway), so record it now,
+  // queue payOrder for reconnect (the pay-CAS makes the flush idempotent), and
+  // show the receipt immediately. Order number is a placeholder until it syncs.
+  function payOfflineCash(order: Order, amountReceived: number): PaymentResponse {
+    queuePayment(order.id, { method: "CASH", amountReceived });
+    const changeDue = (amountReceived - parseFloat(order.total)).toFixed(2);
+    const result: PaymentResponse = {
+      order: {
+        id: order.id,
+        number: order.number,
+        status: "PAID",
+        kitchenStatus: order.kitchenStatus,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        discount: order.discount,
+        total: order.total,
+      },
+      payment: {
+        id: `local-${order.id}`,
+        method: "CASH",
+        amount: order.total,
+        reference: null,
+        changeDue,
+        createdAt: new Date().toISOString(),
+      },
+      changeDue,
+    };
+    dispatch({ type: "paid", result });
+    return result;
+  }
+
   async function pay(
     orderId: string,
     opts: { method: "CASH" | "CARD" | "UPI"; amountReceived?: number; reference?: string },
@@ -177,6 +208,7 @@ export function useOrder() {
     resumeExisting,
     sendKitchen,
     pay,
+    payOfflineCash,
     reset: () => dispatch({ type: "reset" }),
   };
 }

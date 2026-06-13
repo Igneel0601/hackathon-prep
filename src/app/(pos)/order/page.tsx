@@ -298,7 +298,7 @@ function OrderView() {
 
   const { categories, products, loading: productsLoading } = useProducts(activeCategoryId ?? undefined);
   const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, loadItems, clear } = useCart();
-  const { state: orderState, ensureOrder, resumeExisting, sendKitchen, pay } = useOrder();
+  const { state: orderState, ensureOrder, resumeExisting, sendKitchen, pay, payOfflineCash } = useOrder();
   const { methods: enabledMethods } = useEnabledPaymentMethods();
   const upiId = enabledMethods.find((m) => m.method === "UPI")?.upiId ?? null;
 
@@ -407,6 +407,16 @@ function OrderView() {
     const unfired = items.filter((i) => i.round === 0);
     const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined, totals);
     if (!order) return;
+    // Offline CASH: record locally + queue (cash needs no network); card/UPI need it.
+    if (
+      OFFLINE_ENABLED &&
+      typeof navigator !== "undefined" &&
+      !navigator.onLine &&
+      payMethod === "CASH"
+    ) {
+      payOfflineCash(order, parseFloat(amountReceived));
+      return;
+    }
     await pay(order.id, {
       method: payMethod,
       ...(payMethod === "CASH" ? { amountReceived: parseFloat(amountReceived) } : {}),

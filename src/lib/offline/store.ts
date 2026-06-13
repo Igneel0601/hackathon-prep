@@ -10,7 +10,7 @@
 // Order.updatedAt drives change detection). Products/tables are read-only caches.
 import { observable } from "@legendapp/state";
 import { syncedCrud } from "@legendapp/state/sync-plugins/crud";
-import { synced } from "@legendapp/state/sync";
+import { synced, syncObservable } from "@legendapp/state/sync";
 import { ObservablePersistIndexedDB } from "@legendapp/state/persist-plugins/indexeddb";
 import {
   getOrders,
@@ -19,8 +19,9 @@ import {
   voidOrder,
   getProducts,
   getTables,
+  payOrder,
 } from "@/lib/api-client";
-import type { Order, ProductsResponse, TablesResponse } from "@/lib/api-types";
+import type { Order, PaymentBody, ProductsResponse, TablesResponse } from "@/lib/api-types";
 
 const isBrowser = typeof window !== "undefined";
 
@@ -28,8 +29,8 @@ const isBrowser = typeof window !== "undefined";
 const idb = isBrowser
   ? new ObservablePersistIndexedDB({
       databaseName: "cafe-pos-offline",
-      version: 1,
-      tableNames: ["orders", "products", "tables"],
+      version: 2,
+      tableNames: ["orders", "products", "tables", "payment-outbox"],
     })
   : undefined;
 
@@ -105,3 +106,47 @@ export const tables$ = observable(
     persist: persist("tables"),
   }),
 );
+
+// ── Cash payment outbox ─────────────────────────────────────────────────────
+// Payment is a separate endpoint (not part of the order CRUD), and it must run
+// AFTER the order's create has reached the server. So queued cash payments live
+// in their own persisted outbox and flush when online (retrying until the order
+// exists). The server's pay-CAS makes each flush idempotent (retry-safe).
+export interface QueuedPayment {
+  key: string;
+  orderId: string;
+  body: PaymentBody;
+  queuedAt: number;
+}
+
+export const paymentOutbox$ = observable<Record<string, QueuedPayment>>({});
+if (idb) {
+  syncObservable(paymentOutbox$, { persist: { name: "payment-outbox", plugin: idb } });
+}
+
+export function queuePayment(orderId: string, body: PaymentBody) {
+  const key = crypto.randomUUID();
+  paymentOutbox$[key].set({ key, orderId, body, queuedAt: Date.now() });
+}
+
+let flushing = false;
+export async function flushPayments(): Promise<void> {
+  if (flushing || typeof navigator === "undefined" || !navigator.onLine) return;
+  flushing = true;
+  try {
+    const queued = paymentOutbox$.get() ?? {};
+    for (const [key, p] of Object.entries(queued)) {
+      try {
+        await payOrder(p.orderId, p.body); // pay-CAS → idempotent
+        paymentOutbox$[key].delete();
+      } catch (e) {
+        const status = (e as { status?: number }).status;
+        // 409 = already paid (idempotent replay) → applied, drop it.
+        // 404 = the order's create hasn't synced yet → leave queued, retry next tick.
+        if (status === 409) paymentOutbox$[key].delete();
+      }
+    }
+  } finally {
+    flushing = false;
+  }
+}
