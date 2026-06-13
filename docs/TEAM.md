@@ -98,6 +98,46 @@ The 5-step spine in [`SCOPE.md`](./SCOPE.md), divided so all four work in parall
 - `OrderItem`: `productId, name, unitPrice, qty, lineTotal` (snapshot price at add-time).
 - Rajat **writes** orders/items + payment; Mukund **reads** + advances `kitchenStatus`. Both go through Vaibhav's API shapes.
 
+## MVP file-ownership map (no-conflict)
+
+**Rule: one branch = a disjoint set of files. Never edit a file someone else owns.**
+Feature-specific components live colocated in the owner's route folder (`_components/`), never in shared `src/components/`.
+
+| Owner | Owns these paths | Builds |
+|-------|------------------|--------|
+| **Vaibhav** | `src/lib/api-types.ts`, `src/lib/api-client.ts`, `middleware.ts`, `src/app/layout.tsx` (SessionProvider), `src/app/providers.tsx`, `src/app/login/page.tsx` | typed API client, auth gating, login |
+| **Vinayak** | `src/components/**`, `src/app/(pos)/layout.tsx`, `src/app/globals.css`, `tailwind`/`components.json`, `package.json` (UI deps) | **design (Claude Design)** + shell/nav + shared primitives |
+| **Rajat** | `src/app/(pos)/page.tsx`, `src/app/(pos)/order/_components/**`, `…/order/_hooks/**` | Order View: floor picker, product grid, cart, cash checkout |
+| **Mukund** | `src/app/kds/**` (own layout+page), `src/app/(pos)/orders/page.tsx`, their `_components/`/`_hooks/` | KDS (separate tab), Orders list |
+
+**Only 3 collision points — all avoided:**
+1. `src/components/` → Vinayak-only. Others import, never add (their parts go in their route's `_components/`).
+2. `package.json`/lockfile → only Vinayak touches it (UI deps). `api-types`/`api-client` are pure TS (no deps).
+3. Layouts → root `layout.tsx` = Vaibhav (SessionProvider only); `(pos)/layout.tsx` = Vinayak. Different files; pages render inside but never edit them.
+
+**Wave order:**
+- **Wave 0 (now, parallel):** Vaibhav `feat/api-types` (merge first — everyone imports it) + `feat/auth-shell`; Vinayak designs in Claude Design.
+- **Wave 1 (after api-types on `dev`):** Rajat `feat/order-view`, Mukund `feat/kitchen-display` — zero shared files, merge in any order.
+
+## Design runs in parallel — wire against dummy UI
+
+Vinayak **designs** the screens (Claude Design); Rajat/Mukund **wire data now** against plain dummy UIs, then swap in the finished design. The integration seam is the **component inventory + props** — agree these, build to them on both sides, and swap-in is a reskin, not a rewrite.
+
+**Lock these component boundaries (money props are `string` — Decimal-as-string from the API):**
+
+| Component | Props |
+|-----------|-------|
+| `TableCard` | `{ number, seats, status: 'available' \| 'active', onClick }` |
+| `FloorPickerModal` | `{ floors, onSelectTable }` |
+| `CategoryTabs` | `{ categories: {id,name,color}[], active, onChange }` |
+| `ProductCard` | `{ name, price: string, categoryColor, onClick }` |
+| `CartLine` | `{ name, qty, unitPrice: string, lineTotal: string, onInc, onDec }` |
+| `OrderSummary` | `{ subtotal, tax, discount, total }` (all `string`) |
+| `PaymentModal` | `{ total: string, methods, onConfirm }` |
+| `TicketCard` | `{ number, items: {name,qty}[], status, onAdvance }` |
+
+Rajat/Mukund build these as plain HTML + minimal Tailwind with **real props + real wiring**; replace internals with Vinayak's design later, props unchanged. Pages to design + screen list: see [`docs/design/README.md`](./design/README.md).
+
 ## Who built what
 
 In the mentoring round, **mentors ask each person what they built and quiz them on it.**
@@ -106,7 +146,12 @@ Keep this log current as features ship — it's everyone's prep sheet.
 | Feature / area | Owner | Notes |
 |----------------|-------|-------|
 | Project scaffold, DB, Auth, CI | Vaibhav | platform/infra |
-| _TBD_ | _TBD_ | |
+| POS data model (schema + migrations) | Vaibhav | 9 models + enums |
+| POS API layer (8 routes) | Vaibhav | products, tables, orders, payment, kitchen, KDS |
+| Auth — email/password + Google, JWT | Vaibhav | Credentials + signup |
+| Order View UI | Rajat | _in progress_ |
+| Kitchen Display + Orders UI | Mukund | _in progress_ |
+| Design + UI shell/components | Vinayak | _in progress_ |
 
 ## Understand your own code
 
