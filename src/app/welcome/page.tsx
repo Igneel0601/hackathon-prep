@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { CafeLogo } from "@/components/CafeLogo";
 
 const DISPLAY = "var(--cafe-font-display)";
 const BODY = "var(--cafe-font-body)";
@@ -22,7 +23,9 @@ export default function WelcomePage() {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center">
-        <Image src="/logo-badge.png" alt="Odoo Cafe" width={72} height={72} className="object-contain" style={{ filter: "drop-shadow(0 6px 18px rgba(255,188,13,0.35))" }} />
+        <div style={{ filter: "drop-shadow(0 6px 18px rgba(255,188,13,0.35))" }}>
+          <CafeLogo size={84} />
+        </div>
         <h1
           className="mt-5 text-5xl uppercase leading-none tracking-tight md:text-7xl"
           style={{ fontFamily: DISPLAY, color: "#FAF3E8", textShadow: "0 4px 30px rgba(13,5,2,0.8)" }}

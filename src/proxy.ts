@@ -11,6 +11,11 @@ export function proxy(req: NextRequest) {
     req.cookies.has("__Secure-authjs.session-token");
 
   if (!hasSession) {
+    // Guests landing on the root see the kiosk entry (Self Checkout vs Service);
+    // any other gated page bounces to login.
+    if (req.nextUrl.pathname === "/") {
+      return NextResponse.redirect(new URL("/welcome", req.url));
+    }
     const url = new URL("/login", req.url);
     url.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(url);
