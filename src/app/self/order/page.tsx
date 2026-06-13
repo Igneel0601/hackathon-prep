@@ -42,9 +42,7 @@ function SelfOrderView() {
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const { items, totals, addProduct, increment, decrement } = useCart();
 
-  const [step, setStep] = useState<"cart" | "email">("cart");
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [step, setStep] = useState<"cart" | "confirm">("cart");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +60,6 @@ function SelfOrderView() {
   const shown = activeCat ? products.filter((p) => p.categoryId === activeCat) : products;
   const cartQty = Object.fromEntries(items.map((i) => [i.productId, i.qty]));
   const itemCount = items.reduce((s, i) => s + i.qty, 0);
-  const emailValid = email.trim().includes("@");
 
   async function place() {
     setError(null);
@@ -71,7 +68,6 @@ function SelfOrderView() {
       const res = await placeSelfOrder({
         tableId,
         items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
-        customer: { email: email.trim(), name: name.trim() || undefined },
       });
       router.push(`/self/confirm?n=${res.number}`);
     } catch (e) {
@@ -139,7 +135,7 @@ function SelfOrderView() {
               </div>
               <div className="shrink-0 space-y-3 p-5" style={{ borderTop: "1px solid rgba(92,48,32,0.10)" }}>
                 <OrderSummary subtotal={totals.subtotal} tax={totals.tax} discount={totals.discount} total={totals.total} />
-                <button onClick={() => setStep("email")}
+                <button onClick={() => setStep("confirm")}
                   className="w-full rounded-xl py-3 text-sm font-bold transition-transform active:scale-95"
                   style={{ background: "#1A0A04", color: "#FAF3E8" }}>
                   Review &amp; Place Order
@@ -152,7 +148,7 @@ function SelfOrderView() {
 
       {/* Mobile bottom bar */}
       {items.length > 0 && (
-        <button onClick={() => setStep("email")}
+        <button onClick={() => setStep("confirm")}
           className="flex shrink-0 items-center justify-between px-5 py-3.5 text-sm font-bold md:hidden"
           style={{ background: "#1A0A04", color: "#FAF3E8" }}>
           <span>{itemCount} item{itemCount > 1 ? "s" : ""}</span>
@@ -160,22 +156,16 @@ function SelfOrderView() {
         </button>
       )}
 
-      {/* Email step (modal) */}
-      {step === "email" && (
+      {/* Confirm step (modal) */}
+      {step === "confirm" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" style={{ background: "rgba(13,5,2,0.6)" }} onClick={() => !placing && setStep("cart")}>
           <div className="w-full max-w-md rounded-t-3xl p-6 sm:rounded-3xl" style={{ background: "#FDFAF5" }} onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-2xl uppercase tracking-tight" style={{ fontFamily: DISPLAY, color: "#1A0A04" }}>Almost there</h2>
-            <p className="mt-1 text-sm" style={{ color: "#9B6B55" }}>Enter your email so we can tie this order to you. Pay at the counter when you collect.</p>
+            <h2 className="text-2xl uppercase tracking-tight" style={{ fontFamily: DISPLAY, color: "#1A0A04" }}>Place order?</h2>
+            <p className="mt-1 text-sm" style={{ color: "#9B6B55" }}>This goes straight to the kitchen. Pay at the counter when you collect — you can get an emailed receipt at checkout.</p>
 
-            <label className="mt-5 block text-xs font-semibold uppercase tracking-wide" style={{ color: "#9B6B55" }}>Email *</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
-              className="mt-1 w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.18)", color: "#1A0A04" }} />
-
-            <label className="mt-3 block text-xs font-semibold uppercase tracking-wide" style={{ color: "#9B6B55" }}>Name (optional)</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
-              className="mt-1 w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.18)", color: "#1A0A04" }} />
+            <div className="mt-4">
+              <OrderSummary subtotal={totals.subtotal} tax={totals.tax} discount={totals.discount} total={totals.total} />
+            </div>
 
             {error && <p className="mt-3 rounded-lg px-3 py-2 text-xs" style={{ background: "rgba(122,46,18,0.10)", color: "#7A2E12" }}>{error}</p>}
 
@@ -185,7 +175,7 @@ function SelfOrderView() {
                 style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.22)", color: "#2A1008" }}>
                 Back
               </button>
-              <button onClick={place} disabled={placing || !emailValid}
+              <button onClick={place} disabled={placing}
                 className="flex-[2] rounded-xl py-3 text-sm font-bold transition-transform active:scale-95 disabled:opacity-40"
                 style={{ background: "#FFBC0D", color: "#1A0A04" }}>
                 {placing ? "Placing…" : `Place Order · ₹${totals.total}`}

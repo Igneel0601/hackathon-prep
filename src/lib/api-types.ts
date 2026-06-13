@@ -153,6 +153,7 @@ export interface PaymentBody {
   method: PaymentMethod;
   amountReceived?: number; // required for CASH
   reference?: string; // CARD/UPI
+  email?: string; // optional — emails a receipt on success
 }
 
 export type KitchenAction = "send" | "advance";
@@ -161,7 +162,6 @@ export type KitchenAction = "send" | "advance";
 export interface SelfOrderBody {
   tableId: string;
   items: { productId: string; qty: number }[];
-  customer: { email: string; name?: string };
 }
 
 export interface SelfOrderResult {

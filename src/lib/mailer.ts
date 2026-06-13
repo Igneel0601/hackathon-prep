@@ -33,6 +33,8 @@ export interface ReceiptEmailData {
   subtotal: string;
   tax: string;
   total: string;
+  /** Set once payment has been taken (cashier checkout) — changes copy + adds payment info. */
+  paid?: { method: string; amount: string; changeDue: string | null };
 }
 
 function formatMoney(v: string): string {
@@ -41,8 +43,17 @@ function formatMoney(v: string): string {
 
 function renderText(data: ReceiptEmailData): string {
   const lines = data.items.map((i) => `  ${i.qty} x ${i.name} — ${formatMoney(i.lineTotal)}`);
+  const totalLabel = data.paid ? "Total paid" : "Total to pay";
+  const footer = data.paid
+    ? [
+        `Paid via ${data.paid.method}`,
+        ...(data.paid.changeDue ? [`Change given: ${formatMoney(data.paid.changeDue)}`] : []),
+        "",
+        "Thanks for dining with us!",
+      ]
+    : ["Please pay at the counter when your order arrives. Enjoy your meal!"];
   return [
-    "Thank you for placing an order with us!",
+    data.paid ? "Thank you for your payment!" : "Thank you for placing an order with us!",
     "",
     `Order #${data.orderNumber} — Table ${data.tableNumber}`,
     "",
@@ -50,9 +61,9 @@ function renderText(data: ReceiptEmailData): string {
     "",
     `Subtotal: ${formatMoney(data.subtotal)}`,
     `Tax: ${formatMoney(data.tax)}`,
-    `Total to pay: ${formatMoney(data.total)}`,
+    `${totalLabel}: ${formatMoney(data.total)}`,
     "",
-    "Please pay at the counter when your order arrives. Enjoy your meal!",
+    ...footer,
   ].join("\n");
 }
 
@@ -63,17 +74,21 @@ function renderHtml(data: ReceiptEmailData): string {
         `<tr><td style="padding:4px 8px">${i.qty} x ${i.name}</td><td style="padding:4px 8px;text-align:right">${formatMoney(i.lineTotal)}</td></tr>`,
     )
     .join("");
+  const totalLabel = data.paid ? "Total paid" : "Total to pay";
+  const footer = data.paid
+    ? `<p>Paid via ${data.paid.method}${data.paid.changeDue ? ` — change given: ${formatMoney(data.paid.changeDue)}` : ""}</p><p>Thanks for dining with us!</p>`
+    : `<p>Please pay at the counter when your order arrives. Enjoy your meal!</p>`;
   return `
     <div style="font-family:sans-serif;color:#1A0A04">
-      <h2>Thank you for placing an order with us!</h2>
+      <h2>${data.paid ? "Thank you for your payment!" : "Thank you for placing an order with us!"}</h2>
       <p>Order #${data.orderNumber} — Table ${data.tableNumber}</p>
       <table style="width:100%;max-width:360px;border-collapse:collapse">${rows}</table>
       <table style="width:100%;max-width:360px;border-collapse:collapse;margin-top:8px;border-top:1px solid #ccc">
         <tr><td style="padding:4px 8px">Subtotal</td><td style="padding:4px 8px;text-align:right">${formatMoney(data.subtotal)}</td></tr>
         <tr><td style="padding:4px 8px">Tax</td><td style="padding:4px 8px;text-align:right">${formatMoney(data.tax)}</td></tr>
-        <tr><td style="padding:4px 8px"><strong>Total to pay</strong></td><td style="padding:4px 8px;text-align:right"><strong>${formatMoney(data.total)}</strong></td></tr>
+        <tr><td style="padding:4px 8px"><strong>${totalLabel}</strong></td><td style="padding:4px 8px;text-align:right"><strong>${formatMoney(data.total)}</strong></td></tr>
       </table>
-      <p>Please pay at the counter when your order arrives. Enjoy your meal!</p>
+      ${footer}
     </div>
   `;
 }

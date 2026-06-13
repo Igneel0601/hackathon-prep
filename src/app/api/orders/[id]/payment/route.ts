@@ -1,13 +1,17 @@
 import { Prisma } from "@/generated/prisma/client";
 import { ApiError, errorResponse, json, requireEmployee } from "@/lib/api";
 import { db } from "@/lib/db";
+import { sendReceiptEmail } from "@/lib/mailer";
 
 type PaymentMethod = "CASH" | "CARD" | "UPI";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface PaymentBody {
   method?: unknown;
   amountReceived?: unknown;
   reference?: unknown;
+  email?: unknown;
 }
 
 export async function POST(
@@ -82,16 +86,30 @@ export async function POST(
     const reference =
       typeof body.reference === "string" ? body.reference : undefined;
 
+    let email: string | undefined;
+    if (typeof body.email === "string" && body.email.trim()) {
+      email = body.email.trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) {
+        throw new ApiError(400, "email must be a valid email address");
+      }
+    }
+
     // Atomic: flip DRAFT→PAID only if still DRAFT, so two concurrent payments
     // can't both succeed. If the guard matches nothing, the order was already paid.
     const { updatedOrder, payment } = await db.$transaction(async (tx) => {
       const flipped = await tx.order.updateMany({
         where: { id, status: "DRAFT" },
-        data: { status: "PAID" },
+        data: { status: "PAID", kitchenStatus: "COMPLETED" },
       });
       if (flipped.count === 0) {
         throw new ApiError(409, "Order is not payable");
       }
+      // Checkout closes the kitchen ticket too — mark any items still
+      // TO_COOK/PREPARING as COMPLETED so the order drops off the KDS.
+      await tx.orderItem.updateMany({
+        where: { orderId: id, kitchenStatus: { in: ["TO_COOK", "PREPARING"] } },
+        data: { kitchenStatus: "COMPLETED" },
+      });
       const updatedOrder = await tx.order.findUniqueOrThrow({
         where: { id },
         select: {
@@ -103,6 +121,8 @@ export async function POST(
           tax: true,
           discount: true,
           total: true,
+          table: { select: { number: true } },
+          items: { select: { name: true, qty: true, lineTotal: true } },
         },
       });
       const payment = await tx.payment.create({
@@ -125,9 +145,34 @@ export async function POST(
       return { updatedOrder, payment };
     });
 
+    // Best-effort receipt email — never block the payment on SMTP issues.
+    if (email) {
+      try {
+        await sendReceiptEmail({
+          to: email,
+          orderNumber: updatedOrder.number,
+          tableNumber: updatedOrder.table.number,
+          items: updatedOrder.items.map((i) => ({ name: i.name, qty: i.qty, lineTotal: i.lineTotal.toString() })),
+          subtotal: updatedOrder.subtotal.toString(),
+          tax: updatedOrder.tax.toString(),
+          total: updatedOrder.total.toString(),
+          paid: {
+            method: payment.method,
+            amount: payment.amount.toString(),
+            changeDue: payment.changeDue?.toString() ?? null,
+          },
+        });
+      } catch (e) {
+        console.error("[orders/payment] failed to send receipt email:", e);
+      }
+    }
+
     return json({
       order: {
-        ...updatedOrder,
+        id: updatedOrder.id,
+        number: updatedOrder.number,
+        status: updatedOrder.status,
+        kitchenStatus: updatedOrder.kitchenStatus,
         subtotal: updatedOrder.subtotal.toString(),
         tax: updatedOrder.tax.toString(),
         discount: updatedOrder.discount.toString(),
