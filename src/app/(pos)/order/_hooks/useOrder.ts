@@ -91,11 +91,13 @@ export function useOrder() {
     const existing = state.phase === "ordered" ? state.order : null;
     dispatch({ type: "submitting" });
 
-    // Offline-mode path: write through the Legend-State store. It persists to
-    // IndexedDB and QUEUES the create/update — flushing to the server (via the
-    // api-client functions wired in store.ts) the moment the network returns.
-    // The server's idempotency guards make the at-least-once flush safe.
-    if (OFFLINE_ENABLED) {
+    // Offline-mode path: write through the Legend-State store ONLY when actually
+    // offline. It persists to IndexedDB and QUEUES the create/update — flushing to
+    // the server (via the api-client functions in store.ts) the moment the network
+    // returns. The server's idempotency guards make the at-least-once flush safe.
+    // When online we fall through to the direct API call below so the order really
+    // exists server-side (otherwise Send-to-Kitchen hits a 404 on an unsynced id).
+    if (OFFLINE_ENABLED && typeof navigator !== "undefined" && !navigator.onLine) {
       try {
         const id = existing?.id ?? crypto.randomUUID();
         const local = buildLocalOrder(

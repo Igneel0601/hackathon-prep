@@ -18,7 +18,11 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Run on everything except API routes, Next internals, the login page, and assets.
+// Run on everything except API routes, Next internals, the login page, and any
+// static file (a path with an extension). Crucially, PWA assets like
+// /manifest.webmanifest, /sw.js and the icon PNGs are fetched WITHOUT credentials,
+// so the cookie check would 307 them to /login — serving HTML where the browser
+// expects JSON/JS. Excluding extensioned paths keeps those public.
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login).*)"],
+  matcher: ["/((?!api|_next|favicon.ico|login|.*\\..*).*)"],
 };

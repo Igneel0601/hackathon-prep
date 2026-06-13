@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  :root{
+    --bg:#0f1115;--bg-2:#171a21;--bg-3:#1f242e;
+    --fg:#e8eaed;--fg-muted:#9aa1ab;--fg-dim:#5f6772;
+    --border:rgba(232,234,237,0.10);--border-2:rgba(232,234,237,0.18);
+    --accent:#6b8afd;--accent-2:#8aa0ff;
+    --success:#4ade80;--warn:#fbbf24;--danger:#f87171;
+    --radius:0.5rem;--radius-lg:0.875rem;--pill:999px;
+    --shadow:0 0.5rem 2rem rgba(0,0,0,0.35);
+    --font-sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --fs-xs:0.75rem;--lh-xs:1.5;
+    --fs-sm:0.875rem;--lh-sm:1.5;
+    --fs-base:1rem;--lh-base:1.6;
+    --fs-lg:1.125rem;--lh-lg:1.55;
+    --fs-xl:1.25rem;--lh-xl:1.45;
+    --fs-2xl:1.5rem;--lh-2xl:1.3;
+    --fs-3xl:1.875rem;--lh-3xl:1.2;
+    --fs-4xl:2.25rem;--lh-4xl:1.15;
+    --fs-5xl:3rem;--lh-5xl:1.05;
+    --fs-6xl:3.75rem;--lh-6xl:1.0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  @keyframes toastin{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:none;}}
+  @keyframes fadein{from{opacity:0;}to{opacity:1;}}
+  @keyframes modalin{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+</style>
+</helmet>
+
+<div style="min-height:100dvh;padding:2.5rem 1rem 5rem;">
+  <div style="max-width:60rem;margin:0 auto;">
+
+    <!-- Header -->
+    <header style="display:flex;flex-direction:column;gap:0.5rem;">
+      <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:0.375rem;border:1px solid rgba(107,138,253,0.3);background:var(--bg-3);color:var(--accent);border-radius:var(--pill);padding:0.125rem 0.625rem;font-size:0.75rem;font-weight:500;">Living style guide</span>
+      <h1 style="margin:0.5rem 0 0;font-size:1.875rem;font-weight:600;letter-spacing:-0.02em;color:var(--fg);">Component kit</h1>
+      <p style="margin:0;max-width:34rem;color:var(--fg-muted);line-height:1.55;text-wrap:pretty;">Every primitive, variant and state. The entire system reskins from the CSS variables in <code style="background:var(--bg-3);border-radius:0.25rem;padding:0.1rem 0.35rem;font-size:0.85em;color:var(--fg);">globals.css</code>.</p>
+    </header>
+
+    <!-- TYPOGRAPHY -->
+    <section style="display:flex;flex-direction:column;gap:0.25rem;padding:2.5rem 0 0;">
+      <h2 style="margin:0 0 0.75rem;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Type scale</h2>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-6xl);line-height:var(--lh-6xl);font-weight:600;letter-spacing:-0.025em;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Reskin</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-6xl</span> · 3.75rem / 1.0</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-5xl);line-height:var(--lh-5xl);font-weight:600;letter-spacing:-0.025em;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Reskin</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-5xl</span> · 3rem / 1.05</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-4xl);line-height:var(--lh-4xl);font-weight:600;letter-spacing:-0.02em;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Hero headline</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-4xl</span> · 2.25rem / 1.15</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-3xl);line-height:var(--lh-3xl);font-weight:600;letter-spacing:-0.02em;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Page title</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-3xl</span> · 1.875rem / 1.2</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-2xl);line-height:var(--lh-2xl);font-weight:600;letter-spacing:-0.015em;color:var(--fg);">Section heading</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-2xl</span> · 1.5rem / 1.3</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-xl);line-height:var(--lh-xl);font-weight:500;color:var(--fg);">Card title / lead</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-xl</span> · 1.25rem / 1.45</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-lg);line-height:var(--lh-lg);color:var(--fg);">Large body copy</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-lg</span> · 1.125rem / 1.55</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-base);line-height:var(--lh-base);color:var(--fg);">Body — the default reading size for paragraphs and prose.</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-base</span> · 1rem / 1.6</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-sm);line-height:var(--lh-sm);color:var(--fg-muted);">Default UI text — labels, table cells, helper copy.</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-sm</span> · 0.875rem / 1.5</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:var(--fs-xs);line-height:var(--lh-xs);text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Caption / overline</span>
+        <span style="flex-shrink:0;font-size:0.75rem;color:var(--fg-dim);text-align:right;font-family:var(--font-mono);"><span style="color:var(--fg-muted);">text-xs</span> · 0.75rem / 1.5</span>
+      </div>
+      <p style="margin:1rem 0 0;font-size:0.875rem;color:var(--fg-muted);line-height:1.55;text-wrap:pretty;">Each step pairs a size with a line-height as design tokens, so the whole scale is fluid (rides the responsive root size) and reskinnable — swap <code style="background:var(--bg-3);border-radius:0.25rem;padding:0.1rem 0.35rem;font-size:0.85em;color:var(--fg);">--fs-*</code> / <code style="background:var(--bg-3);border-radius:0.25rem;padding:0.1rem 0.35rem;font-size:0.85em;color:var(--fg);">--font-sans</code> in <code style="background:var(--bg-3);border-radius:0.25rem;padding:0.1rem 0.35rem;font-size:0.85em;color:var(--fg);">globals.css</code>.</p>
+    </section>
+
+    <!-- BUTTONS -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Button — variants &amp; states</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:var(--bg);transition:background .15s;" style-hover="background:var(--accent-2)">Primary</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;background:var(--bg-3);color:var(--fg);transition:border-color .15s;" style-hover="border-color:var(--border-2)">Secondary</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);cursor:pointer;background:transparent;color:var(--fg-muted);transition:background .15s,color .15s;" style-hover="background:var(--bg-3);color:var(--fg)">Ghost</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);cursor:pointer;background:var(--danger);color:var(--bg);transition:opacity .15s;" style-hover="opacity:0.9">Delete</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.75rem;">
+        <button style="display:inline-flex;align-items:center;justify-content:center;height:2.25rem;padding:0 0.75rem;font-size:0.8125rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Small</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Medium</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;height:2.75rem;padding:0 1.25rem;font-size:1rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Large</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.05rem;height:1.05rem;"><path d="M12 5v14"/><path d="M5 12h14"/></svg>New item</button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Continue<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.05rem;height:1.05rem;"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);cursor:wait;"><span style="width:1rem;height:1rem;border:2px solid color-mix(in srgb,var(--bg) 40%,transparent);border-top-color:var(--bg);border-radius:999px;animation:spin .7s linear infinite;display:inline-block;"></span>Loading</button>
+        <button disabled style="display:inline-flex;align-items:center;justify-content:center;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);opacity:0.5;cursor:not-allowed;">Disabled</button>
+      </div>
+    </section>
+
+    <!-- BADGES -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Badge / Pill</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+        <span style="display:inline-flex;align-items:center;gap:0.375rem;border:1px solid var(--border);background:var(--bg-3);color:var(--fg-muted);border-radius:var(--pill);padding:0.125rem 0.625rem;font-size:0.75rem;font-weight:500;">Neutral</span>
+        <span style="display:inline-flex;align-items:center;gap:0.375rem;border:1px solid rgba(107,138,253,0.3);background:var(--bg-3);color:var(--accent);border-radius:var(--pill);padding:0.125rem 0.625rem;font-size:0.75rem;font-weight:500;">Accent</span>
+        <span style="display:inline-flex;align-items:center;gap:0.375rem;border:1px solid rgba(74,222,128,0.3);background:var(--bg-3);color:var(--success);border-radius:var(--pill);padding:0.125rem 0.625rem;font-size:0.75rem;font-weight:500;"><span style="width:0.375rem;height:0.375rem;border-radius:999px;background:currentColor;"></span>Active</span>
+        <span style="display:inline-flex;align-items:center;gap:0.375rem;border:1px solid rgba(251,191,36,0.3);background:var(--bg-3);color:var(--warn);border-radius:var(--pill);padding:0.125rem 0.625rem;font-size:0.75rem;font-weight:500;"><span style="width:0.375rem;height:0.375rem;border-radius:999px;background:currentColor;"></span>Trialing</span>
+        <span style="display:inline-flex;align-items:center;gap:0.375rem;border:1px solid rgba(248,113,113,0.3);background:var(--bg-3);color:var(--danger);border-radius:var(--pill);padding:0.125rem 0.625rem;font-size:0.75rem;font-weight:500;"><span style="width:0.375rem;height:0.375rem;border-radius:999px;background:currentColor;"></span>Past due</span>
+      </div>
+    </section>
+
+    <!-- CARDS -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Card</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem;">
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);"><h3 style="margin:0;font-size:1rem;font-weight:600;color:var(--fg);">Static card</h3></div>
+          <div style="padding:1rem 1.25rem;font-size:0.875rem;color:var(--fg-muted);line-height:1.5;">Header, body and footer slots — built from token utilities only.</div>
+          <div style="padding:1rem 1.25rem;border-top:1px solid var(--border);display:flex;gap:0.75rem;justify-content:flex-end;">
+            <button style="height:2.25rem;padding:0 0.75rem;font-size:0.8125rem;font-weight:500;border:none;border-radius:var(--radius);background:transparent;color:var(--fg-muted);cursor:pointer;">Cancel</button>
+            <button style="height:2.25rem;padding:0 0.875rem;font-size:0.8125rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);cursor:pointer;">Confirm</button>
+          </div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:1.25rem;display:flex;align-items:center;font-size:0.875rem;color:var(--fg-muted);transition:transform .2s,border-color .2s;cursor:pointer;" style-hover="transform:translateY(-2px);border-color:var(--border-2)">Interactive card — hover to see the lift.</div>
+      </div>
+    </section>
+
+    <!-- INPUTS -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Inputs &amp; fields</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;">
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">Default</label>
+          <input placeholder="you@example.com" style="width:100%;min-height:2.5rem;padding:0.5rem 0.75rem;font-size:0.875rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">With helper</label>
+          <input placeholder="username" style="width:100%;min-height:2.5rem;padding:0.5rem 0.75rem;font-size:0.875rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);" />
+          <span style="font-size:0.75rem;color:var(--fg-dim);">3–20 characters.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">Error</label>
+          <input value="nope" style="width:100%;min-height:2.5rem;padding:0.5rem 0.75rem;font-size:0.875rem;border:1px solid var(--danger);border-radius:var(--radius);background:var(--bg);color:var(--fg);" />
+          <span style="font-size:0.75rem;color:var(--danger);">This field is required.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;opacity:0.6;">
+          <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">Disabled</label>
+          <input disabled placeholder="Unavailable" style="width:100%;min-height:2.5rem;padding:0.5rem 0.75rem;font-size:0.875rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);cursor:not-allowed;" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">Select</label>
+          <div style="position:relative;">
+            <select style="width:100%;min-height:2.5rem;padding:0.5rem 2.5rem 0.5rem 0.75rem;font-size:0.875rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);appearance:none;cursor:pointer;"><option>Free</option><option>Pro</option><option>Enterprise</option></select>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:var(--fg-dim);pointer-events:none;"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">Search (Field wrapper)</label>
+          <div style="position:relative;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--fg-dim);"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input placeholder="Search…" style="width:100%;min-height:2.5rem;padding:0.5rem 0.75rem 0.5rem 2.25rem;font-size:0.875rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);" />
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.375rem;">
+        <label style="font-size:0.875rem;font-weight:500;color:var(--fg);">Textarea</label>
+        <textarea rows="3" placeholder="Write something…" style="width:100%;padding:0.5rem 0.75rem;font-size:0.875rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);resize:vertical;line-height:1.5;font-family:inherit;"></textarea>
+      </div>
+    </section>
+
+    <!-- TABS -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Tabs</h2>
+      <div role="tablist" style="display:flex;gap:0.25rem;border-bottom:1px solid var(--border);position:relative;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <button type="button" onClick="{{ t.onClick }}" style="{{ t.btnStyle }}">{{ t.label }}<span style="{{ t.indicatorStyle }}"></span></button>
+        </sc-for>
+      </div>
+      <p style="margin:0;font-size:0.875rem;color:var(--fg-muted);">Active tab: <span style="color:var(--fg);font-weight:500;">{{ activeTab }}</span> — click to switch; the underline slides.</p>
+    </section>
+
+    <!-- OVERLAYS -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Overlays — Modal, Dropdown, Toast</h2>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.75rem;">
+        <button onClick="{{ openModal }}" style="height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);cursor:pointer;">Open modal</button>
+        <div style="position:relative;">
+          <button onClick="{{ toggleMenu }}" style="display:inline-flex;align-items:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Menu<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;"><path d="M6 9l6 6 6-6"/></svg></button>
+          <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;top:100%;left:0;margin-top:0.5rem;min-width:12rem;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:0.25rem;z-index:20;animation:fadein .12s ease;">
+              <button onClick="{{ closeMenu }}" style="display:flex;width:100%;align-items:center;gap:0.625rem;padding:0.5rem 0.625rem;border:none;background:transparent;border-radius:var(--radius);font-size:0.875rem;color:var(--fg-muted);cursor:pointer;text-align:left;" style-hover="background:var(--bg-3);color:var(--fg)">Edit</button>
+              <button onClick="{{ closeMenu }}" style="display:flex;width:100%;align-items:center;gap:0.625rem;padding:0.5rem 0.625rem;border:none;background:transparent;border-radius:var(--radius);font-size:0.875rem;color:var(--fg-muted);cursor:pointer;text-align:left;" style-hover="background:var(--bg-3);color:var(--fg)">Duplicate</button>
+              <button onClick="{{ closeMenu }}" style="display:flex;width:100%;align-items:center;gap:0.625rem;padding:0.5rem 0.625rem;border:none;background:transparent;border-radius:var(--radius);font-size:0.875rem;color:var(--danger);cursor:pointer;text-align:left;" style-hover="background:rgba(248,113,113,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>Delete</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+        <button onClick="{{ toastInfo }}" style="height:2.25rem;padding:0 0.875rem;font-size:0.8125rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Info toast</button>
+        <button onClick="{{ toastSuccess }}" style="height:2.25rem;padding:0 0.875rem;font-size:0.8125rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Success toast</button>
+        <button onClick="{{ toastWarn }}" style="height:2.25rem;padding:0 0.875rem;font-size:0.8125rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Warn toast</button>
+        <button onClick="{{ toastDanger }}" style="height:2.25rem;padding:0 0.875rem;font-size:0.8125rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Danger toast</button>
+      </div>
+    </section>
+
+    <!-- LOADING -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Loading — Spinner &amp; Skeleton</h2>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <span style="width:1rem;height:1rem;border:2px solid var(--border-2);border-top-color:var(--fg-muted);border-radius:999px;animation:spin .7s linear infinite;display:inline-block;"></span>
+        <span style="width:1.5rem;height:1.5rem;border:2px solid var(--border-2);border-top-color:var(--accent);border-radius:999px;animation:spin .7s linear infinite;display:inline-block;"></span>
+      </div>
+      <div style="max-width:22rem;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:1.25rem;display:flex;align-items:center;gap:0.75rem;">
+        <div style="width:2.5rem;height:2.5rem;border-radius:999px;background:var(--bg-3);animation:pulse 1.5s ease-in-out infinite;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem;">
+          <div style="height:0.75rem;width:66%;border-radius:999px;background:var(--bg-3);animation:pulse 1.5s ease-in-out infinite;"></div>
+          <div style="height:0.75rem;width:33%;border-radius:999px;background:var(--bg-3);animation:pulse 1.5s ease-in-out infinite;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AVATAR + EMPTY -->
+    <section style="display:flex;flex-direction:column;gap:1rem;padding:2.5rem 0 0;border-top:1px solid var(--border);margin-top:2.5rem;">
+      <h2 style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-dim);">Avatar &amp; EmptyState</h2>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span style="width:2rem;height:2rem;border-radius:999px;background:var(--bg-3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:500;color:var(--fg-muted);">MH</span>
+        <span style="width:2.5rem;height:2.5rem;border-radius:999px;background:var(--bg-3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:500;color:var(--fg-muted);">DO</span>
+        <span style="width:3rem;height:3rem;border-radius:999px;background:var(--bg-3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:1rem;font-weight:500;color:var(--fg-muted);">PR</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;border:1px dashed var(--border);border-radius:var(--radius-lg);padding:3rem 1.5rem;text-align:center;">
+        <span style="width:3rem;height:3rem;border-radius:999px;background:var(--bg-3);color:var(--fg-muted);display:inline-flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.5rem;height:1.5rem;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.5A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.5z"/></svg></span>
+        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+          <h3 style="margin:0;font-size:1rem;font-weight:600;color:var(--fg);">No reports yet</h3>
+          <p style="margin:0;max-width:24rem;font-size:0.875rem;color:var(--fg-muted);text-wrap:pretty;">Create your first report to see analytics across your workspace.</p>
+        </div>
+        <button style="display:inline-flex;align-items:center;gap:0.5rem;height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);cursor:pointer;margin-top:0.25rem;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.05rem;height:1.05rem;"><path d="M12 5v14"/><path d="M5 12h14"/></svg>New report</button>
+      </div>
+    </section>
+
+    <p style="margin:3rem 0 0;font-size:0.8125rem;color:var(--fg-dim);text-align:center;">Visual preview of the Next.js + Tailwind kit. Source components live in <code style="background:var(--bg-3);border-radius:0.25rem;padding:0.1rem 0.35rem;color:var(--fg-muted);">components/ui</code> &amp; <code style="background:var(--bg-3);border-radius:0.25rem;padding:0.1rem 0.35rem;color:var(--fg-muted);">components/layout</code>.</p>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1.5rem;z-index:50;animation:fadein .2s ease;">
+    <div onClick="{{ stop }}" style="width:100%;max-width:32rem;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);animation:modalin .28s cubic-bezier(0.16,1,0.3,1);">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.25rem;border-bottom:1px solid var(--border);">
+        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+          <h2 style="margin:0;font-size:1rem;font-weight:600;color:var(--fg);">Example modal</h2>
+          <p style="margin:0;font-size:0.875rem;color:var(--fg-muted);">Centered on desktop, a bottom sheet on mobile.</p>
+        </div>
+        <button onClick="{{ closeModal }}" aria-label="Close" style="width:2.25rem;height:2.25rem;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:var(--radius);color:var(--fg-muted);cursor:pointer;" style-hover="background:var(--bg-3);color:var(--fg)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+      </div>
+      <div style="padding:1.25rem;font-size:0.875rem;color:var(--fg-muted);line-height:1.55;">Focus is trapped while open, Esc closes, and the overlay click dismisses. Enter and exit are orchestrated with GSAP; hover and focus states are CSS transitions.</div>
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;padding:1.25rem;border-top:1px solid var(--border);">
+        <button onClick="{{ closeModal }}" style="height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-3);color:var(--fg);cursor:pointer;">Cancel</button>
+        <button onClick="{{ closeModal }}" style="height:2.5rem;padding:0 1rem;font-size:0.875rem;font-weight:500;border:none;border-radius:var(--radius);background:var(--accent);color:var(--bg);cursor:pointer;">Export</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- TOASTS -->
+<div style="position:fixed;right:1rem;bottom:1rem;display:flex;flex-direction:column;gap:0.5rem;z-index:60;width:min(22rem,calc(100vw - 2rem));">
+  <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+    <div style="display:flex;gap:0.75rem;align-items:flex-start;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;box-shadow:var(--shadow);animation:toastin .32s cubic-bezier(0.16,1,0.3,1);">
+      <span style="width:0.5rem;height:0.5rem;border-radius:999px;margin-top:0.4rem;flex-shrink:0;background:{{ t.color }};"></span>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:0.125rem;">
+        <span style="font-size:0.875rem;font-weight:500;color:var(--fg);">{{ t.title }}</span>
+        <span style="font-size:0.875rem;color:var(--fg-muted);">{{ t.desc }}</span>
+      </div>
+      <button onClick="{{ t.onClose }}" aria-label="Dismiss" style="width:2rem;height:2rem;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:var(--radius);color:var(--fg-dim);cursor:pointer;" style-hover="background:var(--bg-3);color:var(--fg)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+    </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tab: "overview", modalOpen: false, menuOpen: false, toasts: [] };
+
+  componentWillUnmount() {
+    (this._timers || []).forEach((t) => clearTimeout(t));
+  }
+
+  renderVals() {
+    const FG = "var(--fg)";
+    const MUTED = "var(--fg-muted)";
+    const ACCENT = "var(--accent)";
+
+    const tabsDef = [["overview", "Overview"], ["activity", "Activity"], ["settings", "Settings"]];
+    const tabs = tabsDef.map(([key, label]) => {
+      const active = this.state.tab === key;
+      return {
+        key,
+        label,
+        onClick: () => this.setState({ tab: key }),
+        btnStyle: {
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          height: "2.75rem",
+          padding: "0 0.75rem",
+          fontSize: "0.875rem",
+          fontWeight: 500,
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          position: "relative",
+          color: active ? FG : MUTED,
+          transition: "color .15s",
+        },
+        indicatorStyle: {
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: "-1px",
+          height: "2px",
+          borderRadius: "999px",
+          background: active ? ACCENT : "transparent",
+          transition: "background .2s ease",
+        },
+      };
+    });
+
+    const colors = {
+      info: "var(--accent)",
+      success: "var(--success)",
+      warn: "var(--warn)",
+      danger: "var(--danger)",
+    };
+    const add = (intent, title, desc) => {
+      const id = Math.random().toString(36).slice(2);
+      this.setState((s) => ({ toasts: [...s.toasts, { id, intent, title, desc }] }));
+      const timer = setTimeout(() => {
+        this.setState((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) }));
+      }, 4000);
+      (this._timers = this._timers || []).push(timer);
+    };
+
+    const toasts = this.state.toasts.map((t) => ({
+      id: t.id,
+      title: t.title,
+      desc: t.desc,
+      color: colors[t.intent] || colors.info,
+      onClose: () => this.setState((s) => ({ toasts: s.toasts.filter((x) => x.id !== t.id) })),
+    }));
+
+    return {
+      tabs,
+      activeTab: this.state.tab,
+      modalOpen: this.state.modalOpen,
+      openModal: () => this.setState({ modalOpen: true }),
+      closeModal: () => this.setState({ modalOpen: false }),
+      stop: (e) => e.stopPropagation(),
+      menuOpen: this.state.menuOpen,
+      toggleMenu: () => this.setState((s) => ({ menuOpen: !s.menuOpen })),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      toasts,
+      toastInfo: () => add("info", "Heads up", "An informational toast."),
+      toastSuccess: () => add("success", "Saved", "Your changes are live."),
+      toastWarn: () => add("warn", "Careful", "Your trial ends soon."),
+      toastDanger: () => add("danger", "Something broke", "Please retry."),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0f1115; --bg-2: #171a21; --bg-3: #1f242e;
+  --fg: #e8eaed; --fg-muted: #9aa1ab; --fg-dim: #5f6772;
+  --border: rgba(232,234,237,0.10); --border-2: rgba(232,234,237,0.18);
+  --accent: #6b8afd; --accent-2: #8aa0ff;
+  --success: #4ade80; --warn: #fbbf24; --danger: #f87171;
+  --radius: 0.5rem; --radius-lg: 0.875rem; --radius-pill: 999px;
+  --shadow: 0 0.5rem 2rem rgba(0,0,0,0.35);
+
+  /* Type families */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Type scale — size / line-height pairs (rem, so they ride the fluid root size below) */
+  --fs-xs: 0.75rem;   --lh-xs: 1.5;
+  --fs-sm: 0.875rem;  --lh-sm: 1.5;
+  --fs-base: 1rem;    --lh-base: 1.6;
+  --fs-lg: 1.125rem;  --lh-lg: 1.55;
+  --fs-xl: 1.25rem;   --lh-xl: 1.45;
+  --fs-2xl: 1.5rem;   --lh-2xl: 1.3;
+  --fs-3xl: 1.875rem; --lh-3xl: 1.2;
+  --fs-4xl: 2.25rem;  --lh-4xl: 1.15;
+  --fs-5xl: 3rem;     --lh-5xl: 1.05;
+  --fs-6xl: 3.75rem;  --lh-6xl: 1.0;
+}
+
+@theme inline {
+  --color-bg: var(--bg); --color-bg-2: var(--bg-2); --color-bg-3: var(--bg-3);
+  --color-fg: var(--fg); --color-fg-muted: var(--fg-muted); --color-fg-dim: var(--fg-dim);
+  --color-border: var(--border); --color-border-2: var(--border-2);
+  --color-accent: var(--accent); --color-accent-2: var(--accent-2);
+  --color-success: var(--success); --color-warn: var(--warn); --color-danger: var(--danger);
+  --radius-md: var(--radius); --radius-lg: var(--radius-lg); --radius-pill: var(--radius-pill);
+  --shadow-soft: var(--shadow);
+
+  --font-sans: var(--font-sans); --font-mono: var(--font-mono);
+
+  --text-xs: var(--fs-xs);     --text-xs--line-height: var(--lh-xs);
+  --text-sm: var(--fs-sm);     --text-sm--line-height: var(--lh-sm);
+  --text-base: var(--fs-base); --text-base--line-height: var(--lh-base);
+  --text-lg: var(--fs-lg);     --text-lg--line-height: var(--lh-lg);
+  --text-xl: var(--fs-xl);     --text-xl--line-height: var(--lh-xl);
+  --text-2xl: var(--fs-2xl);   --text-2xl--line-height: var(--lh-2xl);
+  --text-3xl: var(--fs-3xl);   --text-3xl--line-height: var(--lh-3xl);
+  --text-4xl: var(--fs-4xl);   --text-4xl--line-height: var(--lh-4xl);
+  --text-5xl: var(--fs-5xl);   --text-5xl--line-height: var(--lh-5xl);
+  --text-6xl: var(--fs-6xl);   --text-6xl--line-height: var(--lh-6xl);
+}
+
+html {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: clamp(0.9rem, 0.6vw + 0.7rem, 1.05rem);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+::selection { background: color-mix(in oklab, var(--accent) 45%, transparent); color: var(--fg); }
+:where(button,a,input,select,textarea,[tabindex]):focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius);
+}
