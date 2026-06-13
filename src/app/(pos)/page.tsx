@@ -16,7 +16,10 @@ export default function PosHomePage() {
   const router = useRouter();
   const { floors, loading } = useTables();
   const { products } = useProducts();
-  const [showPicker, setShowPicker] = useState(false);
+  // Table picker is the POS landing: open by default so a fresh login AND the
+  // "← Tables" back-navigation from the order screen both land on the floor
+  // grid (not the marketing hero). Closing it (X) reveals the hero behind.
+  const [showPicker, setShowPicker] = useState(true);
 
   const featured = products.slice(0, 3);
 
