@@ -8,8 +8,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    // Only our unit/component tests; ignore build + e2e dirs.
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Unit + component tests (colocated in src/ and tests/unit/)
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/unit/**/*.{test,spec}.{ts,tsx}"],
   },
   resolve: {
     alias: { "@": resolve(__dirname, "./src") },
