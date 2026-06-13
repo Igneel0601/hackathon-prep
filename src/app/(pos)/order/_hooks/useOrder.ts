@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer } from "react";
-import { createOrder, sendToKitchen, payOrder } from "@/lib/api-client";
+import { createOrder, updateOrder, sendToKitchen, payOrder } from "@/lib/api-client";
 import type { Order, PaymentResponse } from "@/lib/api-types";
 import type { CartItem } from "./useCart";
 
@@ -32,14 +32,24 @@ function reducer(_: State, action: Action): State {
 export function useOrder() {
   const [state, dispatch] = useReducer(reducer, { phase: "idle" });
 
-  async function placeOrder(tableId: string, items: CartItem[], discount?: number) {
+  // Adopt an existing DRAFT order fetched for the table (resume).
+  function resumeExisting(order: Order) {
+    dispatch({ type: "ordered", order });
+  }
+
+  // Create the order if none exists for this table yet, otherwise PATCH the
+  // existing draft. One draft per table → no duplicates, current items synced.
+  async function ensureOrder(tableId: string, items: CartItem[], discount?: number) {
+    const existingId = state.phase === "ordered" ? state.order.id : null;
     dispatch({ type: "submitting" });
     try {
-      const order = await createOrder({
-        tableId,
+      const payload = {
         items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
         ...(discount ? { discount } : {}),
-      });
+      };
+      const order = existingId
+        ? await updateOrder(existingId, payload)
+        : await createOrder({ tableId, ...payload });
       dispatch({ type: "ordered", order });
       return order;
     } catch (e: unknown) {
@@ -74,5 +84,12 @@ export function useOrder() {
     }
   }
 
-  return { state, placeOrder, sendKitchen, pay, reset: () => dispatch({ type: "reset" }) };
+  return {
+    state,
+    ensureOrder,
+    resumeExisting,
+    sendKitchen,
+    pay,
+    reset: () => dispatch({ type: "reset" }),
+  };
 }

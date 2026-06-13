@@ -80,6 +80,7 @@ curl -X POST http://localhost:3000/api/orders \
 
 - **Query:**
   - `?status=DRAFT|PAID|CANCELLED` (optional) — filter by order status.
+  - `?tableId=<id>` (optional) — filter to one table. Combine with `status=DRAFT` to resume a table's open order (one draft per table).
 
 ### Response
 

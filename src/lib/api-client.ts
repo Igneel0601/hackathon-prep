@@ -67,9 +67,15 @@ export function getTables(): Promise<TablesResponse> {
   return request<TablesResponse>("/api/tables");
 }
 
-export function getOrders(status?: OrderStatus): Promise<Order[]> {
-  const q = status ? `?status=${status}` : "";
-  return request<Order[]>(`/api/orders${q}`);
+export function getOrders(opts?: {
+  status?: OrderStatus;
+  tableId?: string;
+}): Promise<Order[]> {
+  const params = new URLSearchParams();
+  if (opts?.status) params.set("status", opts.status);
+  if (opts?.tableId) params.set("tableId", opts.tableId);
+  const q = params.toString();
+  return request<Order[]>(`/api/orders${q ? `?${q}` : ""}`);
 }
 
 export function getKitchenTickets(

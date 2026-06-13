@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { getOrders } from "@/lib/api-client";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
 import { useOrder } from "./_hooks/useOrder";
@@ -28,8 +29,43 @@ function OrderView() {
   const [search, setSearch] = useState("");
 
   const { categories, products, loading: productsLoading } = useProducts(activeCategoryId ?? undefined);
-  const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, clear } = useCart();
-  const { state: orderState, placeOrder, sendKitchen, pay } = useOrder();
+  const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, loadItems, clear } = useCart();
+  const { state: orderState, ensureOrder, resumeExisting, sendKitchen, pay } = useOrder();
+
+  // Resume the table's open DRAFT order (if any) once, after products load
+  // (products give us each line's tax rate). One draft per table.
+  const [resumed, setResumed] = useState(false);
+  useEffect(() => {
+    if (resumed || !tableId || productsLoading) return;
+    let cancelled = false;
+    getOrders({ tableId, status: "DRAFT" })
+      .then((orders) => {
+        if (cancelled) return;
+        const draft = orders[0];
+        if (draft) {
+          const taxByProduct = new Map(products.map((p) => [p.id, p.tax]));
+          loadItems(
+            draft.items.map((it) => ({
+              productId: it.productId,
+              name: it.name,
+              unitPrice: it.unitPrice,
+              tax: taxByProduct.get(it.productId) ?? "0",
+              qty: it.qty,
+            })),
+          );
+          const sub = parseFloat(draft.subtotal);
+          const disc = parseFloat(draft.discount);
+          if (disc > 0 && sub > 0) setDiscountPct(Math.round((disc / sub) * 100));
+          resumeExisting(draft);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setResumed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [resumed, tableId, productsLoading, products, loadItems, resumeExisting, setDiscountPct]);
 
   const [showPayment, setShowPayment] = useState(false);
   const [payMethod, setPayMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
@@ -45,17 +81,12 @@ function OrderView() {
   const isEmpty = items.length === 0;
   const isSubmitting = orderState.phase === "submitting";
   const isPaid = orderState.phase === "paid";
-  const orderId = orderState.phase === "ordered" ? orderState.order.id : null;
 
   async function handleSendToKitchen() {
     if (!tableId) return;
-    let id = orderId;
-    if (!id) {
-      const order = await placeOrder(tableId, items, totals.discountAmt || undefined);
-      if (!order) return;
-      id = order.id;
-    }
-    await sendKitchen(id);
+    const order = await ensureOrder(tableId, items, totals.discountAmt || undefined);
+    if (!order) return;
+    await sendKitchen(order.id);
   }
 
   const cashReady =
@@ -66,13 +97,9 @@ function OrderView() {
   async function handlePay() {
     if (!tableId) return;
     if (payMethod === "CASH" && !cashReady) return;
-    let id = orderId;
-    if (!id) {
-      const order = await placeOrder(tableId, items, totals.discountAmt || undefined);
-      if (!order) return;
-      id = order.id;
-    }
-    await pay(id, {
+    const order = await ensureOrder(tableId, items, totals.discountAmt || undefined);
+    if (!order) return;
+    await pay(order.id, {
       method: payMethod,
       ...(payMethod === "CASH" ? { amountReceived: parseFloat(amountReceived) } : {}),
       ...(payReference.trim() ? { reference: payReference.trim() } : {}),
