@@ -382,6 +382,9 @@ function OrderView() {
     // order syncs to the board on reconnect. (Full offline send/queue lands with
     // the Legend-State order-screen rewire.)
     if (typeof navigator !== "undefined" && !navigator.onLine) {
+      // Persist + queue the order (syncs to the server on reconnect), then print
+      // the chit so the kitchen gets it now. The KDS catches up once we're back.
+      await ensureOrder(tableId, unfired, totals.discountAmt || undefined, totals);
       const nextRound = items.reduce((m, i) => Math.max(m, i.round), 0) + 1;
       printKitchenChit({
         tableNumber,
