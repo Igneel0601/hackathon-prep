@@ -89,24 +89,39 @@ function OrderView() {
   if (isPaid && orderState.phase === "paid") {
     const { payment, order } = orderState.result;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-green-50 p-8">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg text-center">
-          <div className="mb-4 text-5xl">✅</div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-green-50 p-8 print:bg-white print:block print:p-0">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg text-center print:shadow-none print:rounded-none print:max-w-full">
+          <div className="mb-4 text-5xl print:hidden">✅</div>
           <h2 className="text-2xl font-bold text-gray-900">Payment Received</h2>
-          <p className="mt-1 text-gray-500">Order #{order.number}</p>
-          <div className="mt-6 space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-600">Total</span><span className="font-semibold">₹{parseFloat(order.total).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-600">Paid ({payment.method})</span><span className="font-semibold">₹{parseFloat(payment.amount).toFixed(2)}</span></div>
+          <p className="mt-1 text-gray-500 print:text-gray-700 font-medium">Odoo Cafe</p>
+          <p className="text-sm text-gray-400 print:text-gray-600">Order #{order.number}</p>
+          <div className="my-4 border-t border-dashed border-gray-300" />
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>₹{parseFloat(order.total).toFixed(2)}</span></div>
+            <div className="flex justify-between font-semibold text-base"><span>Total</span><span>₹{parseFloat(order.total).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600">Method</span><span>{payment.method}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600">Paid</span><span className="font-semibold">₹{parseFloat(payment.amount).toFixed(2)}</span></div>
             {payment.changeDue && (
-              <div className="flex justify-between text-green-600"><span>Change Due</span><span className="font-semibold">₹{parseFloat(payment.changeDue).toFixed(2)}</span></div>
+              <div className="flex justify-between text-green-600 font-semibold"><span>Change Due</span><span>₹{parseFloat(payment.changeDue).toFixed(2)}</span></div>
             )}
           </div>
-          <Button
-            className="mt-8 w-full"
-            onClick={() => { clear(); router.push("/"); }}
-          >
-            New Order
-          </Button>
+          <div className="my-4 border-t border-dashed border-gray-300" />
+          <p className="text-xs text-gray-400 print:text-gray-500">Thank you for visiting!</p>
+          <div className="mt-6 flex gap-2 print:hidden">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => window.print()}
+            >
+              🖨️ Print
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => { clear(); router.push("/"); }}
+            >
+              New Order
+            </Button>
+          </div>
         </div>
       </div>
     );
