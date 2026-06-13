@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useProducts } from "./_hooks/useProducts";
 import { useCart } from "./_hooks/useCart";
@@ -12,6 +12,14 @@ import { OrderSummary } from "./_components/OrderSummary";
 import { Button } from "@/components/ui/button";
 
 export default function OrderPage() {
+  return (
+    <Suspense>
+      <OrderView />
+    </Suspense>
+  );
+}
+
+function OrderView() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tableId = searchParams.get("tableId") ?? "";
