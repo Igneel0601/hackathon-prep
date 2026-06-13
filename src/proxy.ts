@@ -20,5 +20,5 @@ export function proxy(req: NextRequest) {
 
 // Run on everything except API routes, Next internals, the login page, and assets.
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login|welcome|self).*)"],
 };

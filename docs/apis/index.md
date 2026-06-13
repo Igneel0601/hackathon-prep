@@ -11,6 +11,9 @@ Add a row when you add a route. Copy `_template.md` for the doc body.
 | POST | `/api/signup` | [signup/route.md](./signup/route.md) | Create an email/password account |
 | GET | `/api/products` | [products/route.md](./products/route.md) | List active products (optional `?categoryId=`); categories |
 | GET | `/api/tables` | [tables/route.md](./tables/route.md) | Floors + their tables (with active-order flag) |
+| GET | `/api/self/menu` | [self/menu/route.md](./self/menu/route.md) | PUBLIC kiosk menu (active products + categories) |
+| GET | `/api/self/tables` | [self/tables/route.md](./self/tables/route.md) | PUBLIC kiosk floors + tables (free/occupied) |
+| POST | `/api/self/orders` | [self/orders/route.md](./self/orders/route.md) | PUBLIC self-checkout: place order on a free table, fire to kitchen |
 | GET/POST | `/api/orders` | [orders/route.md](./orders/route.md) | List session orders / create a Draft order |
 | PATCH | `/api/orders/[id]` | [orders/[id]/route.md](./orders/[id]/route.md) | Update a Draft order (items, qty, discount) |
 | POST | `/api/orders/[id]/payment` | [orders/[id]/payment/route.md](./orders/[id]/payment/route.md) | Take payment (Cash) → mark Paid |
