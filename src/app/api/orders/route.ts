@@ -226,8 +226,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireEmployee();
-    const session = await getOpenPosSession(user.id);
+    await requireEmployee();
 
     const status = request.nextUrl.searchParams.get("status");
     const tableId = request.nextUrl.searchParams.get("tableId");
@@ -241,7 +240,8 @@ export async function GET(request: NextRequest) {
 
     const orders = await db.order.findMany({
       where: {
-        sessionId: session.id,
+        // Floor-shared: orders belong to the table, not the cashier's session —
+        // any employee sees/serves any table's order. sessionId is provenance only.
         ...(status ? { status: status as "DRAFT" | "PAID" | "CANCELLED" } : {}),
         ...(tableId ? { tableId } : {}),
       },

@@ -4,7 +4,7 @@
 
 **Purpose:** Update a DRAFT order — replace its line items, change the discount, or assign/remove a customer. Totals are always recomputed server-side.
 
-**Auth:** Requires a valid session (any authenticated employee/admin). Returns `401` if signed out.
+**Auth:** Requires a valid session (any authenticated employee/admin). Returns `401` if signed out. **Floor-shared:** any employee can edit any table's order — edits are not scoped to the cashier's session.
 
 ---
 
