@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { FloorPickerModal } from "./order/_components/FloorPickerModal";
 import { useTables } from "./order/_hooks/useTables";
 import type { TableInfo } from "@/lib/api-types";
@@ -16,43 +17,127 @@ export default function PosHomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Cafe POS</h1>
-        <p className="mt-2 text-gray-500">Select a table to start an order</p>
+    <div className="relative flex h-screen w-full flex-col overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <Image src="/cafe-interior.jpg" alt="" fill className="object-cover object-center md:hidden" priority />
+        <Image src="/cafe-moody.jpg" alt="" fill className="hidden object-cover object-center md:block" priority />
+      </div>
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background: "radial-gradient(ellipse 80% 70% at 50% 60%, rgba(13,5,2,0.62) 0%, transparent 100%), linear-gradient(to bottom, rgba(13,5,2,0.55) 0%, rgba(13,5,2,0.30) 40%, rgba(13,5,2,0.70) 100%)",
+        }}
+      />
 
-        {error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
-            {error} —{" "}
-            <button onClick={refetch} className="underline">
-              retry
-            </button>
-          </p>
-        )}
+      {/* Navbar */}
+      <header
+        className="relative z-10 flex h-16 shrink-0 items-center justify-between px-5 md:h-[72px] md:px-9"
+        style={{ background: "rgba(13,5,2,0.42)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <Image src="/logo-badge.png" alt="Odoo Cafe" width={34} height={34} className="object-contain" />
+          <span className="hidden text-base font-extrabold uppercase tracking-tight text-[#FAF3E8] md:block" style={{ fontFamily: "var(--cafe-font-display)" }}>
+            Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
+          </span>
+        </div>
 
-        <button
-          onClick={() => setShowPicker(true)}
-          disabled={loading}
-          className="mt-8 rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Loading tables…" : "Open Table"}
-        </button>
-
-        <div className="mt-6 flex justify-center gap-3">
+        {/* Nav links */}
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/orders")}
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors"
+            style={{ background: "rgba(255,188,13,0.10)", border: "1px solid rgba(255,188,13,0.22)", color: "#FAF3E8" }}
           >
             📋 Orders
           </button>
           <button
             onClick={() => router.push("/kds")}
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors"
+            style={{ background: "rgba(255,188,13,0.10)", border: "1px solid rgba(255,188,13,0.22)", color: "#FAF3E8" }}
           >
-            🍳 Kitchen Display
+            🍳 Kitchen
+          </button>
+          <div
+            className="flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3"
+            style={{ background: "rgba(255,188,13,0.12)", border: "1px solid rgba(255,188,13,0.25)" }}
+          >
+            <span className="h-2 w-2 rounded-full bg-green-400" style={{ boxShadow: "0 0 6px #4ade80" }} />
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#FAF3E8" }}>Open</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main card */}
+      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8">
+        <div
+          className="w-full max-w-sm rounded-3xl px-9 py-10 text-center md:max-w-md md:px-12 md:py-14"
+          style={{
+            background: "rgba(26,10,4,0.72)",
+            backdropFilter: "blur(32px)",
+            border: "1px solid rgba(255,188,13,0.22)",
+            borderTop: "2px solid rgba(255,188,13,0.55)",
+            boxShadow: "0 32px 80px rgba(13,5,2,0.75), 0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 60px rgba(255,188,13,0.06)",
+          }}
+        >
+          {/* Logo */}
+          <div className="relative mb-5 flex justify-center">
+            <div
+              className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ background: "radial-gradient(circle, rgba(255,188,13,0.22) 0%, transparent 70%)" }}
+            />
+            <Image src="/logo-badge.png" alt="Odoo Cafe" width={64} height={64} className="relative z-10 object-contain" style={{ filter: "drop-shadow(0 4px 12px rgba(255,188,13,0.30))" }} />
+          </div>
+
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: "#FFBC0D" }}>Point of Sale</p>
+          <h1 className="mb-3 text-5xl font-extrabold uppercase leading-none tracking-tight text-[#FAF3E8] md:text-6xl" style={{ fontFamily: "var(--cafe-font-display)" }}>
+            Cafe POS
+          </h1>
+          <div className="mx-auto mb-4 h-0.5 w-10 rounded-full" style={{ background: "linear-gradient(to right, transparent, #FFBC0D, transparent)" }} />
+          <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(212,169,122,0.80)" }}>
+            Select a table to start an order
+          </p>
+
+          {error && (
+            <p className="mb-4 rounded-lg px-4 py-2 text-sm" style={{ background: "rgba(139,0,0,0.20)", color: "#F28B8B" }}>
+              {error} —{" "}
+              <button onClick={refetch} className="underline">retry</button>
+            </p>
+          )}
+
+          <button
+            onClick={() => setShowPicker(true)}
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2.5 rounded-xl text-base font-bold transition-all disabled:opacity-50"
+            style={{
+              height: "52px",
+              background: "#FFBC0D",
+              color: "#1A0A04",
+              boxShadow: "0 4px 20px rgba(255,188,13,0.40), 0 1px 0 rgba(255,255,255,0.15) inset",
+            }}
+          >
+            {loading ? "Loading tables…" : (
+              <>
+                Open Table
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                </svg>
+              </>
+            )}
           </button>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer
+        className="relative z-10 flex shrink-0 items-center justify-center gap-5 px-5 py-2.5"
+        style={{ background: "rgba(13,5,2,0.42)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
+          Version <span className="font-semibold" style={{ color: "#FAF3E8" }}>1.0.0</span>
+        </span>
+      </footer>
 
       {showPicker && !loading && (
         <FloorPickerModal

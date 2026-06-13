@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import type { Category } from "@/lib/api-types";
 
 interface CategoryTabsProps {
@@ -11,15 +10,15 @@ interface CategoryTabsProps {
 
 export function CategoryTabs({ categories, active, onChange }: CategoryTabsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+    <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
       <button
         onClick={() => onChange(null)}
-        className={cn(
-          "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+        className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+        style={
           active === null
-            ? "bg-gray-900 text-white"
-            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-        )}
+            ? { background: "#1A0A04", color: "#FAF3E8", border: "1.5px solid #1A0A04" }
+            : { background: "transparent", color: "#5C3020", border: "1.5px solid rgba(92,48,32,0.18)" }
+        }
       >
         All
       </button>
@@ -27,11 +26,12 @@ export function CategoryTabs({ categories, active, onChange }: CategoryTabsProps
         <button
           key={cat.id}
           onClick={() => onChange(cat.id)}
-          className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-            active === cat.id ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          )}
-          style={active === cat.id ? { backgroundColor: cat.color } : undefined}
+          className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+          style={
+            active === cat.id
+              ? { background: "#1A0A04", color: "#FAF3E8", border: "1.5px solid #1A0A04" }
+              : { background: "transparent", color: "#5C3020", border: "1.5px solid rgba(92,48,32,0.18)" }
+          }
         >
           {cat.name}
         </button>
