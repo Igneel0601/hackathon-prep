@@ -97,7 +97,11 @@ function OrderView() {
           <p className="text-sm text-gray-400 print:text-gray-600">Order #{order.number}</p>
           <div className="my-4 border-t border-dashed border-gray-300" />
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>₹{parseFloat(order.total).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>₹{parseFloat(order.subtotal).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600">Tax</span><span>₹{parseFloat(order.tax).toFixed(2)}</span></div>
+            {parseFloat(order.discount) > 0 && (
+              <div className="flex justify-between text-green-700"><span>Discount</span><span>−₹{parseFloat(order.discount).toFixed(2)}</span></div>
+            )}
             <div className="flex justify-between font-semibold text-base"><span>Total</span><span>₹{parseFloat(order.total).toFixed(2)}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">Method</span><span>{payment.method}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">Paid</span><span className="font-semibold">₹{parseFloat(payment.amount).toFixed(2)}</span></div>
