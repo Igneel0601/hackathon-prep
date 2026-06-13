@@ -297,7 +297,7 @@ function OrderView() {
   const [search, setSearch] = useState("");
 
   const { categories, products, loading: productsLoading } = useProducts(activeCategoryId ?? undefined);
-  const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, loadItems, clear } = useCart();
+  const { items, totals, discountPct, setDiscountPct, addProduct, increment, decrement, loadItems, markSent, clear } = useCart();
   const { state: orderState, ensureOrder, resumeExisting, sendKitchen, pay, payOfflineCash } = useOrder();
   const { methods: enabledMethods } = useEnabledPaymentMethods();
   const upiId = enabledMethods.find((m) => m.method === "UPI")?.upiId ?? null;
@@ -392,6 +392,7 @@ function OrderView() {
         round: nextRound,
         items: unfired.map((i) => ({ name: i.name, qty: i.qty })),
       });
+      markSent(); // lock the lines locally so Checkout unlocks (offline can't fire a round)
       return;
     }
     const order = await ensureOrder(tableId, unfired, totals.discountAmt || undefined, totals);

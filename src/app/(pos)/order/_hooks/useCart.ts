@@ -17,6 +17,7 @@ type Action =
   | { type: "inc"; productId: string }
   | { type: "dec"; productId: string }
   | { type: "load"; items: CartItem[] }
+  | { type: "markSent" }
   | { type: "clear" };
 
 function reducer(items: CartItem[], action: Action): CartItem[] {
@@ -47,6 +48,13 @@ function reducer(items: CartItem[], action: Action): CartItem[] {
           i.productId === action.productId && i.round === 0 ? { ...i, qty: i.qty - 1 } : i,
         )
         .filter((i) => i.qty > 0);
+    case "markSent": {
+      // Offline "Send": the server can't fire a round, so lock the un-fired
+      // lines locally (bump to the next round) — they show as "sent" and Checkout
+      // unlocks, mirroring the online flow. The chit is the kitchen's copy.
+      const next = items.reduce((m, i) => Math.max(m, i.round), 0) + 1;
+      return items.map((i) => (i.round === 0 ? { ...i, round: next } : i));
+    }
     case "clear":
       return [];
   }
@@ -85,6 +93,7 @@ export function useCart() {
     increment: (productId: string) => dispatch({ type: "inc", productId }),
     decrement: (productId: string) => dispatch({ type: "dec", productId }),
     loadItems: (cartItems: CartItem[]) => dispatch({ type: "load", items: cartItems }),
+    markSent: () => dispatch({ type: "markSent" }),
     clear: () => dispatch({ type: "clear" }),
   };
 }
