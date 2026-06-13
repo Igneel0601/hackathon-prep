@@ -1,235 +1,160 @@
 "use client";
 
-import { useReducer, useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FloorPickerModal } from "./order/_components/FloorPickerModal";
 import { useTables } from "./order/_hooks/useTables";
+import { useProducts } from "./order/_hooks/useProducts";
 import type { TableInfo } from "@/lib/api-types";
 
-type ClockState = { clock: string; date: string };
-function clockReducer(_: ClockState, now: Date): ClockState {
-  return {
-    clock: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    date: now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
-  };
-}
+const DISPLAY = "var(--cafe-font-display)";
+const BODY = "var(--cafe-font-body)";
 
 export default function PosHomePage() {
   const router = useRouter();
-  const { floors, loading, error, refetch } = useTables();
+  const { floors, loading } = useTables();
+  const { products, categories } = useProducts();
   const [showPicker, setShowPicker] = useState(false);
-  const [clockState, dispatchClock] = useReducer(clockReducer, { clock: "", date: "" });
 
-  useEffect(() => {
-    const tick = () => dispatchClock(new Date());
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const allTables = floors.flatMap((f) => f.tables);
-  const totalTables = allTables.length;
-  const occupiedTables = allTables.filter((t) => t.hasActiveOrder).length;
-  const availableTables = totalTables - occupiedTables;
+  const catColor = Object.fromEntries(categories.map((c) => [c.id, c.color]));
+  const featured = products.slice(0, 3);
 
   function handleSelectTable(table: TableInfo) {
     router.push(`/order?tableId=${table.id}`);
   }
 
   return (
-    <div className="relative flex h-screen w-full flex-col overflow-hidden">
-      {/* Background — coffee beans */}
-      <div className="absolute inset-0 z-0">
-        <Image src="/coffee-beans.jpg" alt="" fill className="object-cover object-center" priority />
-      </div>
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          background: "radial-gradient(ellipse 75% 65% at 50% 50%, rgba(13,5,2,0.70) 0%, rgba(13,5,2,0.86) 100%), linear-gradient(to bottom, rgba(13,5,2,0.55) 0%, rgba(13,5,2,0.40) 45%, rgba(13,5,2,0.80) 100%)",
-        }}
-      />
-
-      {/* Navbar */}
-      <header
-        className="relative z-10 flex shrink-0 items-center justify-between px-5 md:px-9"
-        style={{ height: 64, background: "rgba(13,5,2,0.48)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
-      >
-        {/* Logo */}
+    <div className="min-h-screen w-full overflow-x-hidden" style={{ background: "#EFEAE4", fontFamily: BODY }}>
+      {/* ── Navbar ── */}
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-10">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo-badge.png" alt="Odoo Cafe" width={32} height={32} className="object-contain" />
-          <span className="hidden text-base font-extrabold uppercase tracking-tight md:block" style={{ fontFamily: "var(--cafe-font-display)", color: "#FAF3E8" }}>
+          <Image src="/logo-badge.png" alt="" width={38} height={38} className="object-contain" />
+          <span className="text-xl" style={{ fontFamily: DISPLAY, color: "#2A1008" }}>
             Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
           </span>
         </div>
 
-        {/* Clock (desktop) */}
-        {clockState.clock && (
-          <div className="absolute left-1/2 hidden -translate-x-1/2 flex-col items-center md:flex">
-            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.125rem", fontWeight: 700, color: "#FAF3E8", letterSpacing: "-0.01em" }}>
-              {clockState.clock}
-            </span>
-            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6875rem", color: "rgba(250,243,232,0.50)", letterSpacing: "0.02em" }}>
-              {clockState.date}
-            </span>
-          </div>
-        )}
+        <nav className="hidden items-center gap-8 text-sm font-medium md:flex" style={{ color: "#5C3020" }}>
+          <button onClick={() => setShowPicker(true)} className="transition-colors hover:text-[#1A0A04]">Tables</button>
+          <button onClick={() => router.push("/orders")} className="transition-colors hover:text-[#1A0A04]">Orders</button>
+          <button onClick={() => router.push("/kds")} className="transition-colors hover:text-[#1A0A04]">Kitchen</button>
+        </nav>
 
-        {/* Right: nav links + badge + avatar */}
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => router.push("/orders")}
-            className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors md:block"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(250,243,232,0.70)" }}
-          >
-            Orders
-          </button>
-          <button
-            onClick={() => router.push("/kds")}
-            className="hidden rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors md:block"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(250,243,232,0.70)" }}
-          >
-            Kitchen
-          </button>
-
-          {/* OPEN badge */}
+        <div className="flex items-center gap-3">
           <div
-            className="flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-2.5"
-            style={{ background: "rgba(255,188,13,0.12)", border: "1px solid rgba(255,188,13,0.25)" }}
+            className="hidden items-center gap-2 rounded-full px-4 py-2 sm:flex"
+            style={{ background: "#fff", boxShadow: "0 4px 14px rgba(13,5,2,0.06)" }}
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#4ade80", boxShadow: "0 0 6px #4ade80" }} />
-            <span className="text-[0.7rem] font-bold uppercase tracking-[0.05em]" style={{ color: "rgba(250,243,232,0.90)" }}>Open</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9B6B55" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span className="text-sm" style={{ color: "#9B6B55" }}>Coffee</span>
           </div>
-
-          {/* Avatar */}
-          <div
-            className="flex items-center justify-center rounded-full text-xs font-bold"
-            style={{
-              width: 34,
-              height: 34,
-              background: "rgba(26,10,4,0.70)",
-              border: "1.5px solid rgba(255,255,255,0.18)",
-              color: "#FAF3E8",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
+          <button
+            onClick={() => router.push("/admin")}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold"
+            style={{ background: "#2A1008", color: "#FAF3E8" }}
           >
             N
-          </div>
+          </button>
         </div>
       </header>
 
-      {/* Hero */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-8 text-center">
-        {/* Logo */}
-        <div className="relative mb-6 flex justify-center">
-          <div
-            className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(255,188,13,0.28) 0%, transparent 70%)" }}
-          />
-          <Image src="/logo-badge.png" alt="Odoo Cafe" width={76} height={76} className="relative z-10 object-contain" style={{ filter: "drop-shadow(0 6px 18px rgba(255,188,13,0.35))" }} />
-        </div>
-
-        <h1
-          className="text-6xl font-extrabold uppercase leading-none tracking-tight text-[#FAF3E8] md:text-8xl"
-          style={{ fontFamily: "var(--cafe-font-display)", textShadow: "0 4px 30px rgba(13,5,2,0.8)" }}
-        >
-          Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
-        </h1>
-        <div className="mx-auto my-5 h-0.5 w-16 rounded-full" style={{ background: "linear-gradient(to right, transparent, #FFBC0D, transparent)" }} />
-        <p className="mb-9 text-sm uppercase tracking-[0.28em]" style={{ color: "rgba(212,169,122,0.85)" }}>
-          Cozy · Warm · Freshly Brewed
-        </p>
-
-        {error && (
-          <p className="mb-5 rounded-lg px-4 py-2 text-sm" style={{ background: "rgba(139,0,0,0.30)", color: "#F2A8A8" }}>
-            {error} —{" "}
-            <button onClick={refetch} className="underline">retry</button>
-          </p>
-        )}
-
-        {/* Actions */}
-        <div className="flex w-full max-w-xs flex-col gap-3">
-          {/* Open Table — primary */}
-          <button
-            onClick={() => setShowPicker(true)}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl text-base font-bold transition-all active:scale-[0.98] disabled:opacity-50"
-            style={{
-              height: 54,
-              background: "#FFBC0D",
-              color: "#1A0A04",
-              boxShadow: "0 6px 24px rgba(255,188,13,0.45), 0 1px 0 rgba(255,255,255,0.18) inset",
-            }}
-          >
-            {loading ? "Loading tables…" : (
-              <>
-                Open Table
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
-                </svg>
-              </>
-            )}
-          </button>
-
-          {/* Orders + Kitchen — secondary, same shape */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => router.push("/orders")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl text-base font-bold transition-all active:scale-[0.98]"
-              style={{
-                height: 54,
-                background: "rgba(255,188,13,0.08)",
-                color: "#FFBC0D",
-                border: "1.5px solid rgba(255,188,13,0.45)",
-                backdropFilter: "blur(8px)",
-              }}
+      {/* ── Hero ── */}
+      <main className="relative mx-auto max-w-7xl px-5 md:px-10">
+        <div className="grid items-center gap-8 py-6 md:grid-cols-2 md:py-10">
+          {/* Left copy */}
+          <div className="relative z-10 order-2 md:order-1">
+            <h1
+              className="leading-[0.95] tracking-tight"
+              style={{ fontFamily: DISPLAY, color: "#2A1008", fontSize: "clamp(2.6rem, 6vw, 4.6rem)" }}
             >
-              Orders
-            </button>
-            <button
-              onClick={() => router.push("/kds")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl text-base font-bold transition-all active:scale-[0.98]"
-              style={{
-                height: 54,
-                background: "rgba(255,188,13,0.08)",
-                color: "#FFBC0D",
-                border: "1.5px solid rgba(255,188,13,0.45)",
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              Kitchen
-            </button>
+              Welcome to<br />Odoo <span style={{ color: "#FFBC0D" }}>Cafe</span>
+            </h1>
+            <p className="mt-5 max-w-md text-base leading-relaxed" style={{ color: "#7A5C46" }}>
+              Boost your productivity and build your mood with a glass of coffee in the morning.
+            </p>
+
+            <div className="mt-8 flex items-center gap-5">
+              <button
+                onClick={() => setShowPicker(true)}
+                disabled={loading}
+                className="flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold text-[#FAF3E8] transition-all active:scale-95 disabled:opacity-50"
+                style={{ background: "#2A1008", boxShadow: "0 10px 26px rgba(42,16,8,0.32)" }}
+              >
+                {loading ? "Loading…" : "Order now"}
+                <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "#FFBC0D", color: "#1A0A04" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+                </span>
+              </button>
+              <button onClick={() => router.push("/orders")} className="text-sm font-semibold" style={{ color: "#C2570A" }}>
+                More menu
+              </button>
+            </div>
+          </div>
+
+          {/* Right hero image */}
+          <div className="relative order-1 flex justify-center md:order-2">
+            {/* dark disc */}
+            <div className="relative h-[300px] w-[300px] md:h-[400px] md:w-[400px]">
+              <div className="absolute inset-0 overflow-hidden rounded-full" style={{ background: "#2A1008", boxShadow: "0 30px 70px rgba(13,5,2,0.45)" }}>
+                <Image src="/cafe-interior.jpg" alt="Coffee" fill className="object-cover opacity-90" priority />
+              </div>
+
+              {/* floating: Latte */}
+              <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold" style={{ color: "#2A1008", boxShadow: "0 10px 24px rgba(13,5,2,0.18)" }}>
+                Latte
+              </div>
+              {/* floating: rating */}
+              <div className="absolute right-0 top-1/3 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold" style={{ color: "#2A1008", boxShadow: "0 10px 24px rgba(13,5,2,0.18)" }}>
+                4.8
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFBC0D" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              </div>
+              {/* floating: 2K */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white px-6 py-2.5 text-sm font-bold" style={{ color: "#2A1008", boxShadow: "0 10px 24px rgba(13,5,2,0.18)" }}>
+                2K+ served
+              </div>
+            </div>
           </div>
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer
-        className="relative z-10 flex shrink-0 items-center justify-center gap-5 px-5 py-2.5"
-        style={{ background: "rgba(13,5,2,0.42)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        {!loading && totalTables > 0 && (
-          <>
-            <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
-              Tables: <span className="font-semibold" style={{ color: "#FAF3E8" }}>{totalTables}</span>
-            </span>
-            <span style={{ color: "rgba(212,169,122,0.30)" }}>·</span>
-            <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
-              Available: <span className="font-semibold" style={{ color: "#4ade80" }}>{availableTables}</span>
-            </span>
-            <span style={{ color: "rgba(212,169,122,0.30)" }}>·</span>
-            <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
-              Occupied: <span className="font-semibold" style={{ color: "#FFBC0D" }}>{occupiedTables}</span>
-            </span>
-            <span style={{ color: "rgba(212,169,122,0.30)" }}>·</span>
-          </>
+        {/* ── Featured products panel ── */}
+        {featured.length > 0 && (
+          <div
+            className="relative z-10 mb-10 rounded-[28px] px-5 py-7 md:px-10 md:py-8"
+            style={{ background: "#F0820E", boxShadow: "0 24px 60px rgba(240,130,14,0.28)" }}
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {featured.map((p) => (
+                <div key={p.id} className="flex flex-col items-center text-center">
+                  {/* circle */}
+                  <div
+                    className="relative flex h-28 w-28 items-center justify-center rounded-full"
+                    style={{ background: "rgba(26,10,4,0.55)" }}
+                  >
+                    <div className="h-14 w-14 rounded-full" style={{ background: catColor[p.categoryId] ?? "#7A4A33", boxShadow: "0 4px 14px rgba(13,5,2,0.3)" }} />
+                    <div className="absolute -bottom-2 flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-bold" style={{ color: "#2A1008" }}>
+                      4.8
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFBC0D" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-base font-semibold" style={{ color: "#fff" }}>{p.name}</p>
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>₹{parseFloat(p.price).toFixed(0)}</p>
+                  <button
+                    onClick={() => setShowPicker(true)}
+                    className="mt-2 flex items-center gap-1 text-sm font-semibold"
+                    style={{ color: "#FAF3E8" }}
+                  >
+                    Add to Cart
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
-        <span className="text-xs" style={{ color: "rgba(212,169,122,0.65)" }}>
-          Version <span className="font-semibold" style={{ color: "#FAF3E8" }}>1.0.0</span>
-        </span>
-      </footer>
+      </main>
 
       {showPicker && !loading && (
         <FloorPickerModal
