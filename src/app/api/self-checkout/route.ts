@@ -23,11 +23,31 @@ export async function POST(request: Request) {
       throw new ApiError(429, "Too many orders from this device — please wait a moment.");
     }
 
-    let body: { email?: unknown; tableId?: unknown; items?: unknown };
+    let body: { id?: unknown; email?: unknown; tableId?: unknown; items?: unknown };
     try {
       body = (await request.json()) as typeof body;
     } catch {
       throw new ApiError(400, "Invalid JSON body");
+    }
+
+    // Offline kiosk: the client supplies its own id (uuid) so a queued-then-retried
+    // create is idempotent. If an order with that id already landed, return it (and
+    // don't re-charge the per-email rate bucket below).
+    const clientId = typeof body.id === "string" && body.id ? body.id : undefined;
+    if (clientId) {
+      const existing = await db.order.findUnique({
+        where: { id: clientId },
+        select: { number: true, subtotal: true, tax: true, total: true, table: { select: { number: true } } },
+      });
+      if (existing) {
+        return json({
+          orderNumber: existing.number,
+          tableNumber: existing.table.number,
+          subtotal: existing.subtotal.toString(),
+          tax: existing.tax.toString(),
+          total: existing.total.toString(),
+        });
+      }
     }
 
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
@@ -130,6 +150,7 @@ export async function POST(request: Request) {
     try {
       order = await db.order.create({
         data: {
+          ...(clientId ? { id: clientId } : {}),
           tableId,
           sessionId: session.id,
           customerId: customer.id,
@@ -151,6 +172,24 @@ export async function POST(request: Request) {
       });
     } catch (e) {
       if (e && typeof e === "object" && "code" in e && (e as { code: unknown }).code === "P2002") {
+        // Lost a create race. If it's our own client id that already landed, this is
+        // an idempotent replay → return the existing order. Otherwise the table's
+        // one-draft index tripped → a different order already holds it.
+        if (clientId) {
+          const existing = await db.order.findUnique({
+            where: { id: clientId },
+            select: { number: true, subtotal: true, tax: true, total: true, table: { select: { number: true } } },
+          });
+          if (existing) {
+            return json({
+              orderNumber: existing.number,
+              tableNumber: existing.table.number,
+              subtotal: existing.subtotal.toString(),
+              tax: existing.tax.toString(),
+              total: existing.total.toString(),
+            });
+          }
+        }
         throw new ApiError(409, "This table is already occupied — pick another");
       }
       throw e;

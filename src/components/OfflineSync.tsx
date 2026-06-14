@@ -2,18 +2,20 @@
 
 import { useEffect } from "react";
 import { OFFLINE_ENABLED } from "@/lib/offline/flag";
-import { flushOrders, flushPayments } from "@/lib/offline/store";
+import { flushOrders, flushPayments, flushSelfOrders } from "@/lib/offline/store";
 
 // Drains the offline outboxes when the app loads and whenever the network
-// returns: ORDER creates first, then payments (the pay endpoint needs the order
-// to exist server-side). Runs globally from the root layout so it doesn't depend
-// on any screen being mounted. No-ops entirely when offline mode is off.
+// returns: till ORDER creates first, then payments (the pay endpoint needs the
+// order to exist server-side); the kiosk self-orders are independent (no payment
+// step). Runs globally from the root layout so it doesn't depend on any screen
+// being mounted. No-ops entirely when offline mode is off.
 export function OfflineSync() {
   useEffect(() => {
     if (!OFFLINE_ENABLED) return;
     const flush = async () => {
       await flushOrders();
       await flushPayments();
+      await flushSelfOrders();
     };
     flush();
     window.addEventListener("online", flush);

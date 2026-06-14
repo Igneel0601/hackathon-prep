@@ -290,6 +290,8 @@ export type UpdateUserBody = Partial<{ name: string; role: Role }>;
 
 // ─── Self-checkout (public kiosk) ────────────────────────────────────────────
 export interface SelfCheckoutOrderBody {
+  /** Optional client-supplied id (offline kiosk) — makes the create idempotent on retry. */
+  id?: string;
   email: string;
   tableId: string;
   items: { productId: string; qty: number }[];

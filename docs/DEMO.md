@@ -58,6 +58,13 @@ Open **`/self-checkout`** (no login — could run on a tablet at the door). A gu
 "Wow" moment: place an order from `/self-checkout` on one device, watch it appear on `/kds`
 instantly, then resume it from `/order` to take payment.
 
+**Offline kiosk (with `NEXT_PUBLIC_OFFLINE_MODE=1`):** the door tablet keeps taking orders during
+a wifi blip. Warm it once online, then DevTools → **Offline** → order + pick a free table + email +
+Place Order → the done screen shows **"#— (syncing)"**. Reconnect → the order flushes to the server
+(idempotent) and the number fills in; it then appears on `/kds`. Edge case it handles out loud: if
+that table got taken while offline, on reconnect the kiosk shows **"table taken — please see staff"**
+instead of silently losing the order.
+
 ## What's next (if we had more time)
 
 Admin back-office (manage products/tables in-app instead of seeded), coupons & promotions, a reporting dashboard (revenue, top items), and per-item kitchen tracking.

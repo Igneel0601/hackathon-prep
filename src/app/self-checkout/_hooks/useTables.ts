@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useReducer } from "react";
+import { use$ } from "@legendapp/state/react";
 import { getSelfCheckoutTables } from "@/lib/api-client";
 import type { Floor } from "@/lib/api-types";
+import { OFFLINE_ENABLED } from "@/lib/offline/flag";
+import { kioskTables$ } from "@/lib/offline/store";
 
 type State = { floors: Floor[]; loading: boolean; error: string | null };
 type Action =
@@ -18,7 +21,7 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export function useTables() {
+function useTablesOnline() {
   const [state, dispatch] = useReducer(reducer, { floors: [], loading: true, error: null });
   const [tick, refetch] = useReducer((n: number) => n + 1, 0);
 
@@ -33,3 +36,17 @@ export function useTables() {
 
   return { ...state, refetch };
 }
+
+// Offline-mode: read the cached floors (seeded online). Occupancy is a snapshot —
+// it may be stale, which the place-order flush handles via a 409 → "see staff".
+function useTablesOffline() {
+  const data = use$(kioskTables$);
+  return {
+    floors: data?.floors ?? [],
+    loading: !data,
+    error: null as string | null,
+    refetch: () => {}, // no-op offline — there's nothing fresher to fetch
+  };
+}
+
+export const useTables = OFFLINE_ENABLED ? useTablesOffline : useTablesOnline;

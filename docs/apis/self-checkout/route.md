@@ -15,6 +15,7 @@ and `docs/seed/README.md`).
 - **Body** (JSON):
   ```json
   {
+    "id": "client-uuid (optional)",
     "email": "guest@example.com",
     "tableId": "string",
     "items": [
@@ -22,6 +23,10 @@ and `docs/seed/README.md`).
     ]
   }
   ```
+  - `id` — **optional** client-supplied order id (the offline kiosk sets this). Makes the create
+    **idempotent**: if an order with this id already exists, the endpoint returns it (200) instead of
+    creating a duplicate — so a queued order can be safely re-sent on reconnect. Omit it and the
+    server assigns the id.
   - `email` — required; must look like a valid email address.
   - `tableId` — required; must reference an existing, **active**, currently **free** Table
     (no open DRAFT order). Occupied tables are rejected.

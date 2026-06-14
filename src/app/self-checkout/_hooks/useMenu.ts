@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useReducer } from "react";
+import { use$ } from "@legendapp/state/react";
 import { getSelfCheckoutMenu } from "@/lib/api-client";
 import type { Category, Product } from "@/lib/api-types";
+import { OFFLINE_ENABLED } from "@/lib/offline/flag";
+import { kioskMenu$ } from "@/lib/offline/store";
 
 type State = { categories: Category[]; products: Product[]; loading: boolean; error: string | null };
 type Action =
@@ -18,7 +21,9 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export function useMenu() {
+// Online: fetch directly. Offline-mode: read the Legend-State kiosk cache (seeded
+// online, served from IndexedDB when the network drops).
+function useMenuOnline() {
   const [state, dispatch] = useReducer(reducer, { categories: [], products: [], loading: true, error: null });
 
   useEffect(() => {
@@ -36,3 +41,15 @@ export function useMenu() {
 
   return state;
 }
+
+function useMenuOffline(): State {
+  const data = use$(kioskMenu$);
+  return {
+    categories: data?.categories ?? [],
+    products: data?.products ?? [],
+    loading: !data,
+    error: null,
+  };
+}
+
+export const useMenu = OFFLINE_ENABLED ? useMenuOffline : useMenuOnline;

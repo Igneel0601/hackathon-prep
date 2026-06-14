@@ -19,6 +19,9 @@ import {
   getProducts,
   getTables,
   payOrder,
+  getSelfCheckoutMenu,
+  getSelfCheckoutTables,
+  submitSelfCheckoutOrder,
 } from "@/lib/api-client";
 import type { Order, PaymentBody, ProductsResponse, TablesResponse } from "@/lib/api-types";
 
@@ -28,8 +31,18 @@ const isBrowser = typeof window !== "undefined";
 const idb = isBrowser
   ? new ObservablePersistIndexedDB({
       databaseName: "cafe-pos-offline",
-      version: 3,
-      tableNames: ["orders", "products", "tables", "payment-outbox", "order-outbox"],
+      version: 4,
+      tableNames: [
+        "orders",
+        "products",
+        "tables",
+        "payment-outbox",
+        "order-outbox",
+        // self-checkout kiosk (public, unauthenticated — separate endpoints/caches)
+        "kiosk-menu",
+        "kiosk-tables",
+        "self-order-outbox",
+      ],
     })
   : undefined;
 
@@ -113,6 +126,24 @@ export const tables$ = observable(
   }),
 );
 
+// ── Self-checkout kiosk read caches ─────────────────────────────────────────
+// The kiosk is PUBLIC/unauthenticated, so it can't reuse products$/tables$ (those
+// hit the authed /api/products + /api/tables). It reads the public self-checkout
+// endpoints instead; seed online once → serve offline from IndexedDB.
+export const kioskMenu$ = observable(
+  synced<ProductsResponse>({
+    get: () => getSelfCheckoutMenu(),
+    persist: persist("kiosk-menu"),
+  }),
+);
+
+export const kioskTables$ = observable(
+  synced<TablesResponse>({
+    get: () => getSelfCheckoutTables(),
+    persist: persist("kiosk-tables"),
+  }),
+);
+
 // ── Order create outbox ─────────────────────────────────────────────────────
 // orders$ (syncedCrud) only retries a pending create while the observable is
 // actively OBSERVED. After an offline checkout the order screen unmounts, so the
@@ -164,6 +195,73 @@ export async function flushOrders(): Promise<void> {
     }
   } finally {
     flushingOrders = false;
+  }
+}
+
+// ── Self-checkout order outbox ──────────────────────────────────────────────
+// The public kiosk posts to a DIFFERENT endpoint than the till (POST
+// /api/self-checkout — no payment step), so it gets its own outbox. The client
+// supplies the order id → the create is idempotent on retry. `selfOrderStatus$`
+// (in-memory) drives the kiosk's "done" screen: queued → synced(#) | rejected.
+export interface QueuedSelfOrder {
+  id: string;
+  email: string;
+  tableId: string;
+  items: { productId: string; qty: number }[];
+  total: string;
+  tableNumber: number;
+  queuedAt: number;
+}
+export type SelfOrderStatus =
+  | { state: "queued" }
+  | { state: "synced"; orderNumber: number }
+  | { state: "rejected"; message: string };
+
+export const selfOrderOutbox$ = observable<Record<string, QueuedSelfOrder>>({});
+if (idb) {
+  syncObservable(selfOrderOutbox$, { persist: { name: "self-order-outbox", plugin: idb } });
+}
+// Status is ephemeral UI state (not persisted): seeded "queued" on enqueue.
+export const selfOrderStatus$ = observable<Record<string, SelfOrderStatus>>({});
+
+export function queueSelfOrder(o: QueuedSelfOrder) {
+  selfOrderOutbox$[o.id].set(o);
+  selfOrderStatus$[o.id].set({ state: "queued" });
+}
+
+let flushingSelf = false;
+export async function flushSelfOrders(): Promise<void> {
+  if (flushingSelf || typeof navigator === "undefined" || !navigator.onLine) return;
+  flushingSelf = true;
+  try {
+    const queued = selfOrderOutbox$.get() ?? {};
+    for (const [key, o] of Object.entries(queued)) {
+      try {
+        const res = await submitSelfCheckoutOrder({
+          id: o.id,
+          email: o.email,
+          tableId: o.tableId,
+          items: o.items,
+        });
+        selfOrderStatus$[o.id].set({ state: "synced", orderNumber: res.orderNumber });
+        selfOrderOutbox$[key].delete(); // 201 created, or 200 idempotent-existing → done
+      } catch (e) {
+        const status = (e as { status?: number }).status;
+        // 409 = the table was taken while we were offline (our own id returns 200,
+        // not 409). The guest is likely gone — can't reconcile, so drop it and mark
+        // rejected so the kiosk's done screen can say "see staff".
+        if (status === 409) {
+          selfOrderStatus$[o.id].set({
+            state: "rejected",
+            message: (e as Error).message || "This table was just taken — please see our staff.",
+          });
+          selfOrderOutbox$[key].delete();
+        }
+        // network / 5xx → leave queued, retry next tick
+      }
+    }
+  } finally {
+    flushingSelf = false;
   }
 }
 

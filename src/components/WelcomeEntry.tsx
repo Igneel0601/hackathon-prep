@@ -41,7 +41,7 @@ export function WelcomeEntry() {
         <div className="mt-10 flex w-full max-w-2xl flex-col gap-5 sm:flex-row">
           {/* Self Checkout */}
           <button
-            onClick={() => router.push("/self/tables")}
+            onClick={() => router.push("/self-checkout")}
             className="group flex flex-1 flex-col items-center gap-3 rounded-3xl px-8 py-10 transition-all active:scale-[0.98]"
             style={{ background: "#FFBC0D", color: "#1A0A04", boxShadow: "0 16px 40px rgba(255,188,13,0.35)" }}
           >
