@@ -16,7 +16,6 @@ import type { TableInfo } from "@/lib/api-types";
 import { use$ } from "@legendapp/state/react";
 import { OFFLINE_ENABLED } from "@/lib/offline/flag";
 import { queueSelfOrder, selfOrderStatus$ } from "@/lib/offline/store";
-import { OfflineBadge } from "@/components/OfflineBadge";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,10 +29,14 @@ export default function SelfCheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ orderNumber: number | null; tableNumber: number; total: string } | null>(null);
-  // When an order is placed offline, we track its queued id and watch its sync
-  // status so the done screen can flip from "syncing" → real #, or "see staff".
+  // Offline orders have no server number at "Place Order" time; once the queued
+  // order syncs (OfflineSync), we read its real number to fill the same confirmation
+  // screen. Everything else on this page is identical to the online flow.
   const [queuedId, setQueuedId] = useState<string | null>(null);
-  const selfStatus = use$(() => (queuedId ? selfOrderStatus$[queuedId].get() : undefined));
+  const syncedNumber = use$(() => {
+    const s = queuedId ? selfOrderStatus$[queuedId].get() : undefined;
+    return s?.state === "synced" ? s.orderNumber : null;
+  });
 
   const { categories, products, loading: menuLoading } = useMenu();
   const { floors, loading: tablesLoading, refetch: refetchTables } = useTables();
@@ -103,37 +106,9 @@ export default function SelfCheckoutPage() {
 
   // ── Step: Done ──
   if (step === "done" && result) {
-    // Offline orders carry orderNumber: null until they sync. selfStatus then
-    // flips to the real number (synced) or "rejected" (table taken on reconnect).
-    const placedOffline = result.orderNumber === null;
-    const rejected = placedOffline && selfStatus?.state === "rejected";
-    const orderNo =
-      result.orderNumber ?? (selfStatus?.state === "synced" ? selfStatus.orderNumber : null);
-    const syncing = placedOffline && !rejected && selfStatus?.state !== "synced";
-
-    if (rejected) {
-      return (
-        <Shell>
-          <div className="flex flex-1 flex-col items-center justify-center gap-5 p-6 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(122,46,18,0.12)" }}>
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#7A2E12" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>
-              </svg>
-            </span>
-            <h1 className="text-2xl font-extrabold" style={{ fontFamily: "var(--cafe-font-display)", color: "#1A0A04" }}>
-              Couldn’t place your order
-            </h1>
-            <p className="max-w-sm text-sm leading-relaxed" style={{ color: "#5C3020" }}>
-              Table {result.tableNumber} was taken while you were offline. Please see our staff to be
-              re-seated — your order hasn’t been charged.
-            </p>
-            <button onClick={startOver} className="mt-2 rounded-xl px-6 py-2.5 text-sm font-bold" style={{ background: "#1A0A04", color: "#FAF3E8" }}>
-              Start a New Order
-            </button>
-          </div>
-        </Shell>
-      );
-    }
+    // Online: result.orderNumber is the real number. Offline: it's null until the
+    // queued order syncs, then syncedNumber fills it in — same screen either way.
+    const orderNo = result.orderNumber ?? syncedNumber;
 
     return (
       <Shell>
@@ -147,7 +122,7 @@ export default function SelfCheckoutPage() {
             Thank you for your order!
           </h1>
           <p className="text-sm" style={{ color: "#5C3020" }}>
-            Order {orderNo !== null ? `#${orderNo}` : "#— (syncing)"} · Table {result.tableNumber}
+            Order {orderNo !== null ? `#${orderNo}` : "#…"} · Table {result.tableNumber}
           </p>
           <div className="rounded-2xl px-6 py-4" style={{ background: "#fff", border: "1.5px solid rgba(92,48,32,0.14)" }}>
             <p className="text-xs uppercase tracking-wide" style={{ color: "#9B6B55" }}>Total to pay</p>
@@ -156,18 +131,8 @@ export default function SelfCheckoutPage() {
             </p>
           </div>
           <p className="max-w-sm text-sm leading-relaxed" style={{ color: "#5C3020" }}>
-            {syncing ? (
-              <>
-                We’re offline right now — your order is saved and will reach the kitchen, and your
-                receipt will be emailed to <strong>{email.trim()}</strong>, the moment we’re back online.
-                Please head to your table; staff will bring your order and collect payment there.
-              </>
-            ) : (
-              <>
-                A receipt has been emailed to <strong>{email.trim()}</strong>. Please head to your table —
-                our staff will bring your order and collect payment there.
-              </>
-            )}
+            A receipt has been emailed to <strong>{email.trim()}</strong>. Please head to your table —
+            our staff will bring your order and collect payment there.
           </p>
           <button
             onClick={startOver}
@@ -377,17 +342,12 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col overflow-hidden" style={{ background: "#F5F0EB" }}>
       <header
-        className="relative flex shrink-0 items-center justify-center px-5"
+        className="flex shrink-0 items-center justify-center px-5"
         style={{ height: "56px", background: "#1A0A04" }}
       >
         <span className="text-sm font-bold uppercase tracking-wide" style={{ fontFamily: "var(--cafe-font-display)", color: "#FFBC0D", letterSpacing: "0.12em" }}>
           Odoo Cafe · Self Checkout
         </span>
-        {OFFLINE_ENABLED && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <OfflineBadge />
-          </div>
-        )}
       </header>
       <div className="flex flex-1 flex-col overflow-hidden">{children}</div>
     </div>

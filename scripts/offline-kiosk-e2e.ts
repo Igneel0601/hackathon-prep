@@ -66,8 +66,9 @@ async function main() {
   await page.waitForTimeout(300);
   await page.getByRole("button", { name: /Place Order/i }).click({ timeout: 8000 }).catch((e)=>log("place:", e.message.slice(0,50)));
   await page.waitForTimeout(1000);
-  const syncing = await page.locator("text=/syncing|saved and will reach/i").count();
-  log("done screen shows 'syncing':", syncing > 0);
+  const doneShown = await page.locator("text=/Thank you for your order/i").count();
+  const placeholder = await page.locator("text=/#…/").count(); // offline: number not yet assigned
+  log("done screen shown:", doneShown > 0, "| '#…' placeholder:", placeholder > 0);
   await shot(page, "3-done-offline");
 
   // 6) RECONNECT + poll DB

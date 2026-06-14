@@ -59,11 +59,12 @@ Open **`/self-checkout`** (no login — could run on a tablet at the door). A gu
 instantly, then resume it from `/order` to take payment.
 
 **Offline kiosk (with `NEXT_PUBLIC_OFFLINE_MODE=1`):** the door tablet keeps taking orders during
-a wifi blip. Warm it once online, then DevTools → **Offline** → order + pick a free table + email +
-Place Order → the done screen shows **"#— (syncing)"**. Reconnect → the order flushes to the server
-(idempotent) and the number fills in; it then appears on `/kds`. Edge case it handles out loud: if
-that table got taken while offline, on reconnect the kiosk shows **"table taken — please see staff"**
-instead of silently losing the order.
+a wifi blip — the UI is the **same online flow**, just offline-capable. Warm it once online, then
+DevTools → **Offline** → order + pick a free table + email + Place Order → the confirmation screen is
+identical except the order number shows **"#…"** (no server number yet). Reconnect → the order
+flushes to the server (idempotent) and the number fills in; it then appears on `/kds`. Edge case
+(rare): if that table got taken while offline, the queued order can't be placed on reconnect — it's
+dropped and logged server-side (the `#…` simply doesn't resolve).
 
 ## What's next (if we had more time)
 
