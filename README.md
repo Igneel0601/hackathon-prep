@@ -1,12 +1,13 @@
-# hackathon-prep
+# cafe-pos
 
+Odoo Cafe POS — a web-based restaurant point-of-sale (backend admin + POS terminal + live Kitchen Display).
 Next.js 16 (App Router) + React 19 + TypeScript + Tailwind, pnpm, Prisma 7 (Postgres/Neon), Auth.js v5.
 
 ## Quick start
 
 ```bash
-git clone git@github.com:Igneel0601/hackathon-prep.git
-cd hackathon-prep
+git clone https://github.com/Igneel0601/cafe-pos.git
+cd cafe-pos
 pnpm install                 # also generates the Prisma client (postinstall)
 cp .env.example .env         # then fill in the values (see below)
 pnpm db:migrate              # apply migrations to the DB
@@ -35,7 +36,7 @@ pnpm dev                     # http://localhost:3000
 | `pnpm dev` | dev server |
 | `pnpm build` | production build (must pass before merge) |
 | `pnpm lint` | ESLint |
-| `pnpm typecheck` | `tsc --noEmit` (also runs on pre-push) |
+| `pnpm typecheck` | `tsc --noEmit` (also runs in CI) |
 | `pnpm db:migrate` | create + apply a migration (**schema owner only** — see TEAM.md) |
 | `pnpm db:seed` | seed fixtures (idempotent) |
 | `pnpm db:studio` | open Prisma Studio |
@@ -43,8 +44,8 @@ pnpm dev                     # http://localhost:3000
 
 ## How we work
 
-- **Branch per feature** (`feat/<thing>`) → PR into `main`. Keep PRs small, merge often.
-- `pnpm build` must pass before merge. Pre-push runs typecheck + checks API docs are updated.
+- **Branch per change** (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/<thing>`) → PR into `dev` (Copilot auto-reviews). Keep PRs small, merge often. `dev → main` is promoted via PR at demo checkpoints. Direct push to `dev`/`main` is blocked.
+- `pnpm build` must pass before merge. CI runs lint + typecheck + build + API-doc-sync on every PR; merge only when green.
 - **Don't edit `prisma/schema.prisma`** unless you own it — request the model change instead.
 
 ## Docs
